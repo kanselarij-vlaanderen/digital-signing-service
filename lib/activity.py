@@ -1,8 +1,11 @@
 from flask import g
 from helpers import query, update, generate_uuid
-from ..queries.activity import construct_insert_signing_prep_activity, construct_insert_signing_activity
+from ..queries.activity import construct_insert_signing_prep_activity, \
+    construct_insert_signing_activity, \
+    get_signing_prep_from_subcase_doc
 from .document import get_file_for_document
 from .file import add_file_to_sh_package
+from .mandatee import get_mandatee, get_mandatee_email
 
 SIGNING_PREP_ACT_BASE_URI = "http://example.com/activities/"
 
@@ -25,12 +28,23 @@ def create_signing_prep_activity(signing_subcase_uri, document_uri):
     update(act_query_str)
     return activity
 
-def add_signing_activity(signing_prep_uri, mandatee_uri):
+def get_signing_prep_from_subcase_doc(signing_subcase_uri, document_uri):
+    # TODO
+    pass
+
+def add_signing_activity(signing_subcase_uri, document_uri, mandatee_uri):
+    signing_prep = get_signing_prep_from_subcase_doc(signing_subcase_uri, document_uri)
+    mandatee = get_mandatee(mandatee_uri)
+    mandatee_email = get_mandatee_email(mandatee_uri)
+    g.sh_session.add_users_to_workflow(signing_prep["sh_package_id"], {
+        "user_email": mandatee_email,
+        "user_name": "{} {}".format(mandatee["first_name"], mandatee["family_name"]), # Not sure how/where this appears, since I expect this to be fetched from SigningHub profile info 
+        "role": "SIGNER"
+    })
     activity = {"uuid": generate_uuid()}
     activity["uri"] = SIGNING_ACT_BASE_URI + activity["uuid"]
-    # TODO: query for mandatee's e-mail, register signer at sh, then persist here
     query_str = construct_insert_signing_activity(activity,
-                                                  signing_prep_uri,
+                                                  signing_prep["uri"],
                                                   mandatee_uri)
     update(query_str)
     return activity
