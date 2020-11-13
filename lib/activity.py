@@ -2,7 +2,7 @@ from flask import g
 from helpers import query, update, generate_uuid
 from ..queries.activity import construct_insert_signing_prep_activity, \
     construct_insert_signing_activity, \
-    get_signing_prep_from_subcase_doc
+    construct_get_signing_prep_from_subcase_doc
 from .document import get_file_for_document
 from .file import add_file_to_sh_package
 from .mandatee import get_mandatee, get_mandatee_email
@@ -29,8 +29,13 @@ def create_signing_prep_activity(signing_subcase_uri, document_uri):
     return activity
 
 def get_signing_prep_from_subcase_doc(signing_subcase_uri, document_uri):
-    # TODO
-    pass
+    query_string = construct_get_signing_prep_from_subcase_doc(signing_subcase_uri, document_uri)
+    signing_prep_results = query(query_string)['results']['bindings']
+    if not signing_prep_results:
+        raise Exception("No signing prep found within subcase <{}> for document <{}>".format(signing_subcase_uri, document_uri))
+    signing_prep = signing_prep_results[0]
+    signing_prep["signing"] = [r["signing"] for r in signing_prep_results if r["signing"]] # Many signing activities for one prep activity
+    return signing_prep
 
 def add_signing_activity(signing_subcase_uri, document_uri, mandatee_uri):
     signing_prep = get_signing_prep_from_subcase_doc(signing_subcase_uri, document_uri)

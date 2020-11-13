@@ -50,6 +50,41 @@ WHERE {
         sh_document_id=sparql_escape_string(sh_document_id),
         document=sparql_escape_uri(document_uri))
 
+def construct_get_signing_prep_from_subcase_doc(signing_subcase_uri,
+                                                document_uri,
+                                                graph=APPLICATION_GRAPH):
+    query_template = Template("""
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+
+SELECT (?signing_prep AS ?uri) ?sh_package_id ?sh_document_id ?signing
+WHERE {
+    GRAPH $graph {
+        ?signing_prep a prov:Activity ;
+            dct:type $prep_type ;
+            sh:packageId ?sh_package_id ;
+            sh:documentId ?sh_document_id .
+        ?signing_prep dossier:vindtPlaatsTijdens $signing_subcase .
+        ?signing_prep prov:used $document .
+        OPTIONAL {
+            ?signing a prov:Activity ;
+                dct:type $sign_type ;
+                dossier:vindtPlaatsTijdens $signing_subcase ;
+                prov:wasInformedBy ?signing_prep .
+        }
+    }
+}
+""")
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        signing_subcase=sparql_escape_uri(signing_subcase_uri),
+        prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI),
+        sign_type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
+        document=sparql_escape_uri(document_uri))
+
 def construct_insert_signing_activity(activity,
                                       signing_prep_uri,
                                       mandatee_uri,
