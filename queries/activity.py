@@ -76,10 +76,9 @@ WHERE {
             dct:type $prep_type .
         ?signing_prep dossier:vindtPlaatsTijdens $signing_subcase .
         ?signing_prep sh:document ?sh_doc .
+        ?signing_prep ext:gebruiktBestand $file .
         ?sh_doc sh:packageId ?sh_package_id ;
-            sh:documentId ?sh_document_id ;
-            prov:hadPrimarySource $file .
-
+            sh:documentId ?sh_document_id .
         OPTIONAL {
             ?signing a prov:Activity ;
                 dct:type $sign_type ;
