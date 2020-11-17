@@ -14,6 +14,7 @@ SIGNING_ACT_BASE_URI = "http://example.com/activities/"
 def create_signing_prep_activity(signing_subcase_uri, file_uri):
     activity = {"uuid": generate_uuid()}
     activity["uri"] = SIGNING_PREP_ACT_BASE_URI + activity["uuid"]
+    activity["file"] = file_uri
     file = get_file(file_uri)
     sh_package = g.sh_session.add_package({
         # package_name: "New Package", # Defaults to "Undefined"

@@ -1,6 +1,6 @@
 from flask import g
 from helpers import query
-from ..queries.file import construct_get_file_query
+from ..queries.file import construct_get_file_query, construct_get_file_by_id
 
 SH_SOURCE = "Kaleidos" # TODO https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1022
 
@@ -22,6 +22,14 @@ def get_file(file_uri):
     file_results = query(file_query)['results']['bindings']
     if not file_results:
         raise Exception("No file found by uri <{}>".format(file_uri))
+    file = file_results[0]
+    return file
+
+def get_file_by_id(file_id):
+    file_query = construct_get_file_by_id(file_id)
+    file_results = query(file_query)['results']['bindings']
+    if not file_results:
+        raise Exception("No file found by id '{}'".format(file_id))
     file = file_results[0]
     return file
 
