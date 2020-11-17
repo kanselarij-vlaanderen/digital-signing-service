@@ -2,8 +2,11 @@ from flask import g, request, make_response
 from helpers import log
 from .authentication import signinghub_session_required
 from .lib.pub_flow import get_subcase_from_pub_flow_id
-from .lib.activity import get_signing_preps_from_subcase, create_signing_prep_activity
+from .lib.activity import get_signing_preps_from_subcase, \
+    get_signing_prep_from_subcase_file, \
+    create_signing_prep_activity
 from .lib.file import get_file_by_id
+from .lib.mandatee import get_signing_mandatees
 from .lib.exceptions import NoQueryResultsException
 
 @app.route("/hello")
@@ -41,4 +44,24 @@ def pubflow_files(pubf_id):
         res.headers["Content-Type"] = "application/vnd.api+json"
         return res
 
+@app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/signatories', methods=['GET', 'POST'])
+def login(pubf_id, file_id):
+    subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
+    file_uri = get_file_by_id(file_id)
+    if request.method == 'GET':
+        sig_prep_act = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
+        try:
+            mandatees = get_signing_mandatees(sig_prep_act)
+            mandatees_data = []
+            for mandatee in mandatees:
+                mandatees_data.append({
+                    "type": "mandatees",
+                    "id": mandatee["id"]
+                })
+        except NoQueryResultsException: # No mandatees available
+            mandatees_data = []
+        res = make_response({"data": mandatees_data})
+        res.headers["Content-Type"] = "application/vnd.api+json"
+        return res
+        
 

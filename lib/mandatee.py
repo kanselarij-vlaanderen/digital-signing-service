@@ -1,5 +1,5 @@
 from helpers import query
-from ..queries.mandatee import construct_get_mandatee
+from ..queries.mandatee import construct_get_mandatee, construct_get_signing_mandatees
 from .exceptions import NoQueryResultsException
 
 def get_mandatee(mandatee_uri):
@@ -9,6 +9,13 @@ def get_mandatee(mandatee_uri):
         raise NoQueryResultsException("No mandatee found by uri <{}>".format(mandatee_uri))
     mandatee = madatee_results[0]
     return mandatee
+
+def get_signing_mandatees(signing_prep_uri):
+    query_str = construct_get_signing_mandatees(signing_prep_uri)
+    madatee_results = query(query_str)['results']['bindings']
+    if not madatee_results:
+        raise NoQueryResultsException("No mandatees found for signing prep uri <{}>".format(signing_prep_uri))
+    return madatee_results
 
 def get_mandatee_email(mandatee_uri):
     mandatee = get_mandatee(mandatee_uri)
