@@ -17,6 +17,14 @@ def read_file_bytes(file_uri, max_file_size=None):
     with open(file_path, "rb") as f:
         return f.read()
 
+def get_file(file_uri):
+    file_query = construct_get_file_query(file_uri)
+    file_results = query(file_query)['results']['bindings']
+    if not file_results:
+        raise Exception("No file found by uri <{}>".format(file_uri))
+    file = file_results[0]
+    return file
+
 def add_file_to_sh_package(file_uri, sh_package_id):
     file_query = construct_get_file_query(file_uri)
     file_results = query(file_query)['results']['bindings']
