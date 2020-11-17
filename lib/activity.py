@@ -6,6 +6,7 @@ from ..queries.activity import construct_insert_signing_prep_activity, \
     construct_get_signing_prep_from_subcase_file
 from .file import get_file, add_file_to_sh_package
 from .mandatee import get_mandatee, get_mandatee_email
+from .exceptions import NoQueryResultsException
 
 SIGNING_PREP_ACT_BASE_URI = "http://example.com/activities/"
 
@@ -33,14 +34,14 @@ def get_signing_preps_from_subcase(signing_subcase_uri):
     query_string = construct_get_signing_preps_from_subcase(signing_subcase_uri)
     signing_prep_results = query(query_string)['results']['bindings']
     if not signing_prep_results:
-        raise Exception("No signing prep found within subcase <{}>".format(signing_subcase_uri))
+        raise NoQueryResultsException("No signing prep found within subcase <{}>".format(signing_subcase_uri))
     return signing_prep_results
 
 def get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri):
     query_string = construct_get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri)
     signing_prep_results = query(query_string)['results']['bindings']
     if not signing_prep_results:
-        raise Exception("No signing prep found within subcase <{}> for file <{}>".format(signing_subcase_uri, file_uri))
+        raise NoQueryResultsException("No signing prep found within subcase <{}> for file <{}>".format(signing_subcase_uri, file_uri))
     signing_prep = signing_prep_results[0]
     signing_prep["signing"] = [r["signing"] for r in signing_prep_results if r["signing"]] # Many signing activities for one prep activity
     return signing_prep
