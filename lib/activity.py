@@ -28,6 +28,13 @@ def create_signing_prep_activity(signing_subcase_uri, file_uri):
     update(act_query_str)
     return activity
 
+def get_signing_preps_from_subcase(signing_subcase_uri):
+    query_string = construct_get_signing_preps_from_subcase(signing_subcase_uri)
+    signing_prep_results = query(query_string)['results']['bindings']
+    if not signing_prep_results:
+        raise Exception("No signing prep found within subcase <{}>".format(signing_subcase_uri))
+    return signing_prep_results
+
 def get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri):
     query_string = construct_get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri)
     signing_prep_results = query(query_string)['results']['bindings']

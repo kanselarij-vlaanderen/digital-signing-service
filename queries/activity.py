@@ -96,6 +96,30 @@ WHERE {
         sign_type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
         file=sparql_escape_uri(file_uri))
 
+def construct_get_signing_preps_from_subcase(signing_subcase_uri,
+                                             graph=APPLICATION_GRAPH):
+    query_template = Template("""
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+
+SELECT DISTINCT (?signing_prep AS ?uri) ?file ?file_id
+WHERE {
+    GRAPH $graph {
+        ?signing_prep a prov:Activity ;
+            dct:type $prep_type .
+        ?signing_prep dossier:vindtPlaatsTijdens $signing_subcase .
+        ?signing_prep prov:used ?file .
+        ?file mu:uuid ?file_id .
+    }
+}
+""")
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        signing_subcase=sparql_escape_uri(signing_subcase_uri),
+        prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI))
+
 def construct_insert_signing_activity(activity,
                                       signing_prep_uri,
                                       mandatee_uri,
