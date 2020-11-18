@@ -7,6 +7,23 @@ APPLICATION_GRAPH = "http://mu.semte.ch/application"
 
 SIGNING_ACT_TYPE_URI = "http://example.com/concept/123"
 
+def construct_get_mandatee_by_id(mandatee_id, graph=APPLICATION_GRAPH):
+    query_template = Template("""
+PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+
+SELECT DISTINCT (?mandatee as ?uri)
+WHERE {
+    GRAPH $graph {
+        $mandatee a mandaat:Mandataris ;
+            mu:uuid $uuid .
+    }
+}
+""")
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        uuid=sparql_escape_string(mandatee_id))
+
 def construct_get_mandatee(mandatee_uri, graph=APPLICATION_GRAPH):
     query_template = Template("""
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
