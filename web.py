@@ -45,7 +45,7 @@ def pubflow_files(pubf_id):
         res.headers["Content-Type"] = "application/vnd.api+json"
         return res
 
-@app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/signatories', methods=['GET', 'POST'])
+@app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/signers', methods=['GET', 'POST'])
 def login(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     file_uri = get_file_by_id(file_id)
