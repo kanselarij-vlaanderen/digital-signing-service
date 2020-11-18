@@ -17,7 +17,6 @@ def hello():
 
 
 @app.route('/publication-flow/<uuid:pubf_id>/signing/files', methods=['GET'])
-@signinghub_session_required # provides g.sh_session
 def pubflow_files_get(pubf_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     try:
@@ -68,6 +67,7 @@ def file_signers_get(pubf_id, file_id):
     return res
 
 @app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/signers', methods=['POST'])
+@signinghub_session_required # provides g.sh_session
 def file_signers_post(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     file_uri = get_file_by_id(file_id)
