@@ -1,4 +1,4 @@
-from flask import g, request, make_response
+from flask import g, request, make_response, redirect
 from helpers import log
 from .authentication import signinghub_session_required
 from .jsonapi import jsonapi_required
@@ -83,4 +83,20 @@ def file_signers_post(pubf_id, file_id):
     res = make_response({"data": mandatees}, 202)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
+
+@app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/signinghub-iframe-link', methods=['GET'])
+@signinghub_session_required # provides g.sh_session
+def signinghub_iframe_link(pubf_id, file_id):
+    subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
+    file_uri = get_file_by_id(file_id)
+    signing_prep = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
+    collapse_panels = request.args.get("collapse_panels", default='true', type=str)
+    integration_link = g.sh_session.get_integration_link(signing_prep["sh_package_id"], {
+        "language":"nl-NL",
+        # "user_email": "joe@gmail.com", # Know through SSO login?
+        # "callback_url":"https://web.signinghub.com/", # default configured fir the app.
+        "collapse_panels": "true" if collapse_panels == "true" else "false",
+        # "usercertificate_id": "31585" # Undocumented
+    })
+    redirect(integration_link, 303)
 
