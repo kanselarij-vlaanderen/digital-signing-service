@@ -1,6 +1,7 @@
 from flask import g, request, make_response
 from helpers import log
 from .authentication import signinghub_session_required
+from .jsonapi import jsonapi_required
 from .lib.pub_flow import get_subcase_from_pub_flow_id
 from .lib.activity import get_signing_preps_from_subcase, \
     get_signing_prep_from_subcase_file, \
@@ -35,6 +36,7 @@ def pubflow_files_get(pubf_id):
 
 @app.route('/publication-flow/<uuid:pubf_id>/signing/files', methods=['POST'])
 @signinghub_session_required # provides g.sh_session
+@jsonapi_required
 def pubflow_files_post(pubf_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     body = request.get_json(force=True)
@@ -68,6 +70,7 @@ def file_signers_get(pubf_id, file_id):
 
 @app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/signers', methods=['POST'])
 @signinghub_session_required # provides g.sh_session
+@jsonapi_required
 def file_signers_post(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     file_uri = get_file_by_id(file_id)
