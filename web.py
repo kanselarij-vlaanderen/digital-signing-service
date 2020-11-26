@@ -28,9 +28,11 @@ def pubflow_files_get(pubf_id):
                 "type": "files",
                 "id": signing_prep["file_id"]
             })
+        status_code = 200
     except NoQueryResultsException: # No signing preps available
         files = []
-    res = make_response({"data": files})
+        status_code = 404
+    res = make_response({"data": files}, status_code)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
@@ -62,9 +64,11 @@ def file_signers_get(pubf_id, file_id):
                 "type": "mandatees",
                 "id": mandatee["id"]
             })
+        status_code = 200
     except NoQueryResultsException: # No mandatees available
         mandatees_data = []
-    res = make_response({"data": mandatees_data})
+        status_code = 404
+    res = make_response({"data": mandatees_data}, status_code)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
