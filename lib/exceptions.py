@@ -1,3 +1,3 @@
 
-class NoQueryResultsNoQueryResultsException(NoQueryResultsException):
+class NoQueryResultsException(Exception):
     pass
