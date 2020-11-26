@@ -156,3 +156,34 @@ WHERE {
         type=sparql_escape_string(SIGNING_ACT_TYPE_URI),
         signing_prep=sparql_escape_uri(signing_prep_uri),
         mandatee=sparql_escape_uri(mandatee_uri))
+
+def construct_end_prep_start_signing(signing_prep_uri,
+                                     time,
+                                     graph=APPLICATION_GRAPH):
+    query_template = Template("""
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+
+INSERT {
+    GRAPH $graph {
+        $signing_prep dossier:Activiteit.einddatum $time .
+        ?signing dossier:Activiteit.startdatum $time .
+    }
+}
+WHERE {
+    GRAPH $graph {
+        $signing_prep a prov:Activity ;
+            dct:type $prep_type .
+        ?signing a prov:Activity ;
+            dct:type $sig_type ;
+            prov:wasInformedBy $signing_prep .
+    }
+}
+""")
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        signing_prep=sparql_escape_uri(signing_prep_uri),
+        prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI),
+        sig_type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
+        time=sparql_escape_datetime(time))

@@ -6,7 +6,8 @@ from .lib.pub_flow import get_subcase_from_pub_flow_id
 from .lib.activity import get_signing_preps_from_subcase, \
     get_signing_prep_from_subcase_file, \
     create_signing_prep_activity, \
-    add_signing_activity
+    add_signing_activity, \
+    update_activities_signing_started
 from .lib.file import get_file_by_id
 from .lib.mandatee import get_mandatee_by_id, get_signing_mandatees
 from .lib.exceptions import NoQueryResultsException
@@ -103,4 +104,12 @@ def signinghub_iframe_link(pubf_id, file_id):
         # "usercertificate_id": "31585" # Undocumented
     })
     redirect(integration_link, 303)
+
+@app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/start', methods=['POST'])
+def start_signing(pubf_id, file_id):
+    subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
+    file_uri = get_file_by_id(file_id)
+    signing_prep = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
+    g.sh_session.share_document_package(signing_prep["sh_package_id"])
+    update_activities_signing_started(signing_prep["uri"])
 

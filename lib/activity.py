@@ -1,12 +1,17 @@
+from datetime import datetime
+from pytz import timezone
 from flask import g
 from helpers import query, update, generate_uuid
 from ..queries.activity import construct_insert_signing_prep_activity, \
     construct_insert_signing_activity, \
     construct_get_signing_preps_from_subcase, \
-    construct_get_signing_prep_from_subcase_file
+    construct_get_signing_prep_from_subcase_file, \
+    construct_end_prep_start_signing
 from .file import get_file, add_file_to_sh_package
 from .mandatee import get_mandatee, get_mandatee_email
 from .exceptions import NoQueryResultsException
+
+TIMEZONE = timezone('Europe/Brussels')
 
 SIGNING_PREP_ACT_BASE_URI = "http://example.com/activities/"
 
@@ -62,3 +67,8 @@ def add_signing_activity(signing_subcase_uri, file_uri, mandatee_uri):
                                                   mandatee_uri)
     update(query_str)
     return activity
+
+def update_activities_signing_started(signing_prep_uri):
+    time = datetime.now(TIMEZONE)
+    update_status_query = construct_end_prep_start_signing(signing_prep_uri, time)
+    update(update_status_query)
