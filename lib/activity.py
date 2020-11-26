@@ -6,6 +6,7 @@ from ..queries.activity import construct_insert_signing_prep_activity, \
     construct_insert_signing_activity, \
     construct_get_signing_preps_from_subcase, \
     construct_get_signing_prep_from_subcase_file, \
+    construct_get_signing_prep_from_sh_package_id, \
     construct_end_prep_start_signing
 from .file import get_file, add_file_to_sh_package
 from .mandatee import get_mandatee, get_mandatee_email
@@ -41,6 +42,13 @@ def get_signing_preps_from_subcase(signing_subcase_uri):
     if not signing_prep_results:
         raise NoQueryResultsException("No signing prep found within subcase <{}>".format(signing_subcase_uri))
     return signing_prep_results
+
+def get_signing_prep_from_sh_package_id(sh_package_id):
+    query_string = construct_get_signing_prep_from_sh_package_id(sh_package_id)
+    signing_prep_results = query(query_string)['results']['bindings']
+    if not signing_prep_results:
+        raise NoQueryResultsException("No signing prep found for sh package id '{}'".format(sh_package_id))
+    return signing_prep_results[0]
 
 def get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri):
     query_string = construct_get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri)

@@ -5,6 +5,7 @@ from .jsonapi import jsonapi_required
 from .lib.pub_flow import get_subcase_from_pub_flow_id
 from .lib.activity import get_signing_preps_from_subcase, \
     get_signing_prep_from_subcase_file, \
+    get_signing_prep_from_sh_package_id, \
     create_signing_prep_activity, \
     add_signing_activity, \
     update_activities_signing_started
@@ -112,4 +113,21 @@ def start_signing(pubf_id, file_id):
     signing_prep = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
     g.sh_session.share_document_package(signing_prep["sh_package_id"])
     update_activities_signing_started(signing_prep["uri"])
+
+
+@app.route('/signinghub-callback', methods=['GET, POST']) # HTTP method not specified in api documentation
+def signinghub_callback():
+    data = request.json()
+    sh_package_id = data["package_id"]
+    action = data["action"]
+    if action == "none":
+        log("Someone looked at package_id '{}' through SigningHub Iframe")
+    elif action == "shared": # Start pubflow. Normally handled through API call wired to custom button.
+        sig_prep = get_signing_prep_from_sh_package_id(sh_package_id)
+        update_activities_signing_started(sig_prep["uri"])
+    elif action in ("signed", "declined", "reviewed"):
+        pass
+        # update status/end time of signing activities
+    elif action == "forbidden":
+        log("Someone tried to access forbidden package_id '{}' through SigningHub Iframe")
 

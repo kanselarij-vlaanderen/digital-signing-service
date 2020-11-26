@@ -95,6 +95,28 @@ WHERE {
         sign_type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
         file=sparql_escape_uri(file_uri))
 
+def construct_get_signing_prep_from_sh_package_id(sh_package_id,
+                                                  graph=APPLICATION_GRAPH):
+    query_template = Template("""
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+
+SELECT (?signing_prep AS ?uri)
+WHERE {
+    GRAPH $graph {
+        ?signing_prep a prov:Activity ;
+            dct:type $prep_type .
+        ?signing_prep sh:document ?sh_doc .
+        ?sh_doc sh:packageId $sh_package_id .
+    }
+}
+""")
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI),
+        sh_package_id=sparql_escape_string(sh_package_id))
+
 def construct_get_signing_preps_from_subcase(signing_subcase_uri,
                                              graph=APPLICATION_GRAPH):
     query_template = Template("""
