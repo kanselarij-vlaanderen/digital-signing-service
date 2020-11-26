@@ -1,7 +1,7 @@
 import os
 from functools import wraps
-from flask import g, request
 from pytz import timezone
+from flask import g, request
 from signinghub_api_client.client import SigningHubSession
 from signinghub_api_client.exceptions import AuthenticationException
 from helpers import log, error
