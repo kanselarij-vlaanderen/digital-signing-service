@@ -1,0 +1,161 @@
+openapi: 3.0.1
+info:
+  title: Digital signing service
+  description: A service providing Kaleidos the functionality for digitally signing
+    documents.
+  license:
+    name: MIT
+    url: https://github.com/kanselarij-vlaanderen/digital-signing-service/LICENSE.txt
+  version: 0.0.0
+externalDocs:
+  description: Git Repository
+  url: https://github.com/kanselarij-vlaanderen/digital-signing-service
+servers:
+- url: /
+paths:
+  /publication-flow/{pubf_id}/signing/files:
+    get:
+      tags:
+      - Signing files
+      summary: List signing files for a publication flow
+      operationId: listPubFiles
+      parameters:
+      - name: pubf_id
+        in: path
+        description: ID of publication flow
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/JsonApiFiles'
+    post:
+      tags:
+      - Signing files
+      summary: List signing files for a publication flow
+      operationId: addPubFiles
+      parameters:
+      - name: pubf_id
+        in: path
+        description: ID of publication flow
+        required: true
+        schema:
+          type: string
+      responses:
+        202:
+          description: successful operation
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/JsonApiFiles'
+  /publication-flow/{pubf_id}/signing/files/{file_id}/signers:
+    get:
+      tags:
+      - File signers
+      summary: List signers for a certain file that is part of a publication flow
+      operationId: listFileSigners
+      parameters:
+      - name: pubf_id
+        in: path
+        description: ID of publication flow
+        required: true
+        schema:
+          type: string
+      - name: file_id
+        in: path
+        description: ID of file
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content: {}
+    post:
+      tags:
+      - File signers
+      summary: Add signers for a certain file that is part of a publication flow
+      operationId: addFileSigners
+      parameters:
+      - name: pubf_id
+        in: path
+        description: ID of publication flow
+        required: true
+        schema:
+          type: string
+      - name: file_id
+        in: path
+        description: ID of file
+        required: true
+        schema:
+          type: string
+      responses:
+        202:
+          description: successful operation
+          content: {}
+  /publication-flow/{pubf_id}/signing/files/{file_id}/signinghub-iframe-link:
+    get:
+      tags:
+      - Iframe link
+      summary: Get an Iframe link for SigningHub interface integration
+      operationId: getIframeLink
+      parameters:
+      - name: pubf_id
+        in: path
+        description: ID of publication flow
+        required: true
+        schema:
+          type: string
+      - name: file_id
+        in: path
+        description: ID of file
+        required: true
+        schema:
+          type: string
+      responses:
+        303:
+          description: Redirect to SigningHub page
+  /publication-flow/{pubf_id}/signing/files/{file_id}/start:
+    post:
+      tags:
+      - Start signing
+      summary: Send out file for signing by the appointed signers
+      operationId: startSigning
+      parameters:
+      - name: pubf_id
+        in: path
+        description: ID of publication flow
+        required: true
+        schema:
+          type: string
+      - name: file_id
+        in: path
+        description: ID of file
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Sucessfully sent out signing-flow
+components:
+  schemas:
+    File:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - file
+        id:
+          type: string
+    JsonApiFiles:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/File'
