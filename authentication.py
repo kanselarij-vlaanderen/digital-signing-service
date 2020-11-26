@@ -3,11 +3,12 @@ from functools import wraps
 from flask import g, request
 from pytz import timezone
 from signinghub_api_client.client import SigningHubSession
-from signinghub_api_client.exceptions import SigningHubException
+from signinghub_api_client.exceptions import AuthenticationException
 from helpers import log, error
 from .queries.session import construct_get_mu_session_query, \
     construct_get_signinghub_session_query, construct_insert_signinghub_session_query
 from .sudo_query import sudo_query, sudo_update
+from .lib.exceptions import NoQueryResultsException
 
 TIMEZONE = timezone('Europe/Brussels')
 
@@ -34,7 +35,7 @@ def ensure_signinghub_session(mu_session_uri):
     mu_session_query = construct_get_mu_session_query(mu_session_uri)
     mu_session_result = sudo_query(mu_session_query)['results']['bindings']
     if not mu_session_result:
-        return error("Didn't find a mu-session with an Oauth token.")
+        raise NoQueryResultsException("Didn't find a mu-session with an Oauth token.")
     mu_session = mu_session_result[0]
     sh_session_query = construct_get_signinghub_session_query(mu_session_uri)
     sh_session_results = sudo_query(sh_session_query)['results']['bindings']
@@ -46,18 +47,17 @@ def ensure_signinghub_session(mu_session_uri):
         g.sh_session.access_token = sh_session_result["token"]
     else: # Open new SigningHub session
         log("No valid SigningHub session found. Opening a new one ...")
-        try:
-            g.sh_session = open_new_signinghub_session(mu_session["oauthToken"], mu_session_uri)
-        except SigningHubException:
-            return error("Didn't manage to authenticate at SigningHub.")
-
+        g.sh_session = open_new_signinghub_session(mu_session["oauthToken"], mu_session_uri)
 
 def signinghub_session_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         mu_session_id = request.headers["MU-SESSION-ID"]
-        error_response = ensure_signinghub_session(mu_session_id)
-        if error_response:
-            return error_response
-        return f(*args, **kwargs)
+        try:
+            ensure_signinghub_session(mu_session_id)
+            return f(*args, **kwargs)
+        except AuthenticationException as ex:
+            return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.id))
+        except NoQueryResultsException as ex:
+            return error(ex.args[0])
     return decorated_function
