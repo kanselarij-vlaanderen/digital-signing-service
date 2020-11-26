@@ -11,11 +11,11 @@ from .lib.file import get_file_by_id
 from .lib.mandatee import get_mandatee_by_id, get_signing_mandatees
 from .lib.exceptions import NoQueryResultsException
 
-@app.route("/hello")
+@app.route("/signinghub-profile")
 @signinghub_session_required # provides g.sh_session
-def hello():
-    return "Hello from the mu-python-template!"
-
+def sh_profile_info():
+    """Maintenance endpoint for debugging SigningHub authentication"""
+    return g.sh_session.get_general_profile_information()
 
 @app.route('/publication-flow/<uuid:pubf_id>/signing/files', methods=['GET'])
 def pubflow_files_get(pubf_id):
