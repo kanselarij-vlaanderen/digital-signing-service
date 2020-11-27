@@ -12,9 +12,9 @@ from .lib.exceptions import NoQueryResultsException
 
 TIMEZONE = timezone('Europe/Brussels')
 
-SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL", "test")
-CERT_FILE_PATH = os.environ.get("CERT_FILE_PATH", "/certs/certificate.crt")
-KEY_FILE_PATH = os.environ.get("KEY_FILE_PATH", "/certs/private_key.pem")
+SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
+CERT_FILE_PATH = os.environ.get("CERT_FILE_PATH")
+KEY_FILE_PATH = os.environ.get("KEY_FILE_PATH")
 
 SIGNINGHUB_SSO_METHOD = "test"
 
