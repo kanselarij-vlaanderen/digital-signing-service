@@ -124,6 +124,7 @@ def signinghub_callback():
     if action == "none":
         log("Someone looked at package_id '{}' through SigningHub Iframe")
     elif action == "shared": # Start pubflow. Normally handled through API call wired to custom button.
+        # TODO: signinghub_session_required, but login @ SigningHub with Kaleidos sudo account 
         sig_prep = get_signing_prep_from_sh_package_id(sh_package_id)
         update_activities_signing_started(sig_prep["uri"])
     elif action in ("signed", "declined", "reviewed"):

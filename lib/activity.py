@@ -82,8 +82,10 @@ def add_signing_activity(signing_subcase_uri, file_uri, mandatee_uri):
 
 def update_activities_signing_started(signing_prep_uri):
     time = datetime.now(TIMEZONE)
-    update_status_query = construct_end_prep_start_signing(signing_prep_uri, time)
-    update(update_status_query)
+    update_status_query = construct_end_prep_start_signing(signing_prep_uri,
+                                                           time,
+                                                           graph=SIGNING_ACT_GRAPH)
+    sudo_update(update_status_query)
 
 def update_signing_status(sh_package_id):
     workflow_details = g.sh_session.get_workflow_details(sh_package_id)
