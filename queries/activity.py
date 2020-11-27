@@ -209,3 +209,45 @@ WHERE {
         prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI),
         sig_type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
         time=sparql_escape_datetime(time))
+
+def construct_update_signing_activity(sh_package_id,
+                            sh_document_id,
+                            mandatee_uri,
+                            end_time,
+                            graph=APPLICATION_GRAPH):
+    query_template = Template("""
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
+
+INSERT {
+    GRAPH $graph {
+        ?signing dossier:Activiteit.einddatum $end_time .
+    }
+}
+WHERE {
+    GRAPH $graph {
+        ?signing_prep a prov:Activity ;
+            dct:type $prep_type ;
+            sh:document ?sh_doc .
+        ?sh_doc sh:packageId $sh_package_id ;
+            sh:documentId $sh_document_id .
+        ?signing a prov:Activity ;
+            dct:type $type ;
+            prov:wasInformedBy ?signing_prep ;
+            prov:qualifiedAssociation $mandatee .
+        $mandatee a mandaat:Mandataris .
+        FILTER NOT EXISTS { ?signing dossier:Activiteit.einddatum ?end_time . }
+    }
+}
+""")
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI),
+        sh_package_id=sparql_escape_string(sh_package_id),
+        sh_document_id=sparql_escape_string(sh_document_id),
+        sig_type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
+        mandatee=sparql_escape_uri(mandatee_uri),
+        end_time=sparql_escape_datetime(end_time))

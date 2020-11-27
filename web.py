@@ -8,7 +8,8 @@ from .lib.activity import get_signing_preps_from_subcase, \
     get_signing_prep_from_sh_package_id, \
     create_signing_prep_activity, \
     add_signing_activity, \
-    update_activities_signing_started
+    update_activities_signing_started, \
+    update_signing_status
 from .lib.file import get_file_by_id
 from .lib.mandatee import get_mandatee_by_id, get_signing_mandatees
 from .lib.exceptions import NoQueryResultsException
@@ -126,8 +127,8 @@ def signinghub_callback():
         sig_prep = get_signing_prep_from_sh_package_id(sh_package_id)
         update_activities_signing_started(sig_prep["uri"])
     elif action in ("signed", "declined", "reviewed"):
-        pass
-        # update status/end time of signing activities
+        # TODO: signinghub_session_required, but login @ SigningHub with Kaleidos sudo account 
+        update_signing_status(sh_package_id)
     elif action == "forbidden":
         log("Someone tried to access forbidden package_id '{}' through SigningHub Iframe")
 
