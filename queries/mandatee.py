@@ -32,8 +32,8 @@ PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 SELECT ?email ?first_name ?family_name
 WHERE {
     GRAPH $graph {
-        $mandatee a mandaat:Mandataris .
-            mandatee mandaat:isBestuurlijkeAliasVan ?person .
+        $mandatee a mandaat:Mandataris ;
+            mandaat:isBestuurlijkeAliasVan ?person .
         OPTIONAL { ?person foaf:firstName ?first_name }
         OPTIONAL { ?person foaf:familyName ?family_name }
         OPTIONAL {
