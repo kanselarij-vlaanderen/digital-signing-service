@@ -33,7 +33,7 @@ PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 SELECT (?signinghubSession AS ?uri) ?expiryTime ?token
 WHERE {
     GRAPH $session_graph {
-        $mu_session ext:signinghubSession ?signinghubSession
+        $mu_session ext:signinghubSession ?signinghubSession .
         ?signinghubSession mu:uuid ?uuid ;
             ext:expiryTime ?expiryTime ;
             ext:token ?token .
