@@ -1,5 +1,5 @@
 from string import Template
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import timezone
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
 
@@ -46,6 +46,34 @@ WHERE {
     return query_template.substitute(
         graph=sparql_escape_uri(graph),
         mandatee=sparql_escape_uri(mandatee_uri))
+
+def construct_get_mandatee_by_email(mandatee_email, graph=APPLICATION_GRAPH):
+    mail_uri = "mailto:{}".format(mandatee_email)
+    maximal_end_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) # Today
+    # Sometimes a mandatee needs to sign some last docs a couple of days after the end of the mandate
+    maximal_end_date = maximal_end_date - timedelta(days=30)
+    query_template = Template("""
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
+
+SELECT ?mandatee
+WHERE {
+    GRAPH $graph {
+        ?mandatee a mandaat:Mandataris ;
+            mandaat:isBestuurlijkeAliasVan ?person ;
+            mandaat:einde ?end_date ;
+            mandaat:start ?start_date .
+        ?person foaf:mbox $mail_uri .
+        FILTER(?start_date < NOW())
+        FILTER(?end_date > $end_date)
+    }
+}
+ORDER BY DESC(?end_date)
+""")
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        mail_uri=sparql_escape_uri(mail_uri),
+        end_date=sparql_escape_datetime(maximal_end_date))
 
 def construct_get_signing_mandatees(signing_prep_uri,
                                     graph=APPLICATION_GRAPH):

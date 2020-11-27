@@ -1,6 +1,7 @@
-from helpers import query
+from helpers import query, log
 from ..queries.mandatee import construct_get_mandatee, \
     construct_get_mandatee_by_id, \
+    construct_get_mandatee_by_email, \
     construct_get_signing_mandatees
 from .exceptions import NoQueryResultsException
 
@@ -17,6 +18,16 @@ def get_mandatee_by_id(mandatee_id):
     madatee_results = query(query_str)['results']['bindings']
     if not madatee_results:
         raise NoQueryResultsException("No mandatee found by id '{}'".format(mandatee_id))
+    mandatee = madatee_results[0]
+    return mandatee
+
+def get_mandatee_by_email(mandatee_email):
+    query_str = construct_get_mandatee_by_email(mandatee_email)
+    madatee_results = query(query_str)['results']['bindings']
+    if not madatee_results:
+        raise NoQueryResultsException("No mandatee found by id '{}'".format(mandatee_email))
+    if madatee_results.length > 1:
+        log("Multiple mandatees found for e-mail address '{}'. Picking one.".format(mandatee_email))
     mandatee = madatee_results[0]
     return mandatee
 
