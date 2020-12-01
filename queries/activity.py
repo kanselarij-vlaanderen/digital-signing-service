@@ -1,3 +1,4 @@
+import os
 from string import Template
 from datetime import datetime
 from pytz import timezone
@@ -6,12 +7,14 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escap
 TIMEZONE = timezone('Europe/Brussels')
 APPLICATION_GRAPH = "http://mu.semte.ch/application"
 
-SIGNING_PREP_ACT_TYPE_URI = "http://example.com/concept/123"
+SIGNING_PREP_ACT_TYPE_URI = "http://kanselarij.vo.data.gift/id/concept/activiteit-types/001d38fb-b285-41ef-a252-4e70208e9266"
 
-SIGNING_ACT_TYPE_URI = "http://example.com/concept/123"
+SIGNING_ACT_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/publicatie/Handtekenactiviteit"
 
 SH_DOC_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/signinghub/Document"
-SH_DOC_BASE_URI = "http://example.com/package/{package_id}/document/{document_id}"
+
+sh_package_base_uri = os.environ.get("SIGNINGHUB_API_URL", "http://kanselarij.vo.data.gift/").strip("/") + "/"
+SH_DOC_BASE_URI = "{}package/{{package_id}}/document/{{document_id}}".format(sh_package_base_uri)
 
 def construct_insert_signing_prep_activity(activity,
                                            signing_subcase_uri,

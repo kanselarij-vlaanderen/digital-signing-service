@@ -6,7 +6,7 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escap
 
 TIMEZONE = timezone('Europe/Brussels')
 SESSION_GRAPH = "http://mu.semte.ch/graphs/sessions"
-SIGNINGHUB_SESSION_BASE_URI = "http://example.com/signinghub-sessions/"
+SIGNINGHUB_SESSION_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-sessions/"
 
 def construct_get_mu_session_query(mu_session_uri):
     query_template = Template("""

@@ -5,7 +5,7 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escap
 
 APPLICATION_GRAPH = "http://mu.semte.ch/application"
 
-SIGNING_ACT_TYPE_URI = "http://example.com/concept/123"
+SIGNING_ACT_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/publicatie/Handtekenactiviteit"
 
 def construct_get_mandatee_by_id(mandatee_id, graph=APPLICATION_GRAPH):
     query_template = Template("""
