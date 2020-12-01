@@ -1,6 +1,6 @@
 from flask import g, request, make_response, redirect
 from helpers import log
-from .authentication import signinghub_session_required
+from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
 from .jsonapi import jsonapi_required
 from .lib.pub_flow import get_subcase_from_pub_flow_id
 from .lib.activity import get_signing_preps_from_subcase, \
@@ -124,11 +124,11 @@ def signinghub_callback():
     if action == "none":
         log("Someone looked at package_id '{}' through SigningHub Iframe")
     elif action == "shared": # Start pubflow. Normally handled through API call wired to custom button.
-        # TODO: signinghub_session_required, but login @ SigningHub with Kaleidos sudo account 
+        ensure_signinghub_machine_user_session() # provides g.sh_session
         sig_prep = get_signing_prep_from_sh_package_id(sh_package_id)
         update_activities_signing_started(sig_prep["uri"])
     elif action in ("signed", "declined", "reviewed"):
-        # TODO: signinghub_session_required, but login @ SigningHub with Kaleidos sudo account 
+        ensure_signinghub_machine_user_session() # provides g.sh_session
         update_signing_status(sh_package_id)
     elif action == "forbidden":
         log("Someone tried to access forbidden package_id '{}' through SigningHub Iframe")
