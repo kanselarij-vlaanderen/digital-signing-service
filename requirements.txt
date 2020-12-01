@@ -1,1 +1,1 @@
-git+https://github.com/kanselarij-vlaanderen/signinghub-api-client.git@be98dc1e3ddd70681d709abd18d1d3a3e1e76082
+git+https://github.com/kanselarij-vlaanderen/signinghub-api-client.git@6d419772c13d3ec6dc3cc7fd72ee3d2914924924
