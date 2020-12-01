@@ -1,2 +1,2 @@
 pytz
-git+https://github.com/kanselarij-vlaanderen/signinghub-api-client.git@6d419772c13d3ec6dc3cc7fd72ee3d2914924924
+git+https://github.com/kanselarij-vlaanderen/signinghub-api-client.git@5735bbd716e196c08949274c4ef321630db27a54
