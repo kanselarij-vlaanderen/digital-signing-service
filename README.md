@@ -7,8 +7,8 @@ A service providing Kaleidos the functionality for digitally signing documents.
 - `SIGNINGHUB_API_URL`: Base-URL of the Signinghub-API
 
 API-client identification at SigningHub. For more info, see the SigningHub user-manual on [managing third party integrations](https://manuals.ascertia.com/SigningHubv7/default.aspx#pageid=1111).
-- `SIGNINGHUB_CLIENT_ID`: API client-id
-- `SIGNINGHUB_CLIENT_SECRET`: Base-URL of the Signinghub-API
+- `SIGNINGHUB_CLIENT_ID`
+- `SIGNINGHUB_CLIENT_SECRET`
 
 Authentication at VO-network, through SSL client certificate authentication
 - `CERT_FILE_PATH`: Path to client certificate file (`.pem`-format)
