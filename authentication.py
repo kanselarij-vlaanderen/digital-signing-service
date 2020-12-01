@@ -10,7 +10,7 @@ from .queries.session import construct_get_mu_session_query, \
     construct_insert_signinghub_session_query, \
     construct_get_signinghub_machine_user_session_query, \
     construct_insert_signinghub_machine_user_session_query
-from .sudo_query import sudo_query, sudo_update
+from .sudo_query import query as sudo_query, update as sudo_update
 from .lib.exceptions import NoQueryResultsException
 
 TIMEZONE = timezone('Europe/Brussels')
