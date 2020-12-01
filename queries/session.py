@@ -81,3 +81,53 @@ WHERE {
         expiry_time=sparql_escape_datetime(signinghub_session["expiry_time"].astimezone(TIMEZONE)),
         token=sparql_escape_string(signinghub_session["token"]))
     return query_string
+
+# TODO: a lot of code/query duplication down here when comparing to above.
+# Once we establish a cleaner model for sessions this can be handled in a better way
+
+def construct_get_signinghub_machine_user_session_query():
+    query_template = Template("""
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+SELECT (?signinghubSession AS ?uri) ?expiryTime ?token
+WHERE {
+    GRAPH $session_graph {
+        ?signinghubSession a ext:SigninghubSudoSession ;
+            ext:expiryTime ?expiryTime ;
+            ext:token ?token .
+        BIND($now as ?now)
+        FILTER (?expiryTime > ?now)
+    }
+}
+ORDER BY DESC(?expiryTime)
+LIMIT 1
+""")
+    query_string = query_template.substitute(
+        session_graph=sparql_escape_uri(SESSION_GRAPH),
+        now=sparql_escape_datetime(datetime.now(tz=TIMEZONE)))
+    return query_string
+
+def construct_insert_signinghub_machine_user_session_query(signinghub_session):
+    signinghub_session["uuid"] = generate_uuid()
+    signinghub_session["uri"] = SIGNINGHUB_SESSION_BASE_URI + signinghub_session["uuid"]
+    query_template = Template("""
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+INSERT DATA {
+    GRAPH $session_graph {
+        $signinghub_session a ext:SigninghubSudoSession ;
+            dct:created $creation_time ;
+            ext:expiryTime $expiry_time ;
+            ext:token $token .
+    }
+}""")
+    query_string = query_template.substitute(
+        session_graph=sparql_escape_uri(SESSION_GRAPH),
+        signinghub_session=sparql_escape_uri(signinghub_session["uri"]),
+        creation_time=sparql_escape_datetime(signinghub_session["creation_time"].astimezone(TIMEZONE)),
+        expiry_time=sparql_escape_datetime(signinghub_session["expiry_time"].astimezone(TIMEZONE)),
+        token=sparql_escape_string(signinghub_session["token"]))
+    return query_string
