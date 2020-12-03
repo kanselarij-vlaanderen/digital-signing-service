@@ -8,8 +8,8 @@ TIMEZONE = timezone('Europe/Brussels')
 APPLICATION_GRAPH = "http://mu.semte.ch/application"
 
 SIGNING_PREP_ACT_TYPE_URI = "http://kanselarij.vo.data.gift/id/concept/activiteit-types/001d38fb-b285-41ef-a252-4e70208e9266"
-
 SIGNING_ACT_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/publicatie/Handtekenactiviteit"
+SIGNING_WRAP_TYPE_URI = "http://kanselarij.vo.data.gift/id/concept/activiteit-types/d05978cb-3219-4ed4-9ab5-45b03c58a0ae"
 
 SH_DOC_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/signinghub/Document"
 
@@ -254,4 +254,47 @@ WHERE {
         sh_document_id=sparql_escape_string(sh_document_id),
         sig_type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
         mandatee=sparql_escape_uri(mandatee_uri),
+        end_time=sparql_escape_datetime(end_time))
+
+def construct_insert_wrap_up_activity(sh_package_id,
+                                      sh_document_id,
+                                      signed_doc,
+                                      end_time,
+                                      graph=APPLICATION_GRAPH):
+    query_template = Template("""
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+
+INSERT {
+    GRAPH $graph {
+        ?signing_wrap_up a prov:Activity ;
+            dct:type $wrap_up_type ;
+            prov:wasInformedBy ?signing ;
+            dossier:Activiteit.einddatum $end_time ;
+            prov:generated $signed_doc .
+    }
+}
+WHERE {
+    GRAPH $graph {
+        ?signing_prep a prov:Activity ;
+            dct:type $prep_type ;
+            sh:document ?sh_doc .
+        ?sh_doc sh:packageId $sh_package_id ;
+            sh:documentId $sh_document_id .
+        ?signing a prov:Activity ;
+            dct:type $sig_type ;
+            prov:wasInformedBy ?signing_prep .
+    }
+}
+""")
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI),
+        sig_type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
+        wrap_up_type=sparql_escape_uri(SIGNING_WRAP_TYPE_URI),
+        sh_package_id=sparql_escape_string(sh_package_id),
+        sh_document_id=sparql_escape_string(sh_document_id),
+        signed_doc=sparql_escape_uri(signed_doc),
         end_time=sparql_escape_datetime(end_time))

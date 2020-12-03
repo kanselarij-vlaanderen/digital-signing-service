@@ -29,4 +29,4 @@ The available API-endpoints are documented in an [OpenAPI v3](http://spec.openap
 - Signing subcase type: `"http://kanselarij.vo.data.gift/id/concept/procedurestap-types/fd98c5d0-a218-4fbe-a4d3-029c79aea5c5`
 - Signing preparation activity type: `http://kanselarij.vo.data.gift/id/concept/activiteit-types/001d38fb-b285-41ef-a252-4e70208e9266`
 - Signing activity type: `http://mu.semte.ch/vocabularies/ext/publicatie/Handtekenactiviteit`
-
+- Signing "wrap-up" type (receiving the final signed document): `http://kanselarij.vo.data.gift/id/concept/activiteit-types/d05978cb-3219-4ed4-9ab5-45b03c58a0ae`
