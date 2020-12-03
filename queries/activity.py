@@ -214,10 +214,10 @@ WHERE {
         time=sparql_escape_datetime(time))
 
 def construct_update_signing_activity(sh_package_id,
-                            sh_document_id,
-                            mandatee_uri,
-                            end_time,
-                            graph=APPLICATION_GRAPH):
+                                      sh_document_id,
+                                      mandatee_uri,
+                                      end_time,
+                                      graph=APPLICATION_GRAPH):
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
