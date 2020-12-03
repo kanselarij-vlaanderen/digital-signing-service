@@ -300,7 +300,6 @@ WHERE {
         end_time=sparql_escape_datetime(end_time))
 
 def construct_get_wrap_up_activity(sh_package_id,
-                                   sh_document_id,
                                    graph=APPLICATION_GRAPH):
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
@@ -314,8 +313,7 @@ WHERE {
         ?signing_prep a prov:Activity ;
             dct:type $prep_type ;
             sh:document ?sh_doc .
-        ?sh_doc sh:packageId $sh_package_id ;
-            sh:documentId $sh_document_id .
+        ?sh_doc sh:packageId $sh_package_id .
         ?signing a prov:Activity ;
             dct:type $type ;
             prov:wasInformedBy ?signing_prep .
@@ -331,5 +329,4 @@ WHERE {
         prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI),
         sig_type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
         wrap_up_type=sparql_escape_uri(SIGNING_WRAP_TYPE_URI),
-        sh_package_id=sparql_escape_string(sh_package_id),
-        sh_document_id=sparql_escape_string(sh_document_id))
+        sh_package_id=sparql_escape_string(sh_package_id))
