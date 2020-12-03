@@ -94,3 +94,31 @@ WHERE {
         name=sparql_escape_string(document["name"]),
         created=sparql_escape_datetime(document["created"]),
         file=sparql_escape_uri(file_uri))
+
+def construct_attach_document_to_previous_version(doc_uri, prev_ver_doc_uri, graph=APPLICATION_GRAPH):
+    """ Also handles attaching the new version to the previous one's case"""
+    query_template = Template("""
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX pav: <http://purl.org/pav/>
+
+INSERT {
+    GRAPH $graph {
+        $doc pav:previousVersion $prev_doc .
+        ?case dossier:Dossier.bestaatUit $doc .
+    }
+}
+WHERE {
+    GRAPH $graph {
+        $doc a dossier:Stuk .
+        $prev_doc a dossier:Stuk .
+        OPTIONAL {
+            ?case a dossier:Dossier ;
+                dossier:Dossier.bestaatUit $prev_doc .
+        }
+    }
+}
+""")
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        doc=sparql_escape_uri(doc_uri),
+        prev_doc=sparql_escape_uri(prev_ver_doc_uri))
