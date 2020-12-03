@@ -105,13 +105,14 @@ PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
-SELECT (?signing_prep AS ?uri)
+SELECT DISTINCT (?signing_prep AS ?uri) ?sh_document_id
 WHERE {
     GRAPH $graph {
         ?signing_prep a prov:Activity ;
             dct:type $prep_type .
         ?signing_prep sh:document ?sh_doc .
-        ?sh_doc sh:packageId $sh_package_id .
+        ?sh_doc sh:packageId $sh_package_id ;
+            sh:documentId ?sh_document_id .
     }
 }
 """)
