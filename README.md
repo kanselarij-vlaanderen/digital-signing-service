@@ -18,6 +18,26 @@ Credentials of the Kaleidos machine user at SigningHub
 - `SIGNINGHUB_MACHINE_ACCOUNT_USERNAME`
 - `SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD`
 
+
+#### docker-compose snippet
+
+```yml
+  digital-signing:
+    image: kanselarij/digital-signing # Make sure to specify a tagged version here
+    environment:
+      SIGNINGHUB_API_URL: ""
+      SIGNINGHUB_CLIENT_ID: ""
+      SIGNINGHUB_CLIENT_SECRET: ""
+      CERT_FILE_PATH: ""
+      KEY_FILE_PATH: ""
+      SIGNINGHUB_MACHINE_ACCOUNT_USERNAME: ""
+      SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD: ""
+    volumes:
+      -./data/files:/share
+      -./config/digital-signing/cert:/cert
+    restart: always
+```
+
 ## REST API
 
 The available API-endpoints are documented in an [OpenAPI v3](http://spec.openapis.org/oas/v3.0.3) spec-file `openapi.yaml`.
