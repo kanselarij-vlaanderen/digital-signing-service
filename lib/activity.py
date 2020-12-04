@@ -105,6 +105,10 @@ def update_signing_status(sh_package_id):
                                                                  end_time,
                                                                  graph=SIGNING_ACT_GRAPH)
                 sudo_update(query_string)
+        else:
+            log("User {} didn't perform a sign-action, but rather '{}'. \
+                No update to the signing status performed.".format(user["user_email"], user["process_status"]))
+
 def wrap_up_signing_flow(sh_package_id):
     workflow_details = g.sh_session.get_workflow_details(sh_package_id)
     workflow_status = workflow_details["workflow"]["workflow_status"]
