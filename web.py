@@ -9,7 +9,8 @@ from .lib.activity import get_signing_preps_from_subcase, \
     create_signing_prep_activity, \
     add_signing_activity, \
     update_activities_signing_started, \
-    update_signing_status
+    update_signing_status, \
+    wrap_up_signing_flow
 from .lib.file import get_file_by_id
 from .lib.mandatee import get_mandatee_by_id, get_signing_mandatees
 from .lib.exceptions import NoQueryResultsException
@@ -130,6 +131,7 @@ def signinghub_callback():
     elif action in ("signed", "declined", "reviewed"):
         ensure_signinghub_machine_user_session() # provides g.sh_session
         update_signing_status(sh_package_id)
+        wrap_up_signing_flow(sh_package_id) # Attempt to wrap up in case this was the last signature required
     elif action == "forbidden":
         log("Someone tried to access forbidden package_id '{}' through SigningHub Iframe")
 
