@@ -102,7 +102,7 @@ def open_new_signinghub_machine_user_session():
     return sh_session
 
 def ensure_signinghub_machine_user_session():
-    sh_session_query = construct_get_signinghub_machine_user_session_query()
+    sh_session_query = construct_get_signinghub_machine_user_session_query(SIGNINGHUB_OAUTH_TOKEN_EP)
     sh_session_results = sudo_query(sh_session_query)['results']['bindings']
     if sh_session_results: # Restore SigningHub session
         log("Found a valid SigningHub session.")

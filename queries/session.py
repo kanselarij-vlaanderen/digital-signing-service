@@ -126,7 +126,7 @@ WHERE {
         now=sparql_escape_datetime(datetime.now(tz=TIMEZONE)))
     return query_string
 
-def construct_get_signinghub_machine_user_session_query():
+def construct_get_signinghub_machine_user_session_query(signinghub_token_endpoint):
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX oauth-2.0: <http://kanselarij.vo.data.gift/vocabularies/oauth-2.0-session/>
@@ -149,5 +149,6 @@ LIMIT 1
 """)
     query_string = query_template.substitute(
         session_graph=sparql_escape_uri(SESSION_GRAPH),
+        signinghub_token_endpoint=sparql_escape_uri(signinghub_token_endpoint),
         now=sparql_escape_datetime(datetime.now(tz=TIMEZONE)))
     return query_string
