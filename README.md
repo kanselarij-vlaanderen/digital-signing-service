@@ -14,6 +14,8 @@ Authentication at VO-network, through SSL client certificate authentication
 - `CERT_FILE_PATH`: Path to client certificate file (`.pem`-format)
 - `KEY_FILE_PATH`: Path to client private key file
 
+_Note that both of above parameters must be set to activate client certificate authentication. If omitted, no client cert. auth. will be attempted._
+
 Credentials of the Kaleidos machine user at SigningHub
 - `SIGNINGHUB_MACHINE_ACCOUNT_USERNAME`
 - `SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD`

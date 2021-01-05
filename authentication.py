@@ -19,6 +19,7 @@ TIMEZONE = timezone('Europe/Brussels')
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
 CERT_FILE_PATH = os.environ.get("CERT_FILE_PATH")
 KEY_FILE_PATH = os.environ.get("KEY_FILE_PATH")
+CLIENT_CERT_AUTH_ENABLED = CERT_FILE_PATH and KEY_FILE_PATH
 
 SIGNINGHUB_SSO_METHOD = "test" # TODO
 
@@ -32,7 +33,8 @@ SIGNINGHUB_SESSION_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-sess
 
 def open_new_signinghub_session(oauth_token, mu_session_uri):
     sh_session = SigningHubSession(SIGNINGHUB_API_URL)
-    sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
+    if CLIENT_CERT_AUTH_ENABLED:
+        sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
     sh_session.authenticate_sso(oauth_token, SIGNINGHUB_SSO_METHOD)
     sh_session_params = {
         "creation_time": sh_session.last_successful_auth_time,
@@ -58,7 +60,8 @@ def ensure_signinghub_session(mu_session_uri):
         log("Found a valid SigningHub session.")
         sh_session_result = sh_session_results[0]
         g.sh_session = SigningHubSession(SIGNINGHUB_API_URL)
-        g.sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
+        if CLIENT_CERT_AUTH_ENABLED:
+            g.sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
         g.sh_session.access_token = sh_session_result["token"]
     else: # Open new SigningHub session
         log("No valid SigningHub session found. Opening a new one ...")
@@ -79,7 +82,8 @@ def signinghub_session_required(f):
 
 def open_new_signinghub_machine_user_session():
     sh_session = SigningHubSession(SIGNINGHUB_API_URL)
-    sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
+    if CLIENT_CERT_AUTH_ENABLED:
+        sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
     sh_session.authenticate(SIGNINGHUB_API_CLIENT_ID,
                             SIGNINGHUB_API_CLIENT_SECRET,
                             "password", # grant type
@@ -104,7 +108,8 @@ def ensure_signinghub_machine_user_session():
         log("Found a valid SigningHub session.")
         sh_session_result = sh_session_results[0]
         g.sh_session = SigningHubSession(SIGNINGHUB_API_URL)
-        g.sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
+        if CLIENT_CERT_AUTH_ENABLED:
+            g.sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
         g.sh_session.access_token = sh_session_result["token"]
     else: # Open new SigningHub session
         log("No valid SigningHub session found. Opening a new one ...")
