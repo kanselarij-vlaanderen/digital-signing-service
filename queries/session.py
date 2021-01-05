@@ -135,7 +135,7 @@ PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 SELECT (?signinghubSession AS ?uri) ?expiryTime ?token
 WHERE {
     GRAPH $session_graph {
-        ?signinghubSession a ext:SigninghubSudoSession ;
+        ?signinghubSession a ext:SigninghubSudoSession .
         ?signinghubSession oauth-2.0:hasEndpointURI $signinghub_token_endpoint ;
             oauth-2.0:hasTokenValue ?tokenUri.
         ?tokenUri oauth-2.0:hasTokenValue ?token ;
