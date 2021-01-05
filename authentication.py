@@ -4,12 +4,13 @@ from pytz import timezone
 from flask import g, request
 from signinghub_api_client.client import SigningHubSession
 from signinghub_api_client.exceptions import AuthenticationException
-from helpers import log, error
+from helpers import log, error, generate_uuid
 from .queries.session import construct_get_mu_session_query, \
     construct_get_signinghub_session_query, \
     construct_insert_signinghub_session_query, \
+    construct_attach_signinghub_session_to_mu_session_query, \
     construct_get_signinghub_machine_user_session_query, \
-    construct_insert_signinghub_machine_user_session_query
+    construct_mark_signinghub_session_as_machine_users_query
 from .sudo_query import query as sudo_query, update as sudo_update
 from .lib.exceptions import NoQueryResultsException
 
@@ -25,6 +26,9 @@ SIGNINGHUB_API_CLIENT_ID = os.environ.get("SIGNINGHUB_CLIENT_ID")
 SIGNINGHUB_API_CLIENT_SECRET = os.environ.get("SIGNINGHUB_CLIENT_SECRET") # API key
 SIGNINGHUB_MACHINE_ACCOUNT_USERNAME = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_USERNAME")
 SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD")
+SIGNINGHUB_OAUTH_TOKEN_EP = SIGNINGHUB_API_URL.strip("/") + "authenticate" # https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1010
+
+SIGNINGHUB_SESSION_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-sessions/"
 
 def open_new_signinghub_session(oauth_token, mu_session_uri):
     sh_session = SigningHubSession(SIGNINGHUB_API_URL)
@@ -33,10 +37,13 @@ def open_new_signinghub_session(oauth_token, mu_session_uri):
     sh_session_params = {
         "creation_time": sh_session.last_successful_auth_time,
         "expiry_time": sh_session.last_successful_auth_time + sh_session.access_token_expiry_time,
-        "token": sh_session.access_token
+        "token": sh_session.access_token,
+        "uri": SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
     }
     sh_session_query = construct_insert_signinghub_session_query(sh_session_params, mu_session_uri)
     sudo_update(sh_session_query)
+    sh_session_link_query = construct_attach_signinghub_session_to_mu_session_query(sh_session_params["uri"], mu_session_uri)
+    sudo_update(sh_session_link_query)
     return sh_session
 
 def ensure_signinghub_session(mu_session_uri):
@@ -45,7 +52,7 @@ def ensure_signinghub_session(mu_session_uri):
     if not mu_session_result:
         raise NoQueryResultsException("Didn't find a mu-session with an Oauth token.")
     mu_session = mu_session_result[0]
-    sh_session_query = construct_get_signinghub_session_query(mu_session_uri)
+    sh_session_query = construct_get_signinghub_session_query(mu_session_uri, SIGNINGHUB_OAUTH_TOKEN_EP)
     sh_session_results = sudo_query(sh_session_query)['results']['bindings']
     if sh_session_results: # Restore SigningHub session
         log("Found a valid SigningHub session.")
@@ -81,10 +88,13 @@ def open_new_signinghub_machine_user_session():
     sh_session_params = {
         "creation_time": sh_session.last_successful_auth_time,
         "expiry_time": sh_session.last_successful_auth_time + sh_session.access_token_expiry_time,
-        "token": sh_session.access_token
+        "token": sh_session.access_token,
+        "uri": SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
     }
-    sh_session_query = construct_insert_signinghub_machine_user_session_query(sh_session_params)
+    sh_session_query = construct_insert_signinghub_session_query(sh_session_params)
     sudo_update(sh_session_query)
+    sh_session_sudo_query = construct_mark_signinghub_session_as_machine_users_query(sh_session_params["uri"])
+    sudo_update(sh_session_sudo_query)
     return sh_session
 
 def ensure_signinghub_machine_user_session():
