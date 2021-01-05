@@ -27,7 +27,7 @@ SIGNINGHUB_API_CLIENT_ID = os.environ.get("SIGNINGHUB_CLIENT_ID")
 SIGNINGHUB_API_CLIENT_SECRET = os.environ.get("SIGNINGHUB_CLIENT_SECRET") # API key
 SIGNINGHUB_MACHINE_ACCOUNT_USERNAME = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_USERNAME")
 SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD")
-SIGNINGHUB_OAUTH_TOKEN_EP = SIGNINGHUB_API_URL.strip("/") + "authenticate" # https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1010
+SIGNINGHUB_OAUTH_TOKEN_EP = SIGNINGHUB_API_URL.strip("/") + "/" + "authenticate" # https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1010
 
 SIGNINGHUB_SESSION_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-sessions/"
 
