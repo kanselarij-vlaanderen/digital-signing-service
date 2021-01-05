@@ -122,7 +122,7 @@ def signinghub_machine_session_required(f):
             ensure_signinghub_machine_user_session()
             return f(*args, **kwargs)
         except AuthenticationException as ex:
-            return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.id))
+            return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.error_id))
         except NoQueryResultsException as ex:
             return error(ex.args[0])
     return decorated_function
