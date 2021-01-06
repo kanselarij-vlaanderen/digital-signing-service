@@ -43,7 +43,7 @@ WHERE {
         ?signinghubSession oauth-2.0:hasEndpointURI $signinghub_token_endpoint ;
             oauth-2.0:hasTokenValue ?tokenUri.
         ?tokenUri oauth-2.0:hasTokenValue ?token ;
-            oauth-2.0:hasExpiryTime ?expiryTime .
+            oauth-2.0:hasExpirytime ?expiryTime .
         BIND($now as ?now)
         FILTER (?now < ?expiryTime)
     }
@@ -145,7 +145,7 @@ WHERE {
         ?signinghubSession oauth-2.0:hasEndpointURI $signinghub_token_endpoint ;
             oauth-2.0:hasTokenValue ?tokenUri.
         ?tokenUri oauth-2.0:hasTokenValue ?token ;
-            oauth-2.0:hasExpiryTime ?expiryTime .
+            oauth-2.0:hasExpirytime ?expiryTime .
         BIND($now as ?now)
         FILTER (?now < ?expiryTime)
     }
