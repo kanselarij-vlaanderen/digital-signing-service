@@ -1,3 +1,4 @@
+import os
 from string import Template
 from datetime import datetime
 from pytz import timezone
@@ -7,6 +8,9 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escap
 TIMEZONE = timezone('Europe/Brussels')
 SESSION_GRAPH = "http://mu.semte.ch/graphs/sessions"
 SIGNINGHUB_TOKEN_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-tokens/"
+
+SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
+SIGNINGHUB_OAUTH_TOKEN_EP = SIGNINGHUB_API_URL.strip("/") + "/" + "authenticate" # https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1010
 
 def construct_get_mu_session_query(mu_session_uri):
     query_template = Template("""
@@ -26,7 +30,7 @@ WHERE {
         mu_session=sparql_escape_uri(mu_session_uri))
     return query_string
 
-def construct_get_signinghub_session_query(mu_session_uri, signinghub_token_endpoint):
+def construct_get_signinghub_session_query(mu_session_uri):
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX oauth-2.0: <http://kanselarij.vo.data.gift/vocabularies/oauth-2.0-session/>
@@ -50,7 +54,7 @@ LIMIT 1
     query_string = query_template.substitute(
         session_graph=sparql_escape_uri(SESSION_GRAPH),
         mu_session=sparql_escape_uri(mu_session_uri),
-        signinghub_token_endpoint=sparql_escape_uri(signinghub_token_endpoint),
+        signinghub_token_endpoint=sparql_escape_uri(SIGNINGHUB_OAUTH_TOKEN_EP),
         now=sparql_escape_datetime(datetime.now(tz=TIMEZONE)))
     return query_string
 
@@ -126,7 +130,7 @@ WHERE {
         now=sparql_escape_datetime(datetime.now(tz=TIMEZONE)))
     return query_string
 
-def construct_get_signinghub_machine_user_session_query(signinghub_token_endpoint):
+def construct_get_signinghub_machine_user_session_query():
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX oauth-2.0: <http://kanselarij.vo.data.gift/vocabularies/oauth-2.0-session/>
@@ -149,6 +153,6 @@ LIMIT 1
 """)
     query_string = query_template.substitute(
         session_graph=sparql_escape_uri(SESSION_GRAPH),
-        signinghub_token_endpoint=sparql_escape_uri(signinghub_token_endpoint),
+        signinghub_token_endpoint=sparql_escape_uri(SIGNINGHUB_OAUTH_TOKEN_EP),
         now=sparql_escape_datetime(datetime.now(tz=TIMEZONE)))
     return query_string

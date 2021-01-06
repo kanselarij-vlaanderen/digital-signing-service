@@ -27,7 +27,6 @@ SIGNINGHUB_API_CLIENT_ID = os.environ.get("SIGNINGHUB_CLIENT_ID")
 SIGNINGHUB_API_CLIENT_SECRET = os.environ.get("SIGNINGHUB_CLIENT_SECRET") # API key
 SIGNINGHUB_MACHINE_ACCOUNT_USERNAME = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_USERNAME")
 SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD")
-SIGNINGHUB_OAUTH_TOKEN_EP = SIGNINGHUB_API_URL.strip("/") + "/" + "authenticate" # https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1010
 
 SIGNINGHUB_SESSION_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-sessions/"
 
@@ -54,7 +53,7 @@ def ensure_signinghub_session(mu_session_uri):
     if not mu_session_result:
         raise NoQueryResultsException("Didn't find a mu-session with an Oauth token.")
     mu_session = mu_session_result[0]
-    sh_session_query = construct_get_signinghub_session_query(mu_session_uri, SIGNINGHUB_OAUTH_TOKEN_EP)
+    sh_session_query = construct_get_signinghub_session_query(mu_session_uri)
     sh_session_results = sudo_query(sh_session_query)['results']['bindings']
     if sh_session_results: # Restore SigningHub session
         log("Found a valid SigningHub session.")
@@ -102,7 +101,7 @@ def open_new_signinghub_machine_user_session():
     return sh_session
 
 def ensure_signinghub_machine_user_session():
-    sh_session_query = construct_get_signinghub_machine_user_session_query(SIGNINGHUB_OAUTH_TOKEN_EP)
+    sh_session_query = construct_get_signinghub_machine_user_session_query()
     sh_session_results = sudo_query(sh_session_query)['results']['bindings']
     if sh_session_results: # Restore SigningHub session
         log("Found a valid SigningHub session.")
