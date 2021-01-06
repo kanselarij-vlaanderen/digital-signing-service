@@ -42,7 +42,7 @@ def open_new_signinghub_session(oauth_token, mu_session_uri):
         "token": sh_session.access_token,
         "uri": SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
     }
-    sh_session_query = construct_insert_signinghub_session_query(sh_session_params, mu_session_uri)
+    sh_session_query = construct_insert_signinghub_session_query(sh_session_params)
     sudo_update(sh_session_query)
     sh_session_link_query = construct_attach_signinghub_session_to_mu_session_query(sh_session_params["uri"], mu_session_uri)
     sudo_update(sh_session_link_query)
