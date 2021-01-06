@@ -68,6 +68,7 @@ PREFIX oauth-2.0: <http://kanselarij.vo.data.gift/vocabularies/oauth-2.0-session
 INSERT DATA {
     GRAPH $session_graph {
         $signinghub_session a oauth-2.0:OauthSession ;
+            oauth-2.0:hasEndpointURI $signinghub_token_endpoint ;
             oauth-2.0:hasTokenValue $token_uri .
         $token_uri a oauth-2.0:BearerToken ;
             dct:created $creation_time ;
@@ -78,6 +79,7 @@ INSERT DATA {
     query_string = query_template.substitute(
         session_graph=sparql_escape_uri(SESSION_GRAPH),
         signinghub_session=sparql_escape_uri(signinghub_session["uri"]),
+        signinghub_token_endpoint=sparql_escape_uri(SIGNINGHUB_OAUTH_TOKEN_EP),
         token_uri=sparql_escape_uri(signinghub_token_uri),
         creation_time=sparql_escape_datetime(signinghub_session["creation_time"].astimezone(TIMEZONE)),
         expiry_time=sparql_escape_datetime(signinghub_session["expiry_time"].astimezone(TIMEZONE)),
