@@ -116,7 +116,7 @@ INSERT {
 }
 WHERE {
     GRAPH $session_graph {
-        ?signinghub_session a oauth-2.0:OauthSession .
+        $signinghub_session a oauth-2.0:OauthSession .
     }
 }
 """)
