@@ -61,10 +61,10 @@ def ensure_signinghub_session(mu_session_uri):
         g.sh_session = SigningHubSession(SIGNINGHUB_API_URL)
         if CLIENT_CERT_AUTH_ENABLED:
             g.sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
-        g.sh_session.access_token = sh_session_result["token"]
+        g.sh_session.access_token = sh_session_result["token"]["value"]
     else: # Open new SigningHub session
         log("No valid SigningHub session found. Opening a new one ...")
-        g.sh_session = open_new_signinghub_session(mu_session["oauthToken"], mu_session_uri)
+        g.sh_session = open_new_signinghub_session(mu_session["oauthToken"]["value"], mu_session_uri)
 
 def signinghub_session_required(f):
     @wraps(f)
@@ -109,7 +109,7 @@ def ensure_signinghub_machine_user_session():
         g.sh_session = SigningHubSession(SIGNINGHUB_API_URL)
         if CLIENT_CERT_AUTH_ENABLED:
             g.sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
-        g.sh_session.access_token = sh_session_result["token"]
+        g.sh_session.access_token = sh_session_result["token"]["value"]
     else: # Open new SigningHub session
         log("No valid SigningHub session found. Opening a new one ...")
         g.sh_session = open_new_signinghub_machine_user_session()

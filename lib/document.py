@@ -17,7 +17,7 @@ def get_file_for_document(document_uri):
     file_results = query(query_string)['results']['bindings']
     if not file_results:
         raise NoQueryResultsException("No pdf-file found for document by uri <{}>".format(document_uri))
-    file = file_results[0]
+    file = {key: value["value"] for key, value in file_results[0].items()}
     return file
 
 def download_sh_doc_to_kaleidos_doc(sh_package_id, sh_document_id, document_name):

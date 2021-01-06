@@ -50,6 +50,7 @@ def get_signing_preps_from_subcase(signing_subcase_uri):
     signing_prep_results = query(query_string)['results']['bindings']
     if not signing_prep_results:
         raise NoQueryResultsException("No signing prep found within subcase <{}>".format(signing_subcase_uri))
+    signing_prep_results = [{k: v["value"] for k, v in res.items()} for res in signing_prep_results]
     return signing_prep_results
 
 def get_signing_prep_from_sh_package_id(sh_package_id):
@@ -57,14 +58,15 @@ def get_signing_prep_from_sh_package_id(sh_package_id):
     signing_prep_results = query(query_string)['results']['bindings']
     if not signing_prep_results:
         raise NoQueryResultsException("No signing prep found for sh package id '{}'".format(sh_package_id))
-    return signing_prep_results[0]
+    signing_prep_result = {k: v["value"] for k, v in signing_prep_results[0].items()}
+    return signing_prep_result
 
 def get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri):
     query_string = construct_get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri)
     signing_prep_results = query(query_string)['results']['bindings']
     if not signing_prep_results:
         raise NoQueryResultsException("No signing prep found within subcase <{}> for file <{}>".format(signing_subcase_uri, file_uri))
-    signing_prep = signing_prep_results[0]
+    signing_prep = {k: v["value"] for k, v in signing_prep_results[0].items()}
     signing_prep["signing"] = [r["signing"] for r in signing_prep_results if r["signing"]] # Many signing activities for one prep activity
     return signing_prep
 
@@ -118,10 +120,10 @@ def wrap_up_signing_flow(sh_package_id):
         if not wrap_up_results:
             signing_prep_act_qs = construct_get_signing_prep_from_sh_package_id(sh_package_id, SIGNING_ACT_GRAPH)
             signing_prep_act = sudo_query(signing_prep_act_qs)['results']['bindings'][0] # Only 1 doc per activity normally
-            new_doc = download_sh_doc_to_kaleidos_doc(sh_package_id, signing_prep_act["sh_document_id"])
-            prev_doc_qs = construct_get_document_for_file(signing_prep_act["used_file"], SIGNED_DOCS_GRAPH)
+            new_doc = download_sh_doc_to_kaleidos_doc(sh_package_id, signing_prep_act["sh_document_id"]["value"])
+            prev_doc_qs = construct_get_document_for_file(signing_prep_act["used_file"]["value"], SIGNED_DOCS_GRAPH)
             prev_doc = sudo_query(prev_doc_qs)['results']['bindings'][0]
-            attach_qs = construct_attach_document_to_previous_version(new_doc["uri"], prev_doc["uri"], SIGNED_DOCS_GRAPH)
+            attach_qs = construct_attach_document_to_previous_version(new_doc["uri"], prev_doc["uri"]["value"], SIGNED_DOCS_GRAPH)
             sudo_update(attach_qs)
         else:
             log("Attempt to wrap up signing-flow was aborted because a wrap-up activity already exists (package-id {})".format(sh_package_id))
