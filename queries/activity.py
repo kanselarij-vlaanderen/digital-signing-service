@@ -22,7 +22,7 @@ def construct_insert_signing_prep_activity(activity,
                                            sh_package_id,
                                            sh_document_id,
                                            graph=APPLICATION_GRAPH):
-    sh_doc_uri = SH_DOC_BASE_URI.format(sh_package_id, sh_document_id)
+    sh_doc_uri = SH_DOC_BASE_URI.format(package_id=sh_package_id, document_id=sh_document_id)
     query_template = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
