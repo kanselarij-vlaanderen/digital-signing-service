@@ -88,7 +88,7 @@ def construct_get_file_by_id(file_id, graph=APPLICATION_GRAPH):
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-W
+
 SELECT (?file AS ?uri)
 WHERE {
     GRAPH $graph {
