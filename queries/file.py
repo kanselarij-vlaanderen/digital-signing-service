@@ -67,7 +67,7 @@ PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
 PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
 PREFIX dbpedia: <http://dbpedia.org/ontology/>
 
-SELECT ?uuid ?name ?size ?extension ?physicalFile
+SELECT (?file_uri AS ?uri) ?uuid ?name ?size ?extension ?physicalFile
 WHERE {
     GRAPH $graph {
         $file_uri a nfo:FileDataObject ;
@@ -76,13 +76,14 @@ WHERE {
             nfo:fileSize ?size ;
             dbpedia:fileExtension ?extension ;
             ^nie:dataSource ?physicalFile .
+        BIND($file_uri AS ?file_uri)
         ?physicalFile a nfo:FileDataObject .
     }
 }
 """)
     return query_template.substitute(
         graph=sparql_escape_uri(graph),
-        uri=sparql_escape_uri(file_uri))
+        file_uri=sparql_escape_uri(file_uri))
 
 def construct_get_file_by_id(file_id, graph=APPLICATION_GRAPH):
     query_template = Template("""
