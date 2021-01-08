@@ -40,8 +40,8 @@ def create_signing_prep_activity(signing_subcase_uri, file_uri):
     act_query_str = construct_insert_signing_prep_activity(activity,
                                                            signing_subcase_uri,
                                                            file_uri,
-                                                           sh_package["package_id"],
-                                                           sh_document["documentid"])
+                                                           str(sh_package["package_id"]),
+                                                           str(sh_document["documentid"]))
     update(act_query_str)
     return activity
 
