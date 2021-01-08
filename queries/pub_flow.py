@@ -4,7 +4,7 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string
 APPLICATION_GRAPH = "http://mu.semte.ch/application"
 
 PUB_FLOW_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/publicatie/Publicatieaangelegenheid"
-SIGNING_SUBC_TYPE_URI = "http://kanselarij.vo.data.gift/id/concept/procedurestap-types/fd98c5d0-a218-4fbe-a4d3-029c79aea5c5"
+SIGNING_SUBC_TYPE_URI = "http://example.com/step/e711f906-34a9-11eb-adc1-0242ac120002" # TODO: change in source data
 
 def construct_get_subcase_from_pub_flow_id(pub_flow_id,
                                            graph=APPLICATION_GRAPH):
