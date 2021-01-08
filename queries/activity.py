@@ -29,6 +29,7 @@ PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
 INSERT {
     GRAPH $graph {
