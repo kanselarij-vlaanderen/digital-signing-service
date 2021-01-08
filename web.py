@@ -21,7 +21,7 @@ def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
     return g.sh_session.get_general_profile_information()
 
-@app.route('/publication-flow/<uuid:pubf_id>/signing/files', methods=['GET'])
+@app.route('/publication-flow/<pubf_id>/signing/files', methods=['GET'])
 def pubflow_files_get(pubf_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     try:
@@ -40,7 +40,7 @@ def pubflow_files_get(pubf_id):
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
-@app.route('/publication-flow/<uuid:pubf_id>/signing/files', methods=['POST'])
+@app.route('/publication-flow/<pubf_id>/signing/files', methods=['POST'])
 @signinghub_session_required # provides g.sh_session
 @jsonapi_required
 def pubflow_files_post(pubf_id):
@@ -55,7 +55,7 @@ def pubflow_files_post(pubf_id):
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
-@app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/signers', methods=['GET'])
+@app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signers', methods=['GET'])
 def file_signers_get(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     file_uri = get_file_by_id(file_id)
@@ -76,7 +76,7 @@ def file_signers_get(pubf_id, file_id):
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
-@app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/signers', methods=['POST'])
+@app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signers', methods=['POST'])
 @signinghub_session_required # provides g.sh_session
 @jsonapi_required
 def file_signers_post(pubf_id, file_id):
@@ -92,7 +92,7 @@ def file_signers_post(pubf_id, file_id):
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
-@app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/signinghub-iframe-link', methods=['GET'])
+@app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signinghub-iframe-link', methods=['GET'])
 @signinghub_session_required # provides g.sh_session
 def signinghub_iframe_link(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
@@ -108,7 +108,7 @@ def signinghub_iframe_link(pubf_id, file_id):
     })
     redirect(integration_link, 303)
 
-@app.route('/publication-flow/<uuid:pubf_id>/signing/files/<uuid:file_id>/start', methods=['POST'])
+@app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/start', methods=['POST'])
 def start_signing(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     file_uri = get_file_by_id(file_id)
