@@ -12,12 +12,14 @@ def construct_get_subcase_from_pub_flow_id(pub_flow_id,
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
 SELECT DISTINCT (?signing_subcase AS ?uri)
 WHERE {
     GRAPH $graph {
         ?pub_flow a $pub_flow_type ;
-            mu:uuid $pub_flow_id .
+            mu:uuid $pub_flow_id ;
+            ext:doorloopt ?signing_subcase .
         ?signing_subcase a dossier:Procedurestap ;
             dct:type $subcase_type .
     }
