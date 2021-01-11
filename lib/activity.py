@@ -67,7 +67,8 @@ def get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri):
     if not signing_prep_results:
         raise NoQueryResultsException("No signing prep found within subcase <{}> for file <{}>".format(signing_subcase_uri, file_uri))
     signing_prep = {k: v["value"] for k, v in signing_prep_results[0].items()}
-    signing_prep["signing"] = [r["signing"] for r in signing_prep_results if r["signing"]] # Many signing activities for one prep activity
+    if any(["signing" in res for res in signing_prep_results]):
+        signing_prep["signing"] = [r["signing"]["value"] for r in signing_prep_results if "signing" in r] # Many signing activities for one prep activity
     return signing_prep
 
 def add_signing_activity(signing_subcase_uri, file_uri, mandatee_uri):
