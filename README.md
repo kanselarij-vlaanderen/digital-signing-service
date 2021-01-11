@@ -40,6 +40,14 @@ Credentials of the Kaleidos machine user at SigningHub
     restart: always
 ```
 
+#### Authorization
+
+Users of this service should have `:read`, `:write` and `:read-for-write` access to following rdf types
+```
+"http://www.w3.org/ns/prov#Activity"
+"http://mu.semte.ch/vocabularies/ext/signinghub/Document"
+```
+
 ## REST API
 
 The available API-endpoints are documented in an [OpenAPI v3](http://spec.openapis.org/oas/v3.0.3) spec-file `openapi.yaml`.
