@@ -58,10 +58,10 @@ def pubflow_files_post(pubf_id):
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signers', methods=['GET'])
 def file_signers_get(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
-    file_uri = get_file_by_id(file_id)
+    file_uri = get_file_by_id(file_id)["uri"]
     sig_prep_act = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
     try:
-        mandatees = get_signing_mandatees(sig_prep_act)
+        mandatees = get_signing_mandatees(sig_prep_act["uri"])
         mandatees_data = []
         for mandatee in mandatees:
             mandatees_data.append({
