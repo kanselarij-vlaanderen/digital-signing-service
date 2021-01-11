@@ -83,7 +83,7 @@ def file_signers_post(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     file_uri = get_file_by_id(file_id)
     body = request.get_json(force=True)
-    mandatees = filter(lambda f: f["type"] == "mandatees", body["data"])
+    mandatees = list(filter(lambda f: f["type"] == "mandatees", body["data"]))
     for mandatee in mandatees: # A separate first loop, to make sure given id's are valid
         mandatee["uri"] = get_mandatee_by_id(mandatee["id"])
     for mandatee in mandatees:
