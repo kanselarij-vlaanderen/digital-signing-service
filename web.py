@@ -81,11 +81,11 @@ def file_signers_get(pubf_id, file_id):
 @jsonapi_required
 def file_signers_post(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
-    file_uri = get_file_by_id(file_id)
+    file_uri = get_file_by_id(file_id)["uri"]
     body = request.get_json(force=True)
     mandatees = list(filter(lambda f: f["type"] == "mandatees", body["data"]))
     for mandatee in mandatees: # A separate first loop, to make sure given id's are valid
-        mandatee["uri"] = get_mandatee_by_id(mandatee["id"])
+        mandatee["uri"] = get_mandatee_by_id(mandatee["id"])["uri"]
     for mandatee in mandatees:
         add_signing_activity(subcase_uri, file_uri, mandatee["uri"])
     res = make_response({"data": mandatees}, 202)
