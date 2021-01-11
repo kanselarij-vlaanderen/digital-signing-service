@@ -48,7 +48,7 @@ def pubflow_files_post(pubf_id):
     body = request.get_json(force=True)
     files = list(filter(lambda f: f["type"] == "files", body["data"]))
     for file in files: # A separate first loop, to make sure given id's are valid
-        file["uri"] = get_file_by_id(file["id"])
+        file["uri"] = get_file_by_id(file["id"])["uri"]
     for file in files:
         create_signing_prep_activity(subcase_uri, file["uri"])
     res = make_response({"data": files}, 202)
