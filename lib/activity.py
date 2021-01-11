@@ -75,11 +75,11 @@ def add_signing_activity(signing_subcase_uri, file_uri, mandatee_uri):
     signing_prep = get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri)
     mandatee = get_mandatee(mandatee_uri)
     mandatee_email = get_mandatee_email(mandatee_uri)
-    g.sh_session.add_users_to_workflow(signing_prep["sh_package_id"], {
+    g.sh_session.add_users_to_workflow(signing_prep["sh_package_id"], [{
         "user_email": mandatee_email,
         "user_name": "{} {}".format(mandatee["first_name"], mandatee["family_name"]), # Not sure how/where this appears, since I expect this to be fetched from SigningHub profile info 
         "role": "SIGNER"
-    })
+    }])
     activity = {"uuid": generate_uuid()}
     activity["uri"] = SIGNING_ACT_BASE_URI + activity["uuid"]
     query_str = construct_insert_signing_activity(activity,
