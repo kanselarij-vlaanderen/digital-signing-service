@@ -15,7 +15,7 @@ PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 SELECT DISTINCT (?mandatee as ?uri)
 WHERE {
     GRAPH $graph {
-        $mandatee a mandaat:Mandataris ;
+        ?mandatee a mandaat:Mandataris ;
             mu:uuid $uuid .
     }
 }
