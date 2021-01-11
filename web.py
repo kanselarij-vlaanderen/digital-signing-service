@@ -46,7 +46,7 @@ def pubflow_files_get(pubf_id):
 def pubflow_files_post(pubf_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     body = request.get_json(force=True)
-    files = filter(lambda f: f["type"] == "files", body["data"])
+    files = list(filter(lambda f: f["type"] == "files", body["data"]))
     for file in files: # A separate first loop, to make sure given id's are valid
         file["uri"] = get_file_by_id(file["id"])
     for file in files:
