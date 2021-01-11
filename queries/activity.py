@@ -105,6 +105,7 @@ def construct_get_signing_prep_from_sh_package_id(sh_package_id,
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
 SELECT DISTINCT (?signing_prep AS ?uri) ?sh_document_id ?used_file
 WHERE {
@@ -112,7 +113,7 @@ WHERE {
         ?signing_prep a prov:Activity ;
             dct:type $prep_type .
         ?signing_prep sh:document ?sh_doc ;
-            prov:used ?used_file .
+            ext:gebruiktBestand ?used_file .
         ?sh_doc sh:packageId $sh_package_id ;
             sh:documentId ?sh_document_id .
     }
@@ -130,6 +131,7 @@ PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
 SELECT DISTINCT (?signing_prep AS ?uri) ?file ?file_id
 WHERE {
@@ -137,7 +139,7 @@ WHERE {
         ?signing_prep a prov:Activity ;
             dct:type $prep_type .
         ?signing_prep dossier:vindtPlaatsTijdens $signing_subcase .
-        ?signing_prep prov:used ?file .
+        ?signing_prep ext:gebruiktBestand ?file .
         ?file mu:uuid ?file_id .
     }
 }
