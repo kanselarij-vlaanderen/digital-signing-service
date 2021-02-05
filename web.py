@@ -96,7 +96,7 @@ def file_signers_post(pubf_id, file_id):
 @signinghub_session_required # provides g.sh_session
 def signinghub_iframe_link(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
-    file_uri = get_file_by_id(file_id)
+    file_uri = get_file_by_id(file_id)["uri"]
     signing_prep = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
     collapse_panels = request.args.get("collapse_panels", default='true', type=str)
     integration_link = g.sh_session.get_integration_link(signing_prep["sh_package_id"], {
@@ -111,7 +111,7 @@ def signinghub_iframe_link(pubf_id, file_id):
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/start', methods=['POST'])
 def start_signing(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
-    file_uri = get_file_by_id(file_id)
+    file_uri = get_file_by_id(file_id)["uri"]
     signing_prep = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
     g.sh_session.share_document_package(signing_prep["sh_package_id"])
     update_activities_signing_started(signing_prep["uri"])
