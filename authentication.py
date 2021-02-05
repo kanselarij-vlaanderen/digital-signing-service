@@ -21,8 +21,6 @@ CERT_FILE_PATH = os.environ.get("CERT_FILE_PATH")
 KEY_FILE_PATH = os.environ.get("KEY_FILE_PATH")
 CLIENT_CERT_AUTH_ENABLED = CERT_FILE_PATH and KEY_FILE_PATH
 
-SIGNINGHUB_SSO_METHOD = "test" # TODO
-
 SIGNINGHUB_API_CLIENT_ID = os.environ.get("SIGNINGHUB_CLIENT_ID")
 SIGNINGHUB_API_CLIENT_SECRET = os.environ.get("SIGNINGHUB_CLIENT_SECRET") # API key
 SIGNINGHUB_MACHINE_ACCOUNT_USERNAME = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_USERNAME")
@@ -30,28 +28,11 @@ SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT
 
 SIGNINGHUB_SESSION_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-sessions/"
 
-def open_new_signinghub_session(oauth_token, mu_session_uri):
-    sh_session = SigningHubSession(SIGNINGHUB_API_URL)
-    if CLIENT_CERT_AUTH_ENABLED:
-        sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
-    sh_session.authenticate_sso(oauth_token, SIGNINGHUB_SSO_METHOD)
-    sh_session_params = {
-        "creation_time": sh_session.last_successful_auth_time,
-        "expiry_time": sh_session.last_successful_auth_time + sh_session.access_token_expiry_time,
-        "token": sh_session.access_token,
-        "uri": SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
-    }
-    sh_session_query = construct_insert_signinghub_session_query(sh_session_params)
-    sudo_update(sh_session_query)
-    sh_session_link_query = construct_attach_signinghub_session_to_mu_session_query(sh_session_params["uri"], mu_session_uri)
-    sudo_update(sh_session_link_query)
-    return sh_session
-
 def ensure_signinghub_session(mu_session_uri):
     mu_session_query = construct_get_mu_session_query(mu_session_uri)
     mu_session_result = sudo_query(mu_session_query)['results']['bindings']
     if not mu_session_result:
-        raise NoQueryResultsException("Didn't find a mu-session with an Oauth token.")
+        raise NoQueryResultsException("Didn't find a mu-session associated with an account with email-address")
     mu_session = mu_session_result[0]
     sh_session_query = construct_get_signinghub_session_query(mu_session_uri)
     sh_session_results = sudo_query(sh_session_query)['results']['bindings']
@@ -64,7 +45,13 @@ def ensure_signinghub_session(mu_session_uri):
         g.sh_session.access_token = sh_session_result["token"]["value"]
     else: # Open new SigningHub session
         log("No valid SigningHub session found. Opening a new one ...")
-        g.sh_session = open_new_signinghub_session(mu_session["oauthToken"]["value"], mu_session_uri)
+        sh_session = open_new_signinghub_machine_user_session(mu_session["email"]["value"])
+        sh_session_uri = SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
+        sh_session_query = construct_insert_signinghub_session_query(sh_session, sh_session_uri)
+        sudo_update(sh_session_query)
+        sh_session_link_query = construct_attach_signinghub_session_to_mu_session_query(sh_session_uri, mu_session_uri)
+        sudo_update(sh_session_link_query)
+        g.sh_session = sh_session
 
 def signinghub_session_required(f):
     @wraps(f)
@@ -79,7 +66,7 @@ def signinghub_session_required(f):
             return error(ex.args[0])
     return decorated_function
 
-def open_new_signinghub_machine_user_session():
+def open_new_signinghub_machine_user_session(scope=None):
     sh_session = SigningHubSession(SIGNINGHUB_API_URL)
     if CLIENT_CERT_AUTH_ENABLED:
         sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
@@ -87,17 +74,8 @@ def open_new_signinghub_machine_user_session():
                             SIGNINGHUB_API_CLIENT_SECRET,
                             "password", # grant type
                             SIGNINGHUB_MACHINE_ACCOUNT_USERNAME,
-                            SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD)
-    sh_session_params = {
-        "creation_time": sh_session.last_successful_auth_time,
-        "expiry_time": sh_session.last_successful_auth_time + sh_session.access_token_expiry_time,
-        "token": sh_session.access_token,
-        "uri": SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
-    }
-    sh_session_query = construct_insert_signinghub_session_query(sh_session_params)
-    sudo_update(sh_session_query)
-    sh_session_sudo_query = construct_mark_signinghub_session_as_machine_users_query(sh_session_params["uri"])
-    sudo_update(sh_session_sudo_query)
+                            SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD,
+                            scope)
     return sh_session
 
 def ensure_signinghub_machine_user_session():
@@ -112,7 +90,13 @@ def ensure_signinghub_machine_user_session():
         g.sh_session.access_token = sh_session_result["token"]["value"]
     else: # Open new SigningHub session
         log("No valid SigningHub session found. Opening a new one ...")
-        g.sh_session = open_new_signinghub_machine_user_session()
+        sh_session = open_new_signinghub_machine_user_session() # No scope, plain sudo user
+        sh_session_uri = SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
+        sh_session_query = construct_insert_signinghub_session_query(sh_session, sh_session_uri)
+        sudo_update(sh_session_query)
+        sh_session_sudo_query = construct_mark_signinghub_session_as_machine_users_query(sh_session_uri)
+        sudo_update(sh_session_sudo_query)
+        g.sh_session = sh_session
 
 def signinghub_machine_session_required(f):
     @wraps(f)

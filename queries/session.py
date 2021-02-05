@@ -7,6 +7,7 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escap
 
 TIMEZONE = timezone('Europe/Brussels')
 SESSION_GRAPH = "http://mu.semte.ch/graphs/sessions"
+ACCOUNT_GRAPH = "http://mu.semte.ch/graphs/public" # TODO: might change once user data is spread over different graphs
 SIGNINGHUB_TOKEN_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-tokens/"
 
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
@@ -15,31 +16,40 @@ SIGNINGHUB_OAUTH_TOKEN_EP = SIGNINGHUB_API_URL.strip("/") + "/" + "authenticate"
 def construct_get_mu_session_query(mu_session_uri):
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX oauth-2.0: <http://kanselarij.vo.data.gift/vocabularies/oauth-2.0-session/>
+PREFIX session: <http://mu.semte.ch/vocabularies/session/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
-SELECT ?uuid ?oauthToken
+SELECT ?uuid ?email
 WHERE {
     GRAPH $session_graph {
-        $mu_session mu:uuid ?uuid .
-        ?acmSession oauth-2.0:authenticates $mu_session ;
-            oauth-2.0:hasTokenValue/oauth-2.0:hasTokenValue ?oauthToken .
+        $mu_session mu:uuid ?uuid ;
+            session:account ?account .
+    }
+    GRAPH $account_graph {
+        ?person foaf:account ?account ;
+            foaf:mbox ?email_uri .
+        BIND(REPLACE(STR(?email_uri), "^mailto:", "") AS ?email)
     }
 }""")
     query_string = query_template.substitute(
         session_graph=sparql_escape_uri(SESSION_GRAPH),
+        account_graph=sparql_escape_uri(ACCOUNT_GRAPH),
         mu_session=sparql_escape_uri(mu_session_uri))
     return query_string
 
 def construct_get_signinghub_session_query(mu_session_uri):
+    # TODO: Model connection betheen Signinghub Session and user/account (now "ext:shSessionAccount").
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX session: <http://mu.semte.ch/vocabularies/session/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 PREFIX oauth-2.0: <http://kanselarij.vo.data.gift/vocabularies/oauth-2.0-session/>
 
 SELECT (?signinghubSession AS ?uri) ?expiryTime ?token
 WHERE {
     GRAPH $session_graph {
-        ?acmSession oauth-2.0:authenticates $mu_session .
-        ?acmSession oauth-2.0:authenticates ?signinghubSession .
+        $mu_session session:account ?account .
+        ?signinghubSession ext:shSessionAccount ?account .
         ?signinghubSession oauth-2.0:hasEndpointURI $signinghub_token_endpoint ;
             oauth-2.0:hasTokenValue ?tokenUri.
         ?tokenUri oauth-2.0:hasTokenValue ?token ;
@@ -58,8 +68,9 @@ LIMIT 1
         now=sparql_escape_datetime(datetime.now(tz=TIMEZONE)))
     return query_string
 
-def construct_insert_signinghub_session_query(signinghub_session):
+def construct_insert_signinghub_session_query(signinghub_session, signinghub_session_uri):
     signinghub_token_uri = SIGNINGHUB_TOKEN_BASE_URI + generate_uuid()
+    expiry_time = signinghub_session.last_successful_auth_time + signinghub_session.access_token_expiry_time
     query_template = Template("""
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
@@ -76,30 +87,31 @@ INSERT DATA {
             oauth-2.0:hasExpirytime $expiry_time .
     }
 }""")
+
     query_string = query_template.substitute(
         session_graph=sparql_escape_uri(SESSION_GRAPH),
-        signinghub_session=sparql_escape_uri(signinghub_session["uri"]),
+        signinghub_session=sparql_escape_uri(signinghub_session_uri),
         signinghub_token_endpoint=sparql_escape_uri(SIGNINGHUB_OAUTH_TOKEN_EP),
         token_uri=sparql_escape_uri(signinghub_token_uri),
-        creation_time=sparql_escape_datetime(signinghub_session["creation_time"].astimezone(TIMEZONE)),
-        expiry_time=sparql_escape_datetime(signinghub_session["expiry_time"].astimezone(TIMEZONE)),
-        token_value=sparql_escape_string(signinghub_session["token"]))
+        creation_time=sparql_escape_datetime(signinghub_session.last_successful_auth_time.astimezone(TIMEZONE)),
+        expiry_time=sparql_escape_datetime(expiry_time.astimezone(TIMEZONE)),
+        token_value=sparql_escape_string(signinghub_session.access_token))
     return query_string
 
 def construct_attach_signinghub_session_to_mu_session_query(signinghub_session_uri, mu_session_uri):
+    # TODO: Model connection betheen Signinghub Session and user/account (now "ext:shSessionAccount").
     query_template = Template("""
-PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX oauth-2.0: <http://kanselarij.vo.data.gift/vocabularies/oauth-2.0-session/>
+PREFIX session: <http://mu.semte.ch/vocabularies/session/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
 INSERT {
     GRAPH $session_graph {
-        ?acmSession oauth-2.0:authenticates $signinghub_session .
+        $signinghub_session ext:shSessionAccount ?account .
     }
 }
 WHERE {
     GRAPH $session_graph {
-        ?acmSession oauth-2.0:authenticates $mu_session .
+        $mu_session session:account ?account .
     }
 }""")
     query_string = query_template.substitute(
