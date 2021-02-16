@@ -66,7 +66,7 @@ def file_signers_get(pubf_id, file_id):
         for mandatee in mandatees:
             mandatees_data.append({
                 "type": "mandatees",
-                "id": mandatee["id"]
+                "id": mandatee["uuid"]
             })
         status_code = 200
     except NoQueryResultsException: # No mandatees available
