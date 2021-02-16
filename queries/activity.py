@@ -184,8 +184,8 @@ WHERE {
         graph=sparql_escape_uri(graph),
         signing=sparql_escape_uri(activity["uri"]),
         uuid=sparql_escape_string(activity["uuid"]),
-        type=sparql_escape_string(SIGNING_ACT_TYPE_URI),
-        prep_type=sparql_escape_string(SIGNING_PREP_ACT_TYPE_URI),
+        type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
+        prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI),
         signing_prep=sparql_escape_uri(signing_prep_uri),
         mandatee=sparql_escape_uri(mandatee_uri))
 
