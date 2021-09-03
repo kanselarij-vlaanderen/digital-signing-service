@@ -1,2 +1,3 @@
 pytz
 git+https://github.com/kanselarij-vlaanderen/signinghub-api-client.git@6a9f59d11e327ad370194b46bbcadc9917bf82f3
+web-pdb

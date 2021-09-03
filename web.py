@@ -1,6 +1,6 @@
 from flask import g, request, make_response, redirect
 from helpers import log
-from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
+from .authentication import signinghub_machine_session_required, ensure_signinghub_machine_user_session
 from .jsonapi import jsonapi_required
 from .lib.pub_flow import get_subcase_from_pub_flow_id
 from .lib.activity import get_signing_preps_from_subcase, \
@@ -15,8 +15,11 @@ from .lib.file import get_file_by_id
 from .lib.mandatee import get_mandatee_by_id, get_signing_mandatees
 from .lib.exceptions import NoQueryResultsException
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 @app.route("/signinghub-profile")
-@signinghub_session_required # provides g.sh_session
+@signinghub_machine_session_required # provides g.sh_session
 def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
     return g.sh_session.get_general_profile_information()
@@ -41,7 +44,7 @@ def pubflow_files_get(pubf_id):
     return res
 
 @app.route('/publication-flow/<pubf_id>/signing/files', methods=['POST'])
-@signinghub_session_required # provides g.sh_session
+@signinghub_machine_session_required # provides g.sh_session
 @jsonapi_required
 def pubflow_files_post(pubf_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
@@ -77,7 +80,7 @@ def file_signers_get(pubf_id, file_id):
     return res
 
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signers', methods=['POST'])
-@signinghub_session_required # provides g.sh_session
+@signinghub_machine_session_required # provides g.sh_session
 @jsonapi_required
 def file_signers_post(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
@@ -93,28 +96,32 @@ def file_signers_post(pubf_id, file_id):
     return res
 
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signinghub-iframe-link', methods=['GET'])
-@signinghub_session_required # provides g.sh_session
+@signinghub_machine_session_required # provides g.sh_session
 def signinghub_iframe_link(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     file_uri = get_file_by_id(file_id)["uri"]
     signing_prep = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
-    collapse_panels = request.args.get("collapse_panels", default='true', type=str)
+    collapse_panels = request.args.get("collapse_panels", default='true', type=str) == "true"
+    # import web_pdb; web_pdb.set_trace()
     integration_link = g.sh_session.get_integration_link(signing_prep["sh_package_id"], {
         "language":"nl-NL",
-        # "user_email": "joe@gmail.com", # Know through SSO login?
-        # "callback_url":"https://web.signinghub.com/", # default configured fir the app.
-        "collapse_panels": "true" if collapse_panels == "true" else "false",
+        "user_email": "kaleidos.servicedesk@vlaanderen.be", # Know through scope login?
+        "callback_url":"http://localhost:4200/", # default configured fir the app.
+        "collapse_panels": "true"
         # "usercertificate_id": "31585" # Undocumented
     })
-    redirect(integration_link, 303)
+    return { "url": integration_link }
+    return redirect(integration_link, 303)
 
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/start', methods=['POST'])
+@signinghub_machine_session_required # provides g.sh_session
 def start_signing(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     file_uri = get_file_by_id(file_id)["uri"]
     signing_prep = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
     g.sh_session.share_document_package(signing_prep["sh_package_id"])
     update_activities_signing_started(signing_prep["uri"])
+    return make_response("", 200)
 
 
 @app.route('/signinghub-callback', methods=['GET, POST']) # HTTP method not specified in api documentation

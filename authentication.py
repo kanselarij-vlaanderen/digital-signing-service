@@ -70,6 +70,7 @@ def open_new_signinghub_machine_user_session(scope=None):
     sh_session = SigningHubSession(SIGNINGHUB_API_URL)
     if CLIENT_CERT_AUTH_ENABLED:
         sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
+    # import web_pdb; web_pdb.set_trace()
     sh_session.authenticate(SIGNINGHUB_API_CLIENT_ID,
                             SIGNINGHUB_API_CLIENT_SECRET,
                             "password", # grant type
