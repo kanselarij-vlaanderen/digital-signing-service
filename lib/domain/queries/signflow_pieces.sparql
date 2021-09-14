@@ -1,0 +1,42 @@
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
+PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+
+SELECT ?signflow ?marking_activity ?preparation_activity (?piece AS ?uri) (?piece_id AS ?id)
+WHERE {
+    GRAPH ?graph {
+        ?signflow a sign:Handtekenaangelegenheid ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?sign_subcase a sign:HandtekenProcedurestap .
+        OPTIONAL {
+            ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase .
+            ?marking_activity a sign:Markeringsactiviteit .
+            OPTIONAL {
+                ?marking_activity sign:gemarkeerdStuk ?piece .
+            }
+        }
+        OPTIONAL {
+            ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
+            ?preparation_activity a sign:Voorbereidingsactiviteit .
+            OPTIONAL {
+                ?preparation_activity sign:voorbereidingGenereert ?signinghub_doc .
+                ?signinghub_doc a signinghub:Document ;
+                    prov:hadPrimarySource ?piece .
+
+            }
+        }
+        OPTIONAL {
+            ?piece a dossier:Stuk ;
+                mu:uuid ?piece_id .
+        }
+    }
+
+    VALUES ?graph {
+        <http://mu.semte.ch/placeholders/graph>
+    }
+    VALUES ?signflow {
+        <http://mu.semte.ch/placeholders/signflow>
+    }
+}

@@ -15,45 +15,45 @@ from .lib.file import get_file_by_id
 from .lib.mandatee import get_mandatee_by_id, get_signing_mandatees
 from .lib.exceptions import NoQueryResultsException
 
+from . import api
+from .lib import exceptions, domain
+
 @app.route("/signinghub-profile")
 @signinghub_session_required # provides g.sh_session
 def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
     return g.sh_session.get_general_profile_information()
 
-@app.route('/publication-flow/<pubf_id>/signing/files', methods=['GET'])
-def pubflow_files_get(pubf_id):
-    subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
+@api.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
+def signflow_pieces_get(signflow_id):
+    signflow_uri = domain.URI.resource.signflow(signflow_id)
     try:
-        signing_preps = get_signing_preps_from_subcase(subcase_uri)
-        files = []
-        for signing_prep in signing_preps:
-            files.append({
-                "type": "files",
-                "id": signing_prep["file_id"]
-            })
-        status_code = 200
-    except NoQueryResultsException: # No signing preps available
-        files = []
-        status_code = 404
-    res = make_response({"data": files}, status_code)
-    res.headers["Content-Type"] = "application/vnd.api+json"
-    return res
+        pieces = domain.get_signflow_pieces(signflow_uri)
+    except exceptions.ResourceNotFoundException as exception:
+        raise api.NotFoundException(exception.uri)
 
-@app.route('/publication-flow/<pubf_id>/signing/files', methods=['POST'])
-@signinghub_session_required # provides g.sh_session
-@jsonapi_required
-def pubflow_files_post(pubf_id):
-    subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
-    body = request.get_json(force=True)
-    files = list(filter(lambda f: f["type"] == "files", body["data"]))
-    for file in files: # A separate first loop, to make sure given id's are valid
-        file["uri"] = get_file_by_id(file["id"])["uri"]
-    for file in files:
-        create_signing_prep_activity(subcase_uri, file["uri"])
-    res = make_response({"data": files}, 202)
-    res.headers["Content-Type"] = "application/vnd.api+json"
-    return res
+    data = [{
+        "type": "pieces",
+        "uri": p["uri"],
+        "id": p["id"],
+        "status": p["status"]
+    } for p in pieces ]
+
+    return 200, data
+
+@api.route('/sign-flows/<signflow_id>/signing/prepare', methods=['POST'])
+# @signinghub_session_required # provides g.sh_session
+def pubflow_files_post(signflow_id):
+    signflow_uri = domain.URI.resource.signflow(signflow_id)
+
+    try:
+        domain.prepare(signflow_uri)
+    except exceptions.ResourceNotFoundException as exception:
+        raise api.NotFoundException(exception.uri)
+    except exceptions.InvalidStateException as exception:
+        raise api.InvalidStateException(exception.args)
+
+    return 204
 
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signers', methods=['GET'])
 def file_signers_get(pubf_id, file_id):
