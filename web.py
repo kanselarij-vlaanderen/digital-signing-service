@@ -16,7 +16,8 @@ from .lib.mandatee import get_mandatee_by_id, get_signing_mandatees
 from .lib.exceptions import NoQueryResultsException
 
 from . import api
-from .lib import exceptions, domain
+from . import lib
+from .lib import exceptions, signflow as SignFlow
 
 @app.route("/signinghub-profile")
 @signinghub_session_required # provides g.sh_session
@@ -26,9 +27,9 @@ def sh_profile_info():
 
 @api.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
 def signflow_pieces_get(signflow_id):
-    signflow_uri = domain.URI.resource.signflow(signflow_id)
+    signflow_uri = SignFlow.uri.resource.signflow(signflow_id)
     try:
-        pieces = domain.get_signflow_pieces(signflow_uri)
+        pieces = SignFlow.get_signflow_pieces(signflow_uri)
     except exceptions.ResourceNotFoundException as exception:
         raise api.NotFoundException(exception.uri)
 
@@ -44,10 +45,10 @@ def signflow_pieces_get(signflow_id):
 @api.route('/sign-flows/<signflow_id>/signing/prepare', methods=['POST'])
 # @signinghub_session_required # provides g.sh_session
 def pubflow_files_post(signflow_id):
-    signflow_uri = domain.URI.resource.signflow(signflow_id)
+    signflow_uri = SignFlow.uri.resource.signflow(signflow_id)
 
     try:
-        domain.prepare(signflow_uri)
+        SignFlow.prepare(signflow_uri)
     except exceptions.ResourceNotFoundException as exception:
         raise api.NotFoundException(exception.uri)
     except exceptions.InvalidStateException as exception:

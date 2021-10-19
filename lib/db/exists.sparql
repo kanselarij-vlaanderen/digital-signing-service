@@ -1,9 +1,0 @@
-ASK {
-    GRAPH ?graph {
-        ?uri a ?type .
-    }
-
-    VALUES ?graph { <http://mu.semte.ch/placeholders/graph> }
-    VALUES ?type { <http://mu.semte.ch/placeholders/type> }
-    VALUES ?uri { <http://mu.semte.ch/placeholders/uri> }
-}

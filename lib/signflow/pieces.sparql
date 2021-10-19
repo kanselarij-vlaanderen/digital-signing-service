@@ -6,7 +6,7 @@ PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
 SELECT ?signflow ?marking_activity ?preparation_activity (?piece AS ?uri) (?piece_id AS ?id)
 WHERE {
-    GRAPH ?graph {
+    GRAPH $graph {
         ?signflow a sign:Handtekenaangelegenheid ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap .
@@ -15,6 +15,8 @@ WHERE {
             ?marking_activity a sign:Markeringsactiviteit .
             OPTIONAL {
                 ?marking_activity sign:gemarkeerdStuk ?piece .
+                ?piece a dossier:Stuk ;
+                    mu:uuid ?piece_id .
             }
         }
         OPTIONAL {
@@ -23,20 +25,13 @@ WHERE {
             OPTIONAL {
                 ?preparation_activity sign:voorbereidingGenereert ?signinghub_doc .
                 ?signinghub_doc a signinghub:Document ;
-                    prov:hadPrimarySource ?piece .
+                prov:hadPrimarySource ?piece .
+                    ?piece a dossier:Stuk ;
+                    mu:uuid ?piece_id .
 
             }
         }
-        OPTIONAL {
-            ?piece a dossier:Stuk ;
-                mu:uuid ?piece_id .
-        }
     }
 
-    VALUES ?graph {
-        <http://mu.semte.ch/placeholders/graph>
-    }
-    VALUES ?signflow {
-        <http://mu.semte.ch/placeholders/signflow>
-    }
+    VALUES ?signflow { $signflow }
 }
