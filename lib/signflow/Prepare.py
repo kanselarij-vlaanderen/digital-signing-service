@@ -1,16 +1,15 @@
 from string import Template
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-from ... import sudo_query
 from .. import exceptions, sparql
-from . import uri, pieces as Pieces
+from . import uri, GetPieces
 
 def execute(signflow_uri):
-    pieces = Pieces.execute(signflow_uri)
+    pieces = GetPieces.execute(signflow_uri)
     if pieces is None:
         raise exceptions.ResourceNotFoundException(signflow_uri)
 
-    if not pieces:
+    if len(pieces) == 0:
         raise exceptions.InvalidStateException(f"Signflow {signflow_uri} has no related pieces.")
 
     if len(pieces) != 1:
@@ -40,4 +39,4 @@ def execute(signflow_uri):
         sh_document_id=sparql_escape_string(signinghub_document_id),
         sh_package_id=sparql_escape_string(signinghub_package_id),
     )
-    sudo_query.update(query_command)
+    sparql.update(query_command)

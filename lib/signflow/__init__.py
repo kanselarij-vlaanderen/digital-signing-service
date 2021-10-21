@@ -1,8 +1,8 @@
-from . import uri, pieces, prepare as Prepare
+from . import uri, GetPieces, Prepare
 from .. import exceptions
 
-def get_signflow_pieces(signflow_uri: str):
-    records = pieces.execute(signflow_uri)
+def get_pieces(signflow_uri: str):
+    records = GetPieces.execute(signflow_uri)
     if records is None:
         raise exceptions.ResourceNotFoundException(signflow_uri)
 

@@ -1,5 +1,4 @@
 from string import Template
-from helpers import query
 from escape_helpers import sparql_escape_string, sparql_escape_uri
 from .. import exceptions, sparql
 from . import uri
@@ -11,7 +10,7 @@ def execute(signflow_uri: str):
         "signflow": sparql_escape_uri(signflow_uri)
     })
     
-    results = query(query_command)
+    results = sparql.query(query_command)
     records = sparql.to_recs(results)
     if len(records) == 0:
         return None

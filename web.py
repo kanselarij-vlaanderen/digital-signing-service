@@ -1,3 +1,4 @@
+import string
 from flask import g, request, make_response, redirect
 from helpers import log
 from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
@@ -15,7 +16,8 @@ from .lib.file import get_file_by_id
 from .lib.mandatee import get_mandatee_by_id, get_signing_mandatees
 from .lib.exceptions import NoQueryResultsException
 
-from . import api
+import flask
+import helpers
 from . import lib
 from .lib import exceptions, signflow as SignFlow
 
@@ -25,36 +27,43 @@ def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
     return g.sh_session.get_general_profile_information()
 
-@api.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
+@app.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
 def signflow_pieces_get(signflow_id):
-    signflow_uri = SignFlow.uri.resource.signflow(signflow_id)
     try:
-        pieces = SignFlow.get_signflow_pieces(signflow_uri)
-    except exceptions.ResourceNotFoundException as exception:
-        raise api.NotFoundException(exception.uri)
+        signflow_uri = SignFlow.uri.resource.signflow(signflow_id)
+        try:
+            pieces = SignFlow.get_pieces(signflow_uri)
+        except exceptions.ResourceNotFoundException as exception:
+            return helpers.error(f"Not Found: {exception.uri}", 404)
 
-    data = [{
-        "type": "pieces",
-        "uri": p["uri"],
-        "id": p["id"],
-        "status": p["status"]
-    } for p in pieces ]
+        data = [{
+            "type": "pieces",
+            "uri": p["uri"],
+            "id": p["id"],
+            "status": p["status"]
+        } for p in pieces ]
 
-    return 200, data
+        return flask.make_response({ "data": data, }, 200)
+    except BaseException as exception:
+        helpers.logger.exception()
+        return helpers.error("Internal Server Error", 500)
 
-@api.route('/sign-flows/<signflow_id>/signing/prepare', methods=['POST'])
+@app.route('/sign-flows/<signflow_id>/signing/prepare', methods=['POST'])
 # @signinghub_session_required # provides g.sh_session
 def pubflow_files_post(signflow_id):
-    signflow_uri = SignFlow.uri.resource.signflow(signflow_id)
-
     try:
-        SignFlow.prepare(signflow_uri)
-    except exceptions.ResourceNotFoundException as exception:
-        raise api.NotFoundException(exception.uri)
-    except exceptions.InvalidStateException as exception:
-        raise api.InvalidStateException(exception.args)
+        signflow_uri = SignFlow.uri.resource.signflow(signflow_id)
 
-    return 204
+        try:
+            SignFlow.prepare(signflow_uri)
+        except exceptions.ResourceNotFoundException as exception:
+            return helpers.error(f"Not Found: {exception.uri}", 404)
+        except exceptions.InvalidStateException as exception:
+            return helpers.error(f"Invalid State: {exception}", 400)
+        return flask.make_response("", 204)
+    except BaseException as exception:
+        helpers.logger.exception()
+        return helpers.error("Internal Server Error", 500)
 
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signers', methods=['GET'])
 def file_signers_get(pubf_id, file_id):
