@@ -41,7 +41,7 @@ def signflow_pieces_get(signflow_id):
             "uri": p["uri"],
             "id": p["id"],
             "status": p["status"]
-        } for p in pieces ]
+        } for p in pieces]
 
         return flask.make_response({ "data": data, }, 200)
     except BaseException as exception:

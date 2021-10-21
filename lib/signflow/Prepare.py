@@ -5,7 +5,8 @@ from .. import exceptions, sparql
 from . import uri, GetPieces
 
 def execute(signflow_uri):
-    pieces = GetPieces.execute(signflow_uri)
+    query_command = 
+
     if pieces is None:
         raise exceptions.ResourceNotFoundException(signflow_uri)
 
@@ -39,6 +40,52 @@ def execute(signflow_uri):
         sh_package_id=sparql_escape_string(signinghub_package_id),
     )
     sparql.update(update_command)
+
+_query_template = Template("""
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
+PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+
+SELECT ?signflow ?marking_activity ?preparation_activity (?piece AS ?uri) (?piece_id AS ?id) ?path
+WHERE {
+    GRAPH <http://mu.semte.ch/graphs/organizations/kanselarij> {
+        ?signflow a sign:Handtekenaangelegenheid ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?sign_subcase a sign:HandtekenProcedurestap .
+        OPTIONAL {
+            ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase .
+            ?marking_activity a sign:Markeringsactiviteit .
+            OPTIONAL {
+                ?marking_activity sign:gemarkeerdStuk ?piece .
+                ?piece a dossier:Stuk ;
+                    mu:uuid ?piece_id .
+                ?piece ext:file ?file .
+                ?file a nfo:FileDataObject ;
+                    ^nie:dataSource ?path .
+            }
+        }
+        OPTIONAL {
+            ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
+            ?preparation_activity a sign:Voorbereidingsactiviteit .
+            OPTIONAL {
+                ?preparation_activity sign:voorbereidingGenereert ?signinghub_doc .
+                ?signinghub_doc a signinghub:Document ;
+                prov:hadPrimarySource ?piece .
+                    ?piece a dossier:Stuk ;
+                    mu:uuid ?piece_id .
+
+            }
+        }
+    }
+
+    VALUES ?signflow { <http://themis.vlaanderen.be/id/handtekenaangelegenheid/6171355D614D6D0009000013> }
+}
+""")
 
 _update_template = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
