@@ -1,4 +1,4 @@
-import string
+import sys
 from flask import g, request, make_response, redirect
 from helpers import log
 from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
@@ -45,24 +45,24 @@ def signflow_pieces_get(signflow_id):
 
         return flask.make_response({ "data": data, }, 200)
     except BaseException as exception:
-        helpers.logger.exception()
+        helpers.logger.exception("Internal server error")
         return helpers.error("Internal Server Error", 500)
 
 @app.route('/sign-flows/<signflow_id>/signing/prepare', methods=['POST'])
-# @signinghub_session_required # provides g.sh_session
-def pubflow_files_post(signflow_id):
+@signinghub_session_required # provides g.sh_session
+def signflow_prepare(signflow_id):
     try:
         signflow_uri = SignFlow.uri.resource.signflow(signflow_id)
 
         try:
-            SignFlow.prepare(signflow_uri)
+            SignFlow.prepare(signflow_uri, g.sh_session)
         except exceptions.ResourceNotFoundException as exception:
             return helpers.error(f"Not Found: {exception.uri}", 404)
         except exceptions.InvalidStateException as exception:
             return helpers.error(f"Invalid State: {exception}", 400)
         return flask.make_response("", 204)
     except BaseException as exception:
-        helpers.logger.exception()
+        helpers.logger.exception("Internal server error")
         return helpers.error("Internal Server Error", 500)
 
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signers', methods=['GET'])
