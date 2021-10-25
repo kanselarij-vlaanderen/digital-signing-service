@@ -10,4 +10,8 @@ class ResourceNotFoundException(Exception):
         self.uri = uri
 
 class InvalidStateException(Exception):
-    """data is in a state that does not allow the requested action"""
+    """state does not allow the requested action."""
+
+
+class InvalidArgumentException(Exception):
+    """provided argument is not valid"""

@@ -1,12 +1,4 @@
-import os
-import inspect
-import helpers
-
-def query(query_command):
-    return helpers.query(query_command)
-
-def update(update_command):
-    helpers.update(update_command)
+from . import exceptions
 
 def to_recs(result):
     bindings = result["results"]["bindings"]
@@ -14,3 +6,8 @@ def to_recs(result):
 
 def to_answer(result):
     return result["boolean"]
+
+def ensure_1_rec(records):
+    if len(records) != 1:
+        raise exceptions.InvalidStateException(f"expected: 1 - found: {len(records)}")
+    return records[0]

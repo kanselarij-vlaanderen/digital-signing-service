@@ -1,8 +1,8 @@
-import sys
 from flask import g, request, make_response, redirect
-from helpers import log
+from helpers import log, error, logger
 from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
 from .jsonapi import jsonapi_required
+from .lib import uri, exceptions, get_pieces, prepare, generate_integration_url
 from .lib.pub_flow import get_subcase_from_pub_flow_id
 from .lib.activity import get_signing_preps_from_subcase, \
     get_signing_prep_from_subcase_file, \
@@ -16,11 +16,6 @@ from .lib.file import get_file_by_id
 from .lib.mandatee import get_mandatee_by_id, get_signing_mandatees
 from .lib.exceptions import NoQueryResultsException
 
-import flask
-import helpers
-from . import lib
-from .lib import exceptions, signflow as SignFlow
-
 @app.route("/signinghub-profile")
 @signinghub_session_required # provides g.sh_session
 def sh_profile_info():
@@ -30,11 +25,11 @@ def sh_profile_info():
 @app.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
 def signflow_pieces_get(signflow_id):
     try:
-        signflow_uri = SignFlow.uri.resource.signflow(signflow_id)
+        signflow_uri = uri.resource.signflow(signflow_id)
         try:
-            pieces = SignFlow.get_pieces(signflow_uri)
+            pieces = get_pieces.execute(signflow_uri)
         except exceptions.ResourceNotFoundException as exception:
-            return helpers.error(f"Not Found: {exception.uri}", 404)
+            return error(f"Not Found: {exception.uri}", 404)
 
         data = [{
             "type": "pieces",
@@ -42,28 +37,31 @@ def signflow_pieces_get(signflow_id):
             "id": p["id"],
             "status": p["status"]
         } for p in pieces]
-
-        return flask.make_response({ "data": data, }, 200)
+        res = make_response({ "data": data }, 200)
+        res.headers["Content-Type"] = "application/vnd.api+json"
+        return res
     except BaseException as exception:
-        helpers.logger.exception("Internal server error")
-        return helpers.error("Internal Server Error", 500)
+        logger.exception("Internal server error")
+        return error("Internal Server Error", 500)
 
 @app.route('/sign-flows/<signflow_id>/signing/prepare', methods=['POST'])
 @signinghub_session_required # provides g.sh_session
-def signflow_prepare(signflow_id):
+def signflow_prepare_post(signflow_id):
     try:
-        signflow_uri = SignFlow.uri.resource.signflow(signflow_id)
-
+        signflow_uri = uri.resource.signflow(signflow_id)
+        body = request.get_json(force=True)
+        data = body["data"]
+        piece_uris = data["pieces"]
         try:
-            SignFlow.prepare(signflow_uri, g.sh_session)
+            prepare.execute(g.sh_session, signflow_uri, piece_uris)
         except exceptions.ResourceNotFoundException as exception:
-            return helpers.error(f"Not Found: {exception.uri}", 404)
+            return error(f"Not Found: {exception.uri}", 404)
         except exceptions.InvalidStateException as exception:
-            return helpers.error(f"Invalid State: {exception}", 400)
-        return flask.make_response("", 204)
+            return error(f"Invalid State: {exception}", 400)
+        return make_response("", 204)
     except BaseException as exception:
-        helpers.logger.exception("Internal server error")
-        return helpers.error("Internal Server Error", 500)
+        logger.exception("Internal server error")
+        return error("Internal Server Error", 500)
 
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signers', methods=['GET'])
 def file_signers_get(pubf_id, file_id):
@@ -102,21 +100,23 @@ def file_signers_post(pubf_id, file_id):
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
-@app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signinghub-iframe-link', methods=['GET'])
+@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signinghub', methods=['GET'])
 @signinghub_session_required # provides g.sh_session
-def signinghub_iframe_link(pubf_id, file_id):
-    subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
-    file_uri = get_file_by_id(file_id)["uri"]
-    signing_prep = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
-    collapse_panels = request.args.get("collapse_panels", default='true', type=str)
-    integration_link = g.sh_session.get_integration_link(signing_prep["sh_package_id"], {
-        "language":"nl-NL",
-        # "user_email": "joe@gmail.com", # Know through SSO login?
-        # "callback_url":"https://web.signinghub.com/", # default configured fir the app.
-        "collapse_panels": "true" if collapse_panels == "true" else "false",
-        # "usercertificate_id": "31585" # Undocumented
-    })
-    redirect(integration_link, 303)
+def signinghub_integration_url(signflow_id, piece_id):
+    try:
+        signflow_uri = uri.resource.signflow(signflow_id)
+        piece_uri = uri.resource.piece(piece_id)
+        collapse_panels = request.args.get("collapse_panels", default="true", type=str) != "false"
+        try:
+            integration_url = generate_integration_url.execute(g.sh_session, signflow_uri, piece_uri, collapse_panels)
+        except exceptions.ResourceNotFoundException as exception:
+            return error(f"Not Found: {exception.uri}", 404)
+        except exceptions.InvalidStateException as exception:
+            return error(f"Invalid State: {exception}", 400)
+        return redirect(integration_url, 303)
+    except BaseException as exception:
+        logger.exception("Internal server error")
+        return error("Internal Server Error", 500)
 
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/start', methods=['POST'])
 def start_signing(pubf_id, file_id):
