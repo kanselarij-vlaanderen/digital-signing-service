@@ -13,16 +13,16 @@ externalDocs:
 servers:
 - url: /
 paths:
-  /publication-flow/{pubf_id}/signing/files:
+  /sign-flows/{signflow_id}/signing/pieces:
     get:
       tags:
       - Signing files
-      summary: List signing files for a publication flow
-      operationId: listPubFiles
+      summary: List pieces associated with a sign flow
+      operationId: listSignPieces
       parameters:
-      - name: pubf_id
+      - name: signflow_id
         in: path
-        description: ID of publication flow
+        description: ID of sign flow
         required: true
         schema:
           type: string
@@ -32,26 +32,22 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/JsonApiFiles'
+                $ref: '#/components/schemas/JsonApiPieces'
     post:
       tags:
       - Signing files
-      summary: List signing files for a publication flow
-      operationId: addPubFiles
+      summary: Prepare sign flow by uploading pieces to SigningHub
+      operationId: addSignPieces
       parameters:
-      - name: pubf_id
+      - name: signflow_id
         in: path
-        description: ID of publication flow
+        description: ID of sign flow
         required: true
         schema:
           type: string
       responses:
         202:
           description: successful operation
-          content:
-            application/vnd.api+json:
-              schema:
-                $ref: '#/components/schemas/JsonApiFiles'
   /publication-flow/{pubf_id}/signing/files/{file_id}/signers:
     get:
       tags:
@@ -97,20 +93,20 @@ paths:
         202:
           description: successful operation
           content: {}
-  /publication-flow/{pubf_id}/signing/files/{file_id}/signinghub-iframe-link:
+  /sign-flow/{signflow_id}/signing/pieces/{piece_id}/signinghub:
     get:
       tags:
       - Iframe link
       summary: Get an Iframe link for SigningHub interface integration
       operationId: getIframeLink
       parameters:
-      - name: pubf_id
+      - name: signflow_id
         in: path
-        description: ID of publication flow
+        description: ID of sign flow
         required: true
         schema:
           type: string
-      - name: file_id
+      - name: piece_id
         in: path
         description: ID of file
         required: true
@@ -143,19 +139,26 @@ paths:
           description: Sucessfully sent out signing-flow
 components:
   schemas:
-    File:
+    Piece:
       type: object
       properties:
         type:
-          type: string
+          type: string          
           enum:
-          - file
+          - pieces
         id:
           type: string
-    JsonApiFiles:
+        uri:
+          type: string
+        status:
+          type: string
+          enum:
+          - "marked"
+          - "prepared"
+    JsonApiPieces:
       type: object
       properties:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/File'
+            $ref: '#/components/schemas/Piece'
