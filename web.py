@@ -4,10 +4,8 @@ from .authentication import signinghub_session_required, ensure_signinghub_machi
 from .jsonapi import jsonapi_required
 from .lib import uri, exceptions, get_pieces, prepare, generate_integration_url
 from .lib.pub_flow import get_subcase_from_pub_flow_id
-from .lib.activity import get_signing_preps_from_subcase, \
-    get_signing_prep_from_subcase_file, \
+from .lib.activity import get_signing_prep_from_subcase_file, \
     get_signing_prep_from_sh_package_id, \
-    create_signing_prep_activity, \
     add_signing_activity, \
     update_activities_signing_started, \
     update_signing_status, \

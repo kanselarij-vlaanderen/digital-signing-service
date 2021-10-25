@@ -16,53 +16,6 @@ SH_DOC_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/signinghub/Document"
 sh_package_base_uri = os.environ.get("SIGNINGHUB_API_URL", "http://kanselarij.vo.data.gift/").strip("/") + "/"
 SH_DOC_BASE_URI = "{}package/{{package_id}}/document/{{document_id}}".format(sh_package_base_uri)
 
-def construct_insert_signing_prep_activity(activity,
-                                           signing_subcase_uri,
-                                           file_uri,
-                                           sh_package_id,
-                                           sh_document_id,
-                                           graph=APPLICATION_GRAPH):
-    sh_doc_uri = SH_DOC_BASE_URI.format(package_id=sh_package_id, document_id=sh_document_id)
-    query_template = Template("""
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
-PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-
-INSERT {
-    GRAPH $graph {
-        $signing_prep a prov:Activity ;
-            mu:uuid $uuid ;
-            dct:type $type .
-        $signing_prep dossier:vindtPlaatsTijdens $signing_subcase .
-        $signing_prep ext:gebruiktBestand $file .
-        $signing_prep sh:document $sh_doc .
-        $sh_doc a $sh_doc_type ;
-            sh:packageId $sh_package_id ;
-            sh:documentId $sh_document_id ;
-            prov:hadPrimarySource $file .
-    }
-}
-WHERE {
-    GRAPH $graph {
-        $signing_subcase a dossier:Procedurestap .
-    }
-}
-""")
-    return query_template.substitute(
-        graph=sparql_escape_uri(graph),
-        signing_prep=sparql_escape_uri(activity["uri"]),
-        signing_subcase=sparql_escape_uri(signing_subcase_uri),
-        uuid=sparql_escape_string(activity["uuid"]),
-        type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI),
-        file=sparql_escape_uri(file_uri),
-        sh_doc=sparql_escape_uri(sh_doc_uri),
-        sh_doc_type=sparql_escape_uri(SH_DOC_TYPE_URI),
-        sh_package_id=sparql_escape_string(sh_package_id),
-        sh_document_id=sparql_escape_string(sh_document_id))
-
 def construct_get_signing_prep_from_subcase_file(signing_subcase_uri,
                                                  file_uri,
                                                  graph=APPLICATION_GRAPH):
@@ -124,31 +77,6 @@ WHERE {
         graph=sparql_escape_uri(graph),
         prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI),
         sh_package_id=sparql_escape_string(sh_package_id))
-
-def construct_get_signing_preps_from_subcase(signing_subcase_uri,
-                                             graph=APPLICATION_GRAPH):
-    query_template = Template("""
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-
-SELECT DISTINCT (?signing_prep AS ?uri) ?file ?file_id
-WHERE {
-    GRAPH $graph {
-        ?signing_prep a prov:Activity ;
-            dct:type $prep_type .
-        ?signing_prep dossier:vindtPlaatsTijdens $signing_subcase .
-        ?signing_prep ext:gebruiktBestand ?file .
-        ?file mu:uuid ?file_id .
-    }
-}
-""")
-    return query_template.substitute(
-        graph=sparql_escape_uri(graph),
-        signing_subcase=sparql_escape_uri(signing_subcase_uri),
-        prep_type=sparql_escape_uri(SIGNING_PREP_ACT_TYPE_URI))
 
 def construct_insert_signing_activity(activity,
                                       signing_prep_uri,
