@@ -8,7 +8,6 @@ from . import exceptions, sparql, uri, get_pieces
 SH_SOURCE = "Kaleidos"
 
 def execute(signinghub_session: SigningHubSession, signflow_uri: str, piece_uris: typing.List[str]):
-
     if len(piece_uris) == 0:
         raise exceptions.InvalidArgumentException(f"No piece to add specified.")
     if len(piece_uris) > 1:

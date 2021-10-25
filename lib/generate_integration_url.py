@@ -4,6 +4,38 @@ from escape_helpers import sparql_escape_string, sparql_escape_uri
 from signinghub_api_client.client import SigningHubSession
 from . import exceptions, uri, sparql, get_pieces
 
+def execute(signinghub_session: SigningHubSession,
+    signflow_uri: str, piece_uri: str,
+    collapse_panels: bool):
+    pieces = get_pieces.execute(signflow_uri)
+
+    piece = sparql.ensure_1_rec(pieces)
+    if piece["uri"] != piece_uri:
+        raise exceptions.InvalidArgumentException(f"Piece <{piece_uri}> is not prepared for this signflow.")
+    if piece["status"] == "marked":
+        raise exceptions.InvalidStateException(f"Piece {piece_uri} is already added to signflow {signflow_uri}.")
+
+    query_command = _query_signinghub_document.safe_substitute(
+        graph=sparql_escape_uri(uri.graph.sign),
+        signflow=sparql_escape_uri(signflow_uri),
+        piece=sparql_escape_uri(piece_uri)
+    )
+
+    signinghub_document_result = query(query_command)
+    signinghub_documents = sparql.to_recs(signinghub_document_result)
+    signinghub_document = signinghub_documents[0]
+    signinghub_package_id = signinghub_document["signinghub_package_id"]
+
+    integration_url = signinghub_session.get_integration_link(signinghub_package_id, {
+        "language":"nl-NL",
+        # "user_email": "joe@gmail.com", # Know through SSO login?
+        # "callback_url":"https://web.signinghub.com/", # default configured fir the app.
+        "collapse_panels": "true" if collapse_panels else "false",
+        # "usercertificate_id": "31585" # Undocumented
+    })
+
+    return integration_url
+
 _query_signinghub_document = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
@@ -32,35 +64,3 @@ WHERE {
     }
 }
 """)
-
-def execute(signinghub_session: SigningHubSession,
-    signflow_uri: str, piece_uri: str,
-    collapse_panels: bool):
-    pieces = get_pieces.execute(signflow_uri)
-
-    piece = pieces[0]
-    piece_uri_db = piece["uri"]
-    
-    if piece_uri != piece_uri_db:
-        raise exceptions.InvalidArgumentException
-
-    query_command = _query_signinghub_document.safe_substitute(
-        graph=sparql_escape_uri(uri.graph.sign),
-        signflow=sparql_escape_uri(signflow_uri),
-        piece=sparql_escape_uri(piece_uri)
-    )
-
-    signinghub_document_result = query(query_command)
-    signinghub_documents = sparql.to_recs(signinghub_document_result)
-    signinghub_document = signinghub_documents[0]
-    signinghub_package_id = signinghub_document["signinghub_package_id"]
-
-    integration_url = signinghub_session.get_integration_link(signinghub_package_id, {
-        "language":"nl-NL",
-        # "user_email": "joe@gmail.com", # Know through SSO login?
-        # "callback_url":"https://web.signinghub.com/", # default configured fir the app.
-        "collapse_panels": "true" if collapse_panels else "false",
-        # "usercertificate_id": "31585" # Undocumented
-    })
-
-    return integration_url

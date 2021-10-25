@@ -23,6 +23,7 @@ class Type(object):
 
 type = Type()
 
+
 RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/"
 
 class Resource:
