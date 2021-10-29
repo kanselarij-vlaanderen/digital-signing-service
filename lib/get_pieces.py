@@ -1,7 +1,7 @@
 from string import Template
 from helpers import query
 from escape_helpers import sparql_escape_string, sparql_escape_uri
-from . import exceptions, sparql, uri
+from . import exceptions, helpers, uri, validate
 
 def execute(signflow_uri: str):
     query_command = _query_template.safe_substitute({
@@ -9,7 +9,7 @@ def execute(signflow_uri: str):
         "signflow": sparql_escape_uri(signflow_uri)
     })
     results = query(query_command)
-    records = sparql.to_recs(results)
+    records = helpers.to_recs(results)
 
     if not records:
         raise exceptions.ResourceNotFoundException(signflow_uri)
@@ -28,22 +28,24 @@ def execute(signflow_uri: str):
 
 _query_template = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
 PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
-SELECT ?signflow ?marking_activity ?preparation_activity ?piece ?piece_id
+SELECT DISTINCT ?signflow ?activity_type ?piece ?piece_id
 WHERE {
     GRAPH $graph {
         ?signflow a sign:Handtekenaangelegenheid ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap .
-        OPTIONAL {
+    
+    	OPTIONAL { 
+      		?piece a dossier:Stuk .
+      		?piece mu:uuid ?piece_id .
+    	}
+        
+    	OPTIONAL {
             ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase .
             ?marking_activity a sign:Markeringsactiviteit .
             OPTIONAL {
@@ -52,6 +54,7 @@ WHERE {
                     mu:uuid ?piece_id .
             }
         }
+    
         OPTIONAL {
             ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
             ?preparation_activity a sign:Voorbereidingsactiviteit .
@@ -59,21 +62,33 @@ WHERE {
                 ?preparation_activity sign:voorbereidingGenereert ?signinghub_doc .
                 ?signinghub_doc a signinghub:Document ;
                 prov:hadPrimarySource ?piece .
-                    ?piece a dossier:Stuk ;
-                    mu:uuid ?piece_id .
-
             }
         }
+    
+        OPTIONAL {
+      		?signing_activity sign:handtekeningVindtPlaatsTijdens ?sign_subcase .
+      		?signing_activity a sign:Handtekenactiviteit .
+      		OPTIONAL {
+        		?signing_activity prov:wasInformedBy ?preparation_activity .
+                ?preparation_activity a sign:Voorbereidingsactiviteit .
+        		?preparation_activity prov:hadPrimarySource ?piece .
+      		}
+    	}
+    
+    	BIND (IF (BOUND (?signing_activity), sign:Handtekenactiviteit,
+    		IF (BOUND (?preparation_activity), sign:Voorbereidingsactiviteit,
+          		IF (BOUND (?marking_activity), sign:Markeringsactiviteit, ?NULL))) AS ?activity_type)
     }
-
+            
     VALUES ?signflow { $signflow }
 }
 """)
 
 def _get_status(record):
-    if "preparation_activity" in record:
-        return "prepared"
-    elif "marking_activity" in record:
-        return "marked"
-    else:
-        raise Exception("status-unknown")
+    switcher = {
+        "http://mu.semte.ch/vocabularies/ext/handteken/Markeringsactiviteit": "marked",
+        "http://mu.semte.ch/vocabularies/ext/handteken/Voorbereidingsactiviteit": "prepared",
+        "http://mu.semte.ch/vocabularies/ext/handteken/Handtekenactiviteit": "ready-to-sign",
+    }
+    status = switcher.get(record["activity_type"])
+    return status

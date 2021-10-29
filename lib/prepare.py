@@ -3,7 +3,7 @@ from string import Template
 from signinghub_api_client.client import SigningHubSession
 from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-from . import exceptions, sparql, uri, get_pieces
+from . import exceptions, helpers, uri, validate, get_pieces
 
 SH_SOURCE = "Kaleidos"
 
@@ -15,8 +15,7 @@ def execute(signinghub_session: SigningHubSession, signflow_uri: str, piece_uris
     piece_uri = piece_uris[0]
 
     pieces = get_pieces.execute(signflow_uri)
-    piece = sparql.ensure_1_rec(pieces)
-
+    piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidArgumentException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
     if piece["status"] != "marked":
@@ -26,9 +25,9 @@ def execute(signinghub_session: SigningHubSession, signflow_uri: str, piece_uris
         graph=sparql_escape_uri(uri.graph.sign),
         piece=sparql_escape_uri(piece_uri),
     )
-    result_file = query(query_file_command)
-    records_file = sparql.to_recs(result_file)
-    file_record = sparql.ensure_1_rec(records_file)
+    file_result = query(query_file_command)
+    file_records = helpers.to_recs(file_result)
+    file_record = helpers.ensure_1(file_records)
     piece_uri = file_record["piece"]
     file_name = file_record["piece_name"] + "." + file_record["file_extension"]
     file_path = file_record["file_path"]

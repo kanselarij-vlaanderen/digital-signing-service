@@ -7,7 +7,7 @@ def to_recs(result):
 def to_answer(result):
     return result["boolean"]
 
-def ensure_1_rec(records):
-    if len(records) != 1:
-        raise exceptions.InvalidStateException(f"expected: 1 - found: {len(records)}")
-    return records[0]
+def ensure_1(collection):
+    if len(collection) != 0:
+        raise exceptions.InvalidStateException(f"expected: 1 - found: {len(collection)}")
+    return collection[0]

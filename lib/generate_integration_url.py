@@ -2,18 +2,20 @@ from string import Template
 from helpers import query
 from escape_helpers import sparql_escape_string, sparql_escape_uri
 from signinghub_api_client.client import SigningHubSession
-from . import exceptions, uri, sparql, get_pieces
+from . import exceptions, helpers, uri, validate, get_pieces
 
 def execute(signinghub_session: SigningHubSession,
     signflow_uri: str, piece_uri: str,
     collapse_panels: bool):
-    pieces = get_pieces.execute(signflow_uri)
+    validate.ensure_signflow_exists(signflow_uri)
+    validate.ensure_piece_exists(piece_uri)
 
-    piece = sparql.ensure_1_rec(pieces)
+    pieces = get_pieces.execute(signflow_uri)
+    piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
-        raise exceptions.InvalidArgumentException(f"Piece <{piece_uri}> is not prepared for this signflow.")
+        raise exceptions.InvalidArgumentException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")
     if piece["status"] == "marked":
-        raise exceptions.InvalidStateException(f"Piece {piece_uri} is already added to signflow {signflow_uri}.")
+        raise exceptions.InvalidStateException(f"Piece <{piece_uri}> is not marked for signflow <{signflow_uri}>.")
 
     query_command = _query_signinghub_document.safe_substitute(
         graph=sparql_escape_uri(uri.graph.sign),
@@ -22,7 +24,7 @@ def execute(signinghub_session: SigningHubSession,
     )
 
     signinghub_document_result = query(query_command)
-    signinghub_documents = sparql.to_recs(signinghub_document_result)
+    signinghub_documents = helpers.to_recs(signinghub_document_result)
     signinghub_document = signinghub_documents[0]
     signinghub_package_id = signinghub_document["signinghub_package_id"]
 
