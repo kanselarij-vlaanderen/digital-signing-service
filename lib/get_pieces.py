@@ -39,12 +39,12 @@ WHERE {
         ?signflow a sign:Handtekenaangelegenheid ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap .
-    
+
     	OPTIONAL { 
       		?piece a dossier:Stuk .
       		?piece mu:uuid ?piece_id .
     	}
-        
+
     	OPTIONAL {
             ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase .
             ?marking_activity a sign:Markeringsactiviteit .
@@ -54,7 +54,7 @@ WHERE {
                     mu:uuid ?piece_id .
             }
         }
-    
+
         OPTIONAL {
             ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
             ?preparation_activity a sign:Voorbereidingsactiviteit .
@@ -64,22 +64,20 @@ WHERE {
                 prov:hadPrimarySource ?piece .
             }
         }
-    
+
         OPTIONAL {
       		?signing_activity sign:handtekeningVindtPlaatsTijdens ?sign_subcase .
       		?signing_activity a sign:Handtekenactiviteit .
       		OPTIONAL {
         		?signing_activity prov:wasInformedBy ?preparation_activity .
-                ?preparation_activity a sign:Voorbereidingsactiviteit .
-        		?preparation_activity prov:hadPrimarySource ?piece .
       		}
     	}
-    
+
     	BIND (IF (BOUND (?signing_activity), sign:Handtekenactiviteit,
     		IF (BOUND (?preparation_activity), sign:Voorbereidingsactiviteit,
           		IF (BOUND (?marking_activity), sign:Markeringsactiviteit, ?NULL))) AS ?activity_type)
     }
-            
+
     VALUES ?signflow { $signflow }
 }
 """)
@@ -88,7 +86,7 @@ def _get_status(record):
     switcher = {
         "http://mu.semte.ch/vocabularies/ext/handteken/Markeringsactiviteit": "marked",
         "http://mu.semte.ch/vocabularies/ext/handteken/Voorbereidingsactiviteit": "prepared",
-        "http://mu.semte.ch/vocabularies/ext/handteken/Handtekenactiviteit": "ready-to-sign",
+        "http://mu.semte.ch/vocabularies/ext/handteken/Handtekenactiviteit": "open",
     }
     status = switcher.get(record["activity_type"])
     return status

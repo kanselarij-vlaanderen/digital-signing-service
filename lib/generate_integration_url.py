@@ -13,9 +13,9 @@ def execute(signinghub_session: SigningHubSession,
     pieces = get_pieces.execute(signflow_uri)
     piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
-        raise exceptions.InvalidArgumentException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")
+        raise exceptions.InvalidStateException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")
     if piece["status"] == "marked":
-        raise exceptions.InvalidStateException(f"Piece <{piece_uri}> is not marked for signflow <{signflow_uri}>.")
+        raise exceptions.InvalidStateException(f"Piece <{piece_uri}> has not been prepared yet.")
 
     query_command = _query_signinghub_document.safe_substitute(
         graph=sparql_escape_uri(uri.graph.sign),
