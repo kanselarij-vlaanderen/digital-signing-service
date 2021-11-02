@@ -4,7 +4,7 @@ from signinghub_api_client.client import SigningHubSession
 from helpers import log, generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import exceptions, helpers, uri, validate, \
-    get_pieces, get_signers
+    get_signflow_pieces, get_signers
 
 def execute(
     signinghub_session: SigningHubSession,

@@ -1,13 +1,13 @@
 from string import Template
 from helpers import query
 from escape_helpers import sparql_escape_string, sparql_escape_uri
-from . import exceptions, helpers, uri, validate, get_pieces
+from . import exceptions, helpers, uri, validate, get_signflow_pieces
 
 def execute(signflow_uri: str, piece_uri: str):
     validate.ensure_signflow_exists(signflow_uri)
     validate.ensure_piece_exists(piece_uri)
    
-    pieces = get_pieces.execute(signflow_uri)
+    pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
     piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidStateException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")

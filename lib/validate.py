@@ -2,7 +2,7 @@ from string import Template
 from helpers import query
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import helpers, exceptions, uri, validate, \
-    get_pieces
+    get_signflow_pieces
 
 def ensure_signflow_exists(signflow_uri):
     if not signflow_exists(signflow_uri):
@@ -71,7 +71,7 @@ def signer_exists(signer_uri):
     return exists
 
 def ensure_piece_linked(signflow_uri, piece_uri, valid_statuses):
-    pieces = get_pieces.execute(signflow_uri)
+    pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
 
     if len(pieces) == 0:
         raise exceptions.ResourceNotFoundException(piece_uri)
