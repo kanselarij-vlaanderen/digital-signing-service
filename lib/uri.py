@@ -1,35 +1,37 @@
-from .. import config
-
-class Graph:
-    sign = config.DATABASE_GRAPH
-graph = Graph()
+from .. import config as __config
 
 
-class Type(object):
+class __Graph:
+    application = 'http://mu.semte.ch/application'
+    kanselarij = "http://mu.semte.ch/graphs/organizations/kanselarij"
+
+graph = __Graph()
+
+
+class __Type(object):
     __TYPE_PREFIX_MAP = {
         "sign": "http://mu.semte.ch/vocabularies/ext/handteken/",
         "dossier": "https://data.vlaanderen.be/ns/dossier#"
     }
-    def __type_build(prefix: str, type: str):        
-        return __TYPE_PREFIX_MAP[prefix] + type
+    def __type_build(self, prefix: str, type: str):        
+        return self.__TYPE_PREFIX_MAP[prefix] + type
 
     @property
-    def signflow():
-        return __type_build("sign", "Handtekenaangelegenheid")
+    def signflow(self):
+        return self.__type_build("sign", "Handtekenaangelegenheid")
 
     @property
-    def piece():
-        return __type_build("dossier", "Stuk")
+    def piece(self):
+        return self.__type_build("dossier", "Stuk")
 
-type = Type()
+type = __Type()
 
 
-RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/"
+__RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/"
 
-class Resource:
-
+class __Resource:
     def __build (self, type: str, id: str):
-        return RESOURCE_BASE_URI + type + "/" + id
+        return __RESOURCE_BASE_URI + type + "/" + id
 
     def piece(self, id: str):
         return self.__build("stuk", id)
@@ -44,6 +46,6 @@ class Resource:
         return self.__build("handteken-handtekenactiviteit", id)
 
     def signinghub_document(self, package_id: str, document_id: str):
-        return f"{config.SIGNINGHUB_BASE_URI}package/{package_id}/document/{document_id}"
+        return f"{__config.SIGNINGHUB_BASE_URI}package/{package_id}/document/{document_id}"
 
-resource = Resource()
+resource = __Resource()

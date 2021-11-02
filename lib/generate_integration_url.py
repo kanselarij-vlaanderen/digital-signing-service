@@ -18,7 +18,7 @@ def execute(signinghub_session: SigningHubSession,
         raise exceptions.InvalidStateException(f"Piece <{piece_uri}> is not marked for signflow <{signflow_uri}>.")
 
     query_command = _query_signinghub_document.safe_substitute(
-        graph=sparql_escape_uri(uri.graph.sign),
+        graph=sparql_escape_uri(uri.graph.application),
         signflow=sparql_escape_uri(signflow_uri),
         piece=sparql_escape_uri(piece_uri)
     )
