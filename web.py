@@ -25,7 +25,7 @@ def pieces_get(signflow_id):
     try:
         signflow_uri = uri.resource.signflow(signflow_id)
         try:
-            pieces = get_pieces.execute(signflow_uri)
+            pieces = get_pieces.get_pieces(signflow_uri)
         except exceptions.ResourceNotFoundException as exception:
             return error(f"Not Found: {exception.uri}", 404)
 
@@ -51,31 +51,12 @@ def prepare_post(signflow_id):
         data = body["data"]
         piece_uris = data["pieces"]
         try:
-            prepare.execute(g.sh_session, signflow_uri, piece_uris)
+            prepare.prepare(g.sh_session, signflow_uri, piece_uris)
         except exceptions.ResourceNotFoundException as exception:
             return error(f"Not Found: {exception.uri}", 404)
         except exceptions.InvalidStateException as exception:
             return error(f"Invalid State: {exception}", 400)
         return make_response("", 204)
-    except BaseException as exception:
-        logger.exception("Internal Server Error")
-        return error("Internal Server Error", 500)
-
-@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['GET'])
-def signers_get(signflow_id, piece_id):
-    try:
-        signflow_uri = uri.resource.signflow(signflow_id)
-        piece_uri = uri.resource.piece(piece_id)
-        try:
-            signers = get_signers.execute(signflow_uri, piece_uri)
-        except exceptions.ResourceNotFoundException as exception: # No mandatees available
-            return error(f"Not found {exception.uri}", 404)
-        except exceptions.InvalidStateException as exception:
-            return error(f"Invalid State: {exception}", 400)
-
-        res = make_response({"data": signers}, 200)
-        res.headers["Content-Type"] = "application/vnd.api+json"
-        return res
     except BaseException as exception:
         logger.exception("Internal Server Error")
         return error("Internal Server Error", 500)

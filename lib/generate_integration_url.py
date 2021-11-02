@@ -4,13 +4,13 @@ from escape_helpers import sparql_escape_string, sparql_escape_uri
 from signinghub_api_client.client import SigningHubSession
 from . import exceptions, helpers, uri, validate, get_pieces
 
-def execute(signinghub_session: SigningHubSession,
+def generate_integration_uri(signinghub_session: SigningHubSession,
     signflow_uri: str, piece_uri: str,
     collapse_panels: bool):
     validate.ensure_signflow_exists(signflow_uri)
     validate.ensure_piece_exists(piece_uri)
 
-    pieces = get_pieces.execute(signflow_uri)
+    pieces = get_pieces.get_pieces(signflow_uri)
     piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidArgumentException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")
