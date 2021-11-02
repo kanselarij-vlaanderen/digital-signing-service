@@ -81,31 +81,31 @@ def signers_get(signflow_id, piece_id):
         logger.exception("Internal Server Error")
         return error("Internal Server Error", 500)
 
-@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['POST'])
+@app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signers', methods=['GET'])
+def file_signers_get(pubf_id, file_id):
+    subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
+    file_uri = get_file_by_id(file_id)["uri"]
+    sig_prep_act = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
+    try:
+        mandatees = get_signing_mandatees(sig_prep_act["uri"])
+        mandatees_data = []
+        for mandatee in mandatees:
+            mandatees_data.append({
+                "type": "mandatees",
+                "id": mandatee["uuid"]
+            })
+        status_code = 200
+    except NoQueryResultsException: # No mandatees available
+        mandatees_data = []
+        status_code = 404
+    res = make_response({"data": mandatees_data}, status_code)
+    res.headers["Content-Type"] = "application/vnd.api+json"
+    return res
+
+@app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/signers', methods=['POST'])
 @signinghub_session_required # provides g.sh_session
 @jsonapi_required
-def signers_assign(signflow_id, piece_id):
-    try:
-        signflow_uri = uri.resource.signflow(signflow_id)
-        piece_uri = uri.resource.piece(piece_id)
-        try:
-            body = request.get_json(force=True)
-            signer_uris = body["data"]["signers"]
-        except:
-            return error(f"Bad Request: invalid payload", 400)
-
-        try:
-            assign_signers.execute(g.sh_session, signflow_uri, piece_uri signer_uris)
-        except exceptions.ResourceNotFoundException as exception:
-            return error(f"Not Found: {exception.uri}", 404)
-        except exceptions.InvalidStateException as exception:
-            return error(f"Invalid State: {exception}", 400)
-        return make_response("", 204)
-    except BaseException as exception:
-        logger.exception("Internal Server Error")
-        return error("Internal Server Error", 500)
-
-
+def file_signers_post(pubf_id, file_id):
     subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
     file_uri = get_file_by_id(file_id)["uri"]
     body = request.get_json(force=True)
@@ -117,24 +117,6 @@ def signers_assign(signflow_id, piece_id):
     res = make_response({"data": mandatees}, 202)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
-
-@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signinghub', methods=['GET'])
-@signinghub_session_required # provides g.sh_session
-def signinghub_integration_url(signflow_id, piece_id):
-    try:
-        signflow_uri = uri.resource.signflow(signflow_id)
-        piece_uri = uri.resource.piece(piece_id)
-        collapse_panels = request.args.get("collapse_panels", default="true", type=str) != "false"
-        try:
-            integration_url = generate_integration_url.execute(g.sh_session, signflow_uri, piece_uri, collapse_panels)
-        except exceptions.ResourceNotFoundException as exception:
-            return error(f"Not Found: {exception.uri}", 404)
-        except exceptions.InvalidStateException as exception:
-            return error(f"Invalid State: {exception}", 400)
-        return redirect(integration_url, 303)
-    except BaseException as exception:
-        logger.exception("Internal server error")
-        return error("Internal Server Error", 500)
 
 @app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/start', methods=['POST'])
 def start_signing(pubf_id, file_id):
