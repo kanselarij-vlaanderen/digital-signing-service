@@ -1,4 +1,4 @@
-from .. import config as __config
+from .. import config as _config
 
 
 class __Graph:
@@ -27,11 +27,12 @@ class __Type(object):
 type = __Type()
 
 
-__RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/"
 
 class __Resource:
+    __RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/"
+
     def __build (self, type: str, id: str):
-        return __RESOURCE_BASE_URI + type + "/" + id
+        return self.__RESOURCE_BASE_URI + type + "/" + id
 
     def piece(self, id: str):
         return self.__build("stuk", id)
@@ -46,6 +47,6 @@ class __Resource:
         return self.__build("handteken-handtekenactiviteit", id)
 
     def signinghub_document(self, package_id: str, document_id: str):
-        return f"{__config.SIGNINGHUB_BASE_URI}package/{package_id}/document/{document_id}"
+        return f"{_config.SIGNINGHUB_BASE_URI}package/{package_id}/document/{document_id}"
 
 resource = __Resource()

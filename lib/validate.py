@@ -18,7 +18,7 @@ def signflow_exists(signflow_uri):
     """)
     
     exists_command = exists_template.safe_substitute(
-        graph=sparql_escape_uri(uri.graph.sign),
+        graph=sparql_escape_uri(uri.graph.kanselarij),
         signflow=sparql_escape_uri(signflow_uri),
     )
 
@@ -40,7 +40,7 @@ def piece_exists(piece_uri):
     """)
     
     exists_command = exists_template.safe_substitute(
-        graph=sparql_escape_uri(uri.graph.sign),
+        graph=sparql_escape_uri(uri.graph.kanselarij),
         piece=sparql_escape_uri(piece_uri)
     )
 
