@@ -8,6 +8,6 @@ def to_answer(result):
     return result["boolean"]
 
 def ensure_1(collection):
-    if len(collection) != 0:
+    if len(collection) != 1:
         raise exceptions.InvalidStateException(f"expected: 1 - found: {len(collection)}")
     return collection[0]
