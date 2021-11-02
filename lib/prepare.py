@@ -22,7 +22,7 @@ def execute(signinghub_session: SigningHubSession, signflow_uri: str, piece_uris
         raise exceptions.InvalidStateException(f"Piece {piece_uri} has already been prepared.")
 
     query_file_command = _query_file_template.safe_substitute(
-        graph=sparql_escape_uri(uri.graph.sign),
+        graph=sparql_escape_uri(uri.graph.application),
         piece=sparql_escape_uri(piece_uri),
     )
     file_result = query(query_file_command)
@@ -54,7 +54,7 @@ def execute(signinghub_session: SigningHubSession, signflow_uri: str, piece_uris
 
     signinghub_document_uri = uri.resource.signinghub_document(signinghub_package_id, signinghub_document_id)
     update_command = _update_template.safe_substitute(
-        graph=sparql_escape_uri(uri.graph.sign),
+        graph=sparql_escape_uri(uri.graph.kanselarij),
         signflow=sparql_escape_uri(signflow_uri),
         preparation_activity=sparql_escape_uri(preparation_activity_uri),
         preparation_activity_id=sparql_escape_string(preparation_activity_id),
@@ -81,7 +81,7 @@ SELECT ?piece ?piece_name ?file ?file_extension ?file_path
 WHERE {
     VALUES ?piece { $piece }
 
-    GRAPH <http://mu.semte.ch/graphs/organizations/kanselarij> {
+    GRAPH $graph {
 
         ?piece a dossier:Stuk ;
             dct:title ?piece_name .

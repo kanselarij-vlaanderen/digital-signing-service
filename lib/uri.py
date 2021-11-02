@@ -2,8 +2,8 @@ from .. import config as __config
 
 
 class __Graph:
-    sign = "http://mu.semte.ch/graphs/organizations/kanselarij"
-    signinghub = "http://mu.semte.ch/graphs/organizations/kanselarij"
+    application = 'http://mu.semte.ch/application'
+    kanselarij = "http://mu.semte.ch/graphs/organizations/kanselarij"
 
 graph = __Graph()
 
