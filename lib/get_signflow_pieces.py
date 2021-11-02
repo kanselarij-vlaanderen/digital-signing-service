@@ -3,7 +3,7 @@ from helpers import query
 from escape_helpers import sparql_escape_string, sparql_escape_uri
 from . import exceptions, helpers, uri, validate
 
-def execute(signflow_uri: str):
+def get_signflow_pieces(signflow_uri: str):
     query_command = _query_template.safe_substitute({
         "graph": sparql_escape_uri(uri.graph.kanselarij),
         "signflow": sparql_escape_uri(signflow_uri)
