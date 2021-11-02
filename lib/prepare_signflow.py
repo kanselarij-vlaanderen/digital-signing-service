@@ -3,7 +3,7 @@ from string import Template
 from signinghub_api_client.client import SigningHubSession
 from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-from . import exceptions, helpers, uri, validate, get_pieces
+from . import exceptions, helpers, uri, validate, get_signflow_pieces
 
 SH_SOURCE = "Kaleidos"
 
@@ -14,7 +14,7 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
         raise exceptions.InvalidArgumentException(f"Signflow can only add 1 piece.")
     piece_uri = piece_uris[0]
 
-    pieces = get_pieces.get_pieces(signflow_uri)
+    pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
     piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidArgumentException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")

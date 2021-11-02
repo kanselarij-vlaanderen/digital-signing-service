@@ -2,7 +2,7 @@ from flask import g, request, make_response, redirect
 from helpers import log, error, logger
 from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
 from .jsonapi import jsonapi_required
-from .lib import uri, exceptions, get_pieces, prepare, generate_integration_url
+from .lib import uri, exceptions, get_signflow_pieces, prepare_signflow, generate_integration_url
 from .lib.pub_flow import get_subcase_from_pub_flow_id
 from .lib.activity import get_signing_prep_from_subcase_file, \
     get_signing_prep_from_sh_package_id, \
@@ -25,7 +25,7 @@ def pieces_get(signflow_id):
     try:
         signflow_uri = uri.resource.signflow(signflow_id)
         try:
-            pieces = get_pieces.get_pieces(signflow_uri)
+            pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
         except exceptions.ResourceNotFoundException as exception:
             return error(f"Not Found: {exception.uri}", 404)
 
@@ -51,7 +51,7 @@ def prepare_post(signflow_id):
         data = body["data"]
         piece_uris = data["pieces"]
         try:
-            prepare.prepare(g.sh_session, signflow_uri, piece_uris)
+            prepare_signflow.prepare_signflow(g.sh_session, signflow_uri, piece_uris)
         except exceptions.ResourceNotFoundException as exception:
             return error(f"Not Found: {exception.uri}", 404)
         except exceptions.InvalidStateException as exception:
