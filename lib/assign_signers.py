@@ -6,7 +6,7 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import exceptions, helpers, uri, validate, \
     get_signflow_pieces, get_signers
 
-def execute(
+def assign_signers(
     signinghub_session: SigningHubSession,
     signflow_uri: str, piece_uri: str, signer_uris: typing.List[str]):
     validate.ensure_signflow_exists(signflow_uri)
@@ -23,39 +23,36 @@ def execute(
     if mandatees_not_found:
         raise exceptions.ResourceNotFoundException(','.join(mandatees_not_found))
 
-    sh_document_query_command = _preparation_activity_template.safe_substitute(
-        graph=sparql_escape_uri(uri.graph.sign),
+    sh_document_query_command = _sh_documents_template.safe_substitute(
+        graph=sparql_escape_uri(uri.graph.application),
         signflow=sparql_escape_uri(signflow_uri),
         piece=sparql_escape_uri(piece_uri),
     )
     sh_document_result = query(sh_document_query_command)
     sh_document_records = helpers.to_recs(sh_document_result)
     sh_document_record = helpers.ensure_1(sh_document_records)
-    preparation_activity = sh_document_record["preparation_activity"]
     sh_package_id = sh_document_record["sh_package_id"]
-    print(mandatee_records)
     sh_users = [{
         "user_email": r["email"],
         "user_name": ' '.join([name for name in [r["first_name"], r["family_name"]] if name]),
         "role": "SIGNER"
     } for r in mandatee_records]
-    print(sh_users)
+    
     signinghub_session.add_users_to_workflow(sh_package_id, sh_users)
 
     signing_activities = [_build_signing_activity(signer_uri) for signer_uri in signer_uris]
 
-    signing_activities_escaped = '\n'.join([f"""({' '.join([
-        sparql_escape_uri(r["uri"]),
-        sparql_escape_string(r["id"]),
-        sparql_escape_uri(r["mandatee_uri"])
-    ])})""" for r in signing_activities])
+    signing_activities_escaped = helpers.sparql_escape_table([[
+            sparql_escape_uri(r["uri"]),
+            sparql_escape_string(r["id"]),
+            sparql_escape_uri(r["mandatee_uri"])
+        ] for r in signing_activities])
 
-    assign_singers_command = _assign_signers_template.safe_substitute(
-        graph=sparql_escape_uri(uri.graph.sign),
-        preparation_activity=sparql_escape_uri(preparation_activity),
+    assign_signers_command = _assign_signers_template.safe_substitute(
+        graph=sparql_escape_uri(uri.graph.kanselarij),
+        signflow=sparql_escape_uri(signflow_uri),
         signing_activities=signing_activities_escaped)
-    log(assign_singers_command)
-    update(assign_singers_command)
+    update(assign_signers_command)
 
     return signing_activities
 
@@ -69,7 +66,7 @@ def _build_signing_activity(mandatee_uri):
         "mandatee_uri": mandatee_uri
     }
 
-_preparation_activity_template = Template("""
+_sh_documents_template = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX mandaat: <https://data.vlaanderen.be/ns/mandaat#>
@@ -77,7 +74,7 @@ PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
 PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
-SELECT ?signflow ?piece ?preparation_activity ?sh_document ?sh_package_id ?sh_document_id
+SELECT ?signflow ?piece ?sh_document ?sh_package_id ?sh_document_id
 WHERE {
     GRAPH $graph {
         ?signflow a sign:Handtekenaangelegenheid ;
@@ -132,18 +129,20 @@ PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 INSERT {
     GRAPH $graph {
         ?signing_activity a sign:Handtekenactiviteit ;
-            mu:uuid ?signing_activity_id ;
-            prov:wasInformedBy ?preparation_activity ;
-            prov:qualifiedAssociation ?signer .
+            mu:uuid ?signing_activity_id .
+        ?signing_activity prov:wasInformedBy ?preparation_activity .
+        ?signing_activity prov:qualifiedAssociation ?signer .
         ?signing_activity sign:handtekeningVindtPlaatsTijdens ?sign_subcase .
     }
 }
 WHERE {
     GRAPH $graph {
+        ?signflow a sign:Handtekenaangelegenheid .
+        ?signflow sign:doorlooptHandtekening ?sign_subcase .
         ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
     }
 
-    VALUES ?preparation_activity { $preparation_activity }
+    VALUES ?signflow { $signflow }
     VALUES (?signing_activity ?signing_activity_id ?signer) { $signing_activities }
 }
 """)

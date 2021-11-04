@@ -7,6 +7,7 @@ def construct_signflow_pieces_query(signflow_uri: str):
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
 PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
@@ -60,7 +61,7 @@ WHERE {
 """)
 
     query_sparql = query_template.safe_substitute({
-        "graph": sparql_escape_uri(uri.graph.kanselarij),
+        "graph": sparql_escape_uri(uri.graph.application),
         "signflow": sparql_escape_uri(signflow_uri)
     })
 

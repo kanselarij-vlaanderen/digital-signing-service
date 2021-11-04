@@ -3,7 +3,7 @@ from helpers import query
 from escape_helpers import sparql_escape_string, sparql_escape_uri
 from . import exceptions, helpers, uri, validate, get_signflow_pieces
 
-def execute(signflow_uri: str, piece_uri: str):
+def get_signers(signflow_uri: str, piece_uri: str):
     validate.ensure_signflow_exists(signflow_uri)
     validate.ensure_piece_exists(piece_uri)
    

@@ -1,5 +1,5 @@
 import typing
-from string import Template
+from .helpers import Template
 from signinghub_api_client.client import SigningHubSession
 from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string

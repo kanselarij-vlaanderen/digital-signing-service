@@ -73,7 +73,7 @@ def signers_get(signflow_id, piece_id):
         signflow_uri = uri.resource.signflow(signflow_id)
         piece_uri = uri.resource.piece(piece_id)
         try:
-            signers = get_signers.execute(signflow_uri, piece_uri)
+            signers = get_signers.get_signers(signflow_uri, piece_uri)
         except exceptions.ResourceNotFoundException as exception:
             logger.info(f"Not Found: {exception.uri}")
             return error(f"Not Found: {exception.uri}", 404)
@@ -101,7 +101,7 @@ def signers_assign(signflow_id, piece_id):
             return error(f"Bad Request: invalid payload", 400)
 
         try:
-            signing_activities = assign_signers.execute(g.sh_session, signflow_uri, piece_uri, signer_uris)
+            signing_activities = assign_signers.assign_signers(g.sh_session, signflow_uri, piece_uri, signer_uris)
         except exceptions.ResourceNotFoundException as exception:
             logger.info(f"Not Found: {exception.uri}")
             return error(f"Not Found: {exception.uri}", 404)
