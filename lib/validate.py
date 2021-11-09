@@ -69,19 +69,3 @@ def signer_exists(signer_uri):
     result = query(exists_command)
     exists = helpers.to_answer(result)
     return exists
-
-def ensure_piece_linked(signflow_uri, piece_uri, valid_statuses):
-    pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
-
-    if len(pieces) == 0:
-        raise exceptions.InvalidStateException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
-    elif len(pieces) > 1:
-        raise exceptions.InvalidStateException(f"expected: 1 piece - found: {len(pieces)}")
-    
-    piece = pieces[0]
-    if piece["uri"] != piece_uri:
-        raise exceptions.InvalidStateException(
-            f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
-    if piece["status"] not in valid_statuses:
-        raise exceptions.InvalidStateException(
-            f"Piece {piece_uri} is in incorrect state for this action.")
