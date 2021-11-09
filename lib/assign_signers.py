@@ -1,17 +1,18 @@
 import typing
-from string import Template
 from signinghub_api_client.client import SigningHubSession
-from helpers import log, generate_uuid, query, update
-from escape_helpers import sparql_escape_uri, sparql_escape_string
+from helpers import log, logger, generate_uuid, query, update
+from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
 from .helpers import sparql_escape_list
 from . import exceptions, helpers, uri, validate
+from .helpers import Template
 
 def assign_signers(
     signinghub_session: SigningHubSession,
     signflow_uri: str, signer_uris: typing.List[str]):
     validate.ensure_signflow_exists(signflow_uri)
     #TODO: validation: ensure signflow is in draft
-    mandatees_query_command = _query_mandatees_template.safe_substitute(
+    mandatees_query_command = _query_mandatees_template.substitute(
+        graph=sparql_escape_uri(uri.graph.application),
         mandatees=sparql_escape_list([sparql_escape_uri(uri) for uri in signer_uris]))
     mandatee_result = query(mandatees_query_command)
     mandatee_records = helpers.to_recs(mandatee_result)
@@ -21,20 +22,20 @@ def assign_signers(
         raise exceptions.ResourceNotFoundException(','.join(mandatees_not_found))
 
     #TODO: validation: ensure signers are not assigned yet
-    sh_document_query_command = _sh_documents_template.safe_substitute(
+    sh_document_query_command = _sh_documents_template.substitute(
         graph=sparql_escape_uri(uri.graph.application),
         signflow=sparql_escape_uri(signflow_uri),
     )
     sh_document_result = query(sh_document_query_command)
     sh_document_records = helpers.to_recs(sh_document_result)
     sh_document_record = helpers.ensure_1(sh_document_records)
+
     sh_package_id = sh_document_record["sh_package_id"]
     sh_users = [{
         "user_email": r["email"],
         "user_name": ' '.join([name for name in [r["first_name"], r["family_name"]] if name]),
         "role": "SIGNER"
     } for r in mandatee_records]
-
     signinghub_session.add_users_to_workflow(sh_package_id, sh_users)
 
     signing_activities = [_build_signing_activity(signer_uri) for signer_uri in signer_uris]
@@ -45,7 +46,7 @@ def assign_signers(
             sparql_escape_uri(r["mandatee_uri"])
     ] for r in signing_activities])
 
-    assign_signers_command = _assign_signers_template.safe_substitute(
+    assign_signers_command = _assign_signers_template.substitute(
         graph=sparql_escape_uri(uri.graph.kanselarij),
         signflow=sparql_escape_uri(signflow_uri),
         signing_activities=signing_activities_escaped)
@@ -66,7 +67,7 @@ def _build_signing_activity(mandatee_uri):
 _sh_documents_template = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX mandaat: <https://data.vlaanderen.be/ns/mandaat#>
+PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
 PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
@@ -94,7 +95,7 @@ PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 
 SELECT ?mandatee ?email ?first_name ?family_name
 WHERE {
-    GRAPH ?graph {
+    GRAPH $graph {
         ?mandatee a mandaat:Mandataris ;
             mandaat:isBestuurlijkeAliasVan ?person .
         OPTIONAL { ?person foaf:firstName ?first_name }

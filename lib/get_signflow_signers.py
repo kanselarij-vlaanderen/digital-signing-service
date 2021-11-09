@@ -1,12 +1,12 @@
-from string import Template
-from helpers import query
-from escape_helpers import sparql_escape_string, sparql_escape_uri
-from . import exceptions, helpers, uri, validate, get_signflow_pieces
+from helpers import log, logger, generate_uuid, query, update
+from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
+from . import exceptions, helpers, uri, validate
+from .helpers import Template
 
 def get_signflow_signers(signflow_uri: str):
     validate.ensure_signflow_exists(signflow_uri)
    
-    query_command = _query_template.safe_substitute(
+    query_command = _query_template.substitute(
         graph=sparql_escape_uri(uri.graph.application),
         signflow=sparql_escape_uri(signflow_uri),
     )

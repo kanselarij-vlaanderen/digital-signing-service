@@ -10,17 +10,18 @@ class Template():
     def __init__(self, template_string: str) -> None:
         self.template = string.Template(template_string)
 
-    def safe_substitute(self, **substitutions: typing.Dict[str, str]):
+    def substitute(self, **substitutions: typing.Dict[str, str]):
         if config.mode.dev:
             for (key, val) in substitutions.items():
                 valid_sparql_val = (val.startswith('"') or val.startswith("'")
                     or val.startswith('<')
                     or val.isnumeric()
-                    or val == "true" or val == "false")
+                    or val == "true" or val == "false"
+                    or val.startswith('('))
                 if not valid_sparql_val:
-                    raise Exception(f"You probably forgot to escape: {substitutions}")
+                    raise Exception(f"You probably forgot to escape: {key}")
         
-        return self.template.safe_substitute(**substitutions)
+        return self.template.substitute(**substitutions)
 
 def to_recs(result):
     bindings = result["results"]["bindings"]

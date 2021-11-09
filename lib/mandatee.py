@@ -1,5 +1,4 @@
 from helpers import query, log
-
 from ..queries.mandatee import construct_get_mandatee, \
     construct_get_mandatee_by_id, \
     construct_get_mandatee_by_email, \

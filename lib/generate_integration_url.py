@@ -1,8 +1,8 @@
-from string import Template
-from helpers import query
-from escape_helpers import sparql_escape_string, sparql_escape_uri
+from helpers import log, logger, generate_uuid, query, update
+from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
 from signinghub_api_client.client import SigningHubSession
 from . import exceptions, helpers, uri, validate, get_signflow_pieces
+from .helpers import Template
 
 def generate_integration_url(signinghub_session: SigningHubSession,
     signflow_uri: str, piece_uri: str,
@@ -17,7 +17,7 @@ def generate_integration_url(signinghub_session: SigningHubSession,
     if piece["status"] == "marked":
         raise exceptions.InvalidStateException(f"Piece <{piece_uri}> has not been prepared yet.")
 
-    query_command = _query_signinghub_document.safe_substitute(
+    query_command = _query_signinghub_document.substitute(
         graph=sparql_escape_uri(uri.graph.application),
         signflow=sparql_escape_uri(signflow_uri),
         piece=sparql_escape_uri(piece_uri)

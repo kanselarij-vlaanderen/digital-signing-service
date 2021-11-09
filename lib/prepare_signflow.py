@@ -1,9 +1,9 @@
 import typing
-from .helpers import Template
 from signinghub_api_client.client import SigningHubSession
-from helpers import generate_uuid, query, update
+from helpers import log, logger, generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import exceptions, helpers, uri, validate, get_signflow_pieces
+from .helpers import Template
 
 SH_SOURCE = "Kaleidos"
 
@@ -21,7 +21,7 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
     if piece["status"] != "marked":
         raise exceptions.InvalidStateException(f"Piece {piece_uri} has already been prepared.")
 
-    query_file_command = _query_file_template.safe_substitute(
+    query_file_command = _query_file_template.substitute(
         graph=sparql_escape_uri(uri.graph.application),
         piece=sparql_escape_uri(piece_uri),
     )
@@ -53,7 +53,7 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
     signinghub_document_id = signinghub_document["documentid"]
 
     signinghub_document_uri = uri.resource.signinghub_document(signinghub_package_id, signinghub_document_id)
-    update_command = _update_template.safe_substitute(
+    update_command = _update_template.substitute(
         graph=sparql_escape_uri(uri.graph.kanselarij),
         signflow=sparql_escape_uri(signflow_uri),
         preparation_activity=sparql_escape_uri(preparation_activity_uri),
