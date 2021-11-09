@@ -4,7 +4,7 @@ from .authentication import signinghub_session_required, ensure_signinghub_machi
 from .jsonapi import jsonapi_required
 from .lib import uri, exceptions, \
     get_signflow_pieces, prepare_signflow, generate_integration_url, \
-    get_signers, assign_signers, start_signflow
+    get_signflow_signers, assign_signers, start_signflow
 from .lib.pub_flow import get_subcase_from_pub_flow_id
 from .lib.activity import get_signing_prep_from_subcase_file, \
     get_signing_prep_from_sh_package_id, \
@@ -73,7 +73,7 @@ def signers_get(signflow_id, piece_id):
         signflow_uri = uri.resource.signflow(signflow_id)
         piece_uri = uri.resource.piece(piece_id)
         try:
-            signers = get_signers.get_signers(signflow_uri)
+            signers = get_signflow_signers.get_signflow_signers(signflow_uri)
         except exceptions.ResourceNotFoundException as exception:
             logger.info(f"Not Found: {exception.uri}")
             return error(f"Not Found: {exception.uri}", 404)
