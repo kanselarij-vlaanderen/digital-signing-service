@@ -2,6 +2,7 @@ from string import Template
 from datetime import datetime, timedelta
 from pytz import timezone
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
+from ..lib.helpers import Template
 
 APPLICATION_GRAPH = "http://mu.semte.ch/application"
 

@@ -4,7 +4,7 @@ from escape_helpers import sparql_escape_string, sparql_escape_uri
 from signinghub_api_client.client import SigningHubSession
 from . import exceptions, helpers, uri, validate, get_signflow_pieces
 
-def generate_integration_uri(signinghub_session: SigningHubSession,
+def generate_integration_url(signinghub_session: SigningHubSession,
     signflow_uri: str, piece_uri: str,
     collapse_panels: bool):
     validate.ensure_signflow_exists(signflow_uri)

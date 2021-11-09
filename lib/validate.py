@@ -62,7 +62,7 @@ def signer_exists(signer_uri):
     """)
     
     exists_command = exists_template.safe_substitute(
-        graph=sparql_escape_uri(uri.graph.sign),
+        graph=sparql_escape_uri(uri.graph.application),
         signer=sparql_escape_uri(signer_uri)
     )
 
@@ -74,7 +74,7 @@ def ensure_piece_linked(signflow_uri, piece_uri, valid_statuses):
     pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
 
     if len(pieces) == 0:
-        raise exceptions.ResourceNotFoundException(piece_uri)
+        raise exceptions.InvalidStateException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
     elif len(pieces) > 1:
         raise exceptions.InvalidStateException(f"expected: 1 piece - found: {len(pieces)}")
     
@@ -84,4 +84,4 @@ def ensure_piece_linked(signflow_uri, piece_uri, valid_statuses):
             f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
     if piece["status"] not in valid_statuses:
         raise exceptions.InvalidStateException(
-            f"Piece {piece_uri} is not prepared or open.")
+            f"Piece {piece_uri} is in incorrect state for this action.")

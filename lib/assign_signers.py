@@ -3,30 +3,27 @@ from string import Template
 from signinghub_api_client.client import SigningHubSession
 from helpers import log, generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-from . import exceptions, helpers, uri, validate, \
-    get_signflow_pieces, get_signers
+from .helpers import sparql_escape_list
+from . import exceptions, helpers, uri, validate
 
 def assign_signers(
     signinghub_session: SigningHubSession,
-    signflow_uri: str, piece_uri: str, signer_uris: typing.List[str]):
+    signflow_uri: str, signer_uris: typing.List[str]):
     validate.ensure_signflow_exists(signflow_uri)
-    validate.ensure_piece_exists(piece_uri)
-    validate.ensure_piece_linked(signflow_uri, piece_uri, ["prepared", "open"])
-
+    #TODO: validation: ensure signflow is in draft
     mandatees_query_command = _query_mandatees_template.safe_substitute(
-        mandatees=' '.join([sparql_escape_uri(uri) for uri in signer_uris])
-    )
+        mandatees=sparql_escape_list([sparql_escape_uri(uri) for uri in signer_uris]))
     mandatee_result = query(mandatees_query_command)
     mandatee_records = helpers.to_recs(mandatee_result)
-    mandatee_records_map = { r["mandatee"]: r for r in mandatee_records }
-    mandatees_not_found = [uri for uri in signer_uris if mandatee_records_map[uri] is None]
+    mandatee_records_set = { r["mandatee"] for r in mandatee_records }
+    mandatees_not_found = [uri for uri in signer_uris if uri not in mandatee_records_set]
     if mandatees_not_found:
         raise exceptions.ResourceNotFoundException(','.join(mandatees_not_found))
 
+    #TODO: validation: ensure signers are not assigned yet
     sh_document_query_command = _sh_documents_template.safe_substitute(
         graph=sparql_escape_uri(uri.graph.application),
         signflow=sparql_escape_uri(signflow_uri),
-        piece=sparql_escape_uri(piece_uri),
     )
     sh_document_result = query(sh_document_query_command)
     sh_document_records = helpers.to_recs(sh_document_result)
@@ -37,7 +34,7 @@ def assign_signers(
         "user_name": ' '.join([name for name in [r["first_name"], r["family_name"]] if name]),
         "role": "SIGNER"
     } for r in mandatee_records]
-    
+
     signinghub_session.add_users_to_workflow(sh_package_id, sh_users)
 
     signing_activities = [_build_signing_activity(signer_uri) for signer_uri in signer_uris]
@@ -46,7 +43,7 @@ def assign_signers(
             sparql_escape_uri(r["uri"]),
             sparql_escape_string(r["id"]),
             sparql_escape_uri(r["mandatee_uri"])
-        ] for r in signing_activities])
+    ] for r in signing_activities])
 
     assign_signers_command = _assign_signers_template.safe_substitute(
         graph=sparql_escape_uri(uri.graph.kanselarij),
@@ -82,13 +79,10 @@ WHERE {
         ?sign_subcase a sign:HandtekenProcedurestap .
         ?sign_subcase ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
         ?preparation_activity sign:voorbereidingGenereert ?sh_document .
-        ?sh_document prov:hadPrimarySource ?piece .
-
         ?sh_document sh:packageId ?sh_package_id ;
             sh:documentId ?sh_document_id .
     }
 
-    VALUES ?piece { $piece }
     VALUES ?signflow { $signflow }
 }
 """)

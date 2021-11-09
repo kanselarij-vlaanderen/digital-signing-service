@@ -6,19 +6,12 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string
 from .. import config
 from . import exceptions
 
-class __Mode:
-    @property
-    def dev(self):
-        return config.MODE == "development"
-
-mode = __Mode()
-
 class Template():
     def __init__(self, template_string: str) -> None:
         self.template = string.Template(template_string)
 
     def safe_substitute(self, **substitutions: typing.Dict[str, str]):
-        if mode.dev:
+        if config.mode.dev:
             for (key, val) in substitutions.items():
                 valid_sparql_val = (val.startswith('"') or val.startswith("'")
                     or val.startswith('<')
@@ -42,8 +35,8 @@ def ensure_1(collection):
     return collection[0]
 
 def sparql_escape_table(table):
-    rows = [sparql_escape_list(row) for row in table]
+    rows = ['(' + sparql_escape_list(row) + ')' for row in table]
     return '\n'.join(rows)
 
 def sparql_escape_list(list):
-    return '(' + ' '.join(list) + ')'
+    return ' '.join(list)

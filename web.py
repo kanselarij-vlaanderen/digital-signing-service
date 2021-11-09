@@ -4,7 +4,7 @@ from .authentication import signinghub_session_required, ensure_signinghub_machi
 from .jsonapi import jsonapi_required
 from .lib import uri, exceptions, \
     get_signflow_pieces, prepare_signflow, generate_integration_url, \
-    get_signers, assign_signers
+    get_signers, assign_signers, start_signflow
 from .lib.pub_flow import get_subcase_from_pub_flow_id
 from .lib.activity import get_signing_prep_from_subcase_file, \
     get_signing_prep_from_sh_package_id, \
@@ -73,7 +73,7 @@ def signers_get(signflow_id, piece_id):
         signflow_uri = uri.resource.signflow(signflow_id)
         piece_uri = uri.resource.piece(piece_id)
         try:
-            signers = get_signers.get_signers(signflow_uri, piece_uri)
+            signers = get_signers.get_signers(signflow_uri)
         except exceptions.ResourceNotFoundException as exception:
             logger.info(f"Not Found: {exception.uri}")
             return error(f"Not Found: {exception.uri}", 404)
@@ -101,7 +101,7 @@ def signers_assign(signflow_id, piece_id):
             return error(f"Bad Request: invalid payload", 400)
 
         try:
-            signing_activities = assign_signers.assign_signers(g.sh_session, signflow_uri, piece_uri, signer_uris)
+            signing_activities = assign_signers.assign_signers(g.sh_session, signflow_uri, signer_uris)
         except exceptions.ResourceNotFoundException as exception:
             logger.info(f"Not Found: {exception.uri}")
             return error(f"Not Found: {exception.uri}", 404)
@@ -118,30 +118,61 @@ def signers_assign(signflow_id, piece_id):
 
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signinghub', methods=['GET'])
 @signinghub_session_required # provides g.sh_session
-def signinghub_integration_url(signflow_id, piece_id):
+def signinghub_integration(signflow_id, piece_id):
     try:
         signflow_uri = uri.resource.signflow(signflow_id)
         piece_uri = uri.resource.piece(piece_id)
         collapse_panels = request.args.get("collapse_panels", default="true", type=str) != "false"
         try:
-            integration_url = generate_integration_url.execute(g.sh_session, signflow_uri, piece_uri, collapse_panels)
+            integration_url = generate_integration_url.generate_integration_url(g.sh_session, signflow_uri, piece_uri, collapse_panels)
         except exceptions.ResourceNotFoundException as exception:
             return error(f"Not Found: {exception.uri}", 404)
         except exceptions.InvalidStateException as exception:
+            logger.exception(f"Invalid state: {exception}")
             return error(f"Invalid State: {exception}", 400)
         return redirect(integration_url, 303)
     except BaseException as exception:
         logger.exception("Internal server error")
         return error("Internal Server Error", 500)
 
-@app.route('/publication-flow/<pubf_id>/signing/files/<file_id>/start', methods=['POST'])
-def start_signing(pubf_id, file_id):
-    subcase_uri = get_subcase_from_pub_flow_id(pubf_id)["uri"]
-    file_uri = get_file_by_id(file_id)["uri"]
-    signing_prep = get_signing_prep_from_subcase_file(subcase_uri, file_uri)
-    g.sh_session.share_document_package(signing_prep["sh_package_id"])
-    update_activities_signing_started(signing_prep["uri"])
+@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signinghub-url', methods=['GET'])
+@signinghub_session_required # provides g.sh_session
+def signinghub_integration_url(signflow_id, piece_id):
+    try:
+        signflow_uri = uri.resource.signflow(signflow_id)
+        piece_uri = uri.resource.piece(piece_id)
+        collapse_panels = request.args.get("collapse_panels", default="true", type=str) != "false"
+        try:
+            integration_url = generate_integration_url.generate_integration_url(g.sh_session, signflow_uri, piece_uri, collapse_panels)
+        except exceptions.ResourceNotFoundException as exception:
+            logger.exception(f"Not found: {exception.uri}")
+            return error(f"Not Found: {exception.uri}", 404)
+        except exceptions.InvalidStateException as exception:
+            logger.exception(f"Invalid state: {exception}")
+            return error(f"Invalid State: {exception}", 400)
+        print(integration_url)
+        return make_response({ "url": integration_url }, 200)
+    except BaseException as exception:
+        logger.exception("Internal server error")
+        return error("Internal Server Error", 500)
 
+@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/start', methods=['POST'])
+@signinghub_session_required
+def start(signflow_id, piece_id):
+    try:
+        signflow_uri = uri.resource.signflow(signflow_id)
+        try:
+            start_signflow.start_signflow(g.sh_session, signflow_uri)
+        except exceptions.ResourceNotFoundException as exception:
+            logger.exception(exception.uri)
+            return error(f"Not Found: {exception.uri}", 404)
+        except exceptions.InvalidStateException as exception:
+            logger.exception(f"Invalid State: {exception}")
+            return error(f"Invalid State: {exception}", 400)
+        return make_response("", 200)
+    except BaseException as exception:
+        logger.exception("Internal server error")
+        return error("Internal Server Error", 500)
 
 @app.route('/signinghub-callback', methods=['GET, POST']) # HTTP method not specified in api documentation
 def signinghub_callback():
