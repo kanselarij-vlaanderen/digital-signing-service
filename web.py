@@ -91,7 +91,7 @@ def signers_get(signflow_id, piece_id):
 
 # piece_id is a part of the URI for consistency with other URIs of this service
 # SigningHubs API does not link signers to pieces
-@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/assign', methods=['POST'])
+@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['POST'])
 @signinghub_session_required # provides g.sh_session
 def signers_assign(signflow_id, piece_id):
     try:
@@ -115,25 +115,6 @@ def signers_assign(signflow_id, piece_id):
         return res
     except BaseException as exception:
         logger.exception("Internal Server Error")
-        return error("Internal Server Error", 500)
-
-@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signinghub', methods=['GET'])
-@signinghub_session_required # provides g.sh_session
-def signinghub_integration(signflow_id, piece_id):
-    try:
-        signflow_uri = uri.resource.signflow(signflow_id)
-        piece_uri = uri.resource.piece(piece_id)
-        collapse_panels = request.args.get("collapse_panels", default="true", type=str) != "false"
-        try:
-            integration_url = generate_integration_url.generate_integration_url(g.sh_session, signflow_uri, piece_uri, collapse_panels)
-        except exceptions.ResourceNotFoundException as exception:
-            return error(f"Not Found: {exception.uri}", 404)
-        except exceptions.InvalidStateException as exception:
-            logger.exception(f"Invalid state: {exception}")
-            return error(f"Invalid State: {exception}", 400)
-        return redirect(integration_url, 303)
-    except BaseException as exception:
-        logger.exception("Internal server error")
         return error("Internal Server Error", 500)
 
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signinghub-url', methods=['GET'])
