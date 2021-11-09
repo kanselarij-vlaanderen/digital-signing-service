@@ -36,7 +36,6 @@ def pieces_get(signflow_id):
             "type": "pieces",
             "uri": p["uri"],
             "id": p["id"],
-            "status": p["status"]
         } for p in pieces]
         res = make_response({ "data": data }, 200)
         res.headers["Content-Type"] = "application/vnd.api+json"

@@ -18,8 +18,6 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
     piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidStateException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
-    if piece["status"] != "marked":
-        raise exceptions.InvalidStateException(f"Piece {piece_uri} has already been prepared.")
 
     query_file_command = _query_file_template.substitute(
         graph=sparql_escape_uri(uri.graph.application),

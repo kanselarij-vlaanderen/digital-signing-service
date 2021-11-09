@@ -10,18 +10,11 @@ def get_signflow_pieces(signflow_uri: str):
     )
     results = query(query_command)
     records = helpers.to_recs(results)
-
-    if not records:
-        raise exceptions.ResourceNotFoundException(signflow_uri)
-
-    has_piece = "piece_id" in records[0]
-    if not has_piece:
-        return []
+    helpers.ensure_1(records)
 
     records = [{
         "id": r["piece_id"],
         "uri": r["piece"],
-        "status": _get_status(r),
     } for r in records]
 
     return records
@@ -39,56 +32,23 @@ WHERE {
         ?signflow a sign:Handtekenaangelegenheid ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap .
-    
-    	OPTIONAL { 
-      		?piece a dossier:Stuk .
-      		?piece mu:uuid ?piece_id .
-    	}
-        
-    	OPTIONAL {
-            ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase .
-            ?marking_activity a sign:Markeringsactiviteit .
-            OPTIONAL {
-                ?marking_activity sign:gemarkeerdStuk ?piece .
-                ?piece a dossier:Stuk ;
-                    mu:uuid ?piece_id .
-            }
-        }
+        ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase .
+        ?marking_activity a sign:Markeringsactiviteit .
+        ?marking_activity sign:gemarkeerdStuk ?piece .
+        ?piece a dossier:Stuk ;
+            mu:uuid ?piece_id .
     
         OPTIONAL {
             ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
             ?preparation_activity a sign:Voorbereidingsactiviteit .
-            OPTIONAL {
-                ?preparation_activity sign:voorbereidingGenereert ?signinghub_doc .
-                ?signinghub_doc a signinghub:Document ;
-                prov:hadPrimarySource ?piece .
-            }
+            ?preparation_activity sign:voorbereidingGenereert ?signinghub_doc .
+            ?signinghub_doc a signinghub:Document .
+            ?signinghub_doc prov:hadPrimarySource ?piece .
+            ?signinghub_doc signinghub:documentId ?documentId .
         }
     
-        OPTIONAL {
-      		?signing_activity sign:handtekeningVindtPlaatsTijdens ?sign_subcase .
-      		?signing_activity a sign:Handtekenactiviteit .
-      		OPTIONAL {
-        		?signing_activity prov:wasInformedBy ?preparation_activity .
-                ?preparation_activity a sign:Voorbereidingsactiviteit .
-        		?preparation_activity prov:hadPrimarySource ?piece .
-      		}
-    	}
-    
-    	BIND (IF (BOUND (?signing_activity), sign:Handtekenactiviteit,
-    		IF (BOUND (?preparation_activity), sign:Voorbereidingsactiviteit,
-          		IF (BOUND (?marking_activity), sign:Markeringsactiviteit, ?NULL))) AS ?activity_type)
     }
             
     VALUES ?signflow { $signflow }
 }
 """)
-
-def _get_status(record):
-    switcher = {
-        "http://mu.semte.ch/vocabularies/ext/handteken/Markeringsactiviteit": "marked",
-        "http://mu.semte.ch/vocabularies/ext/handteken/Voorbereidingsactiviteit": "prepared",
-        "http://mu.semte.ch/vocabularies/ext/handteken/Handtekenactiviteit": "ready-to-sign",
-    }
-    status = switcher.get(record["activity_type"])
-    return status

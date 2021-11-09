@@ -4,6 +4,8 @@ from signinghub_api_client.client import SigningHubSession
 from . import exceptions, helpers, uri, validate, get_signflow_pieces
 from .helpers import Template
 
+# TODO: validation:
+# - piece is uploaded to signinghub
 def generate_integration_url(signinghub_session: SigningHubSession,
     signflow_uri: str, piece_uri: str,
     collapse_panels: bool):
@@ -14,8 +16,6 @@ def generate_integration_url(signinghub_session: SigningHubSession,
     piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidStateException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")
-    if piece["status"] == "marked":
-        raise exceptions.InvalidStateException(f"Piece <{piece_uri}> has not been prepared yet.")
 
     query_command = _query_signinghub_document.substitute(
         graph=sparql_escape_uri(uri.graph.application),
