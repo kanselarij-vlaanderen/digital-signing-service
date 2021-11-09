@@ -7,6 +7,8 @@ from . import exceptions, helpers, uri, validate, get_signflow_pieces
 
 SH_SOURCE = "Kaleidos"
 
+# TODO: validation
+# - piece has not yet been uploaded to SigningHub
 def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, piece_uris: typing.List[str]):
     if len(piece_uris) == 0:
         raise exceptions.InvalidArgumentException(f"No piece to add specified.")
@@ -18,8 +20,6 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
     piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidArgumentException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
-    if piece["status"] != "marked":
-        raise exceptions.InvalidStateException(f"Piece {piece_uri} is already added to signflow {signflow_uri}.")
 
     query_file_command = _query_file_template.safe_substitute(
         graph=sparql_escape_uri(uri.graph.application),
