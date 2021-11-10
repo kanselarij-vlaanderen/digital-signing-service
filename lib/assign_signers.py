@@ -116,7 +116,7 @@ PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX mandaat: <https://data.vlaanderen.be/ns/mandaat#>
+PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
 PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
@@ -125,9 +125,9 @@ INSERT {
     GRAPH $graph {
         ?signing_activity a sign:Handtekenactiviteit ;
             mu:uuid ?signing_activity_id .
-        ?signing_activity prov:wasInformedBy ?preparation_activity .
-        ?signing_activity prov:qualifiedAssociation ?signer .
         ?signing_activity sign:handtekeningVindtPlaatsTijdens ?sign_subcase .
+        ?signing_activity prov:wasInformedBy ?preparation_activity .
+        ?signing_activity sign:ondertekenaar ?signer .
     }
 }
 WHERE {

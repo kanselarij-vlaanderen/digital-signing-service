@@ -22,7 +22,7 @@ def get_signflow_signers(signflow_uri: str):
 _query_template = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX mandaat: <https://data.vlaanderen.be/ns/mandaat#>
+PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
 PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>

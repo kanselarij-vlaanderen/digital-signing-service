@@ -59,17 +59,17 @@ PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
 INSERT {
     GRAPH $graph {
-        ?preparation_activity dossier:einddatum ?start_date .
-        ?signing_activity dossier:startdatum ?start_date .
+        ?preparation_activity dossier:Activiteit.einddatum ?start_date .
+        ?signing_activity dossier:Activiteit.startdatum ?start_date .
     }
 } WHERE {
     GRAPH $graph {
         ?signflow a sign:Handtekenaangelegenheid .
         ?signflow sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap .
-        ?sign_subcase sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
+        ?sign_subcase ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
         ?preparation_activity a sign:Voorbereidingsactiviteit .
-        ?sign_subcase sign:handtekeningVindtPlaatsTijdens ?signing_activity .
+        ?sign_subcase ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
         ?signing_activity a sign:Handtekenactiviteit .
     }
     VALUES ?signflow { $signflow }

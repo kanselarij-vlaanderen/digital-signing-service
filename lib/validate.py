@@ -51,21 +51,3 @@ def piece_exists(piece_uri):
 def ensure_signer_exists(signer_uri):
     if not piece_exists(signer_uri):
         raise exceptions.ResourceNotFoundException(signer_uri)
-
-def signer_exists(signer_uri):
-    exists_template = Template("""
-        PREFIX mandaat: <https://data.vlaanderen.be/ns/mandaat#>
-        
-        ASK {
-            $signer a mandaat:Mandataris .
-        }
-    """)
-    
-    exists_command = exists_template.safe_substitute(
-        graph=sparql_escape_uri(uri.graph.application),
-        signer=sparql_escape_uri(signer_uri)
-    )
-
-    result = query(exists_command)
-    exists = helpers.to_answer(result)
-    return exists
