@@ -6,6 +6,8 @@ from .helpers import sparql_escape_list
 from . import exceptions, helpers, uri, validate
 from .helpers import Template
 
+#TODO: validation:
+# - ensure signers are not assigned yet (SigningHub does not enforce single assignment)
 def assign_signers(
     signinghub_session: SigningHubSession,
     signflow_uri: str, signer_uris: typing.List[str]):
@@ -21,7 +23,6 @@ def assign_signers(
     if mandatees_not_found:
         raise exceptions.ResourceNotFoundException(','.join(mandatees_not_found))
 
-    #TODO: validation: ensure signers are not assigned yet
     sh_document_query_command = _sh_documents_template.substitute(
         graph=sparql_escape_uri(uri.graph.application),
         signflow=sparql_escape_uri(signflow_uri),

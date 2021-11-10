@@ -75,10 +75,10 @@ def signers_get(signflow_id, piece_id):
         try:
             signers = get_signflow_signers.get_signflow_signers(signflow_uri)
         except exceptions.ResourceNotFoundException as exception:
-            logger.info(f"Not Found: {exception.uri}")
+            logger.exception(f"Not Found: {exception.uri}")
             return error(f"Not Found: {exception.uri}", 404)
         except exceptions.InvalidStateException as exception:
-            logger.info(f"Invalid State: {str(exception)}")
+            logger.exception(f"Invalid State: {str(exception)}")
             return error(f"Invalid State: {exception}", 400)
 
         res = make_response({"data": signers}, 200)

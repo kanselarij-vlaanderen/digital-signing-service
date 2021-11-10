@@ -20,13 +20,12 @@ def start_signflow(
     records = helpers.to_recs(result)
     record = helpers.ensure_1(records)
     sh_package_id = record["sh_package_id"]
-    #sh_session.share_document_package(sh_package_id)
+    sh_session.share_document_package(sh_package_id)
     update_activities_command = _update_activities_template.substitute(
         graph=sparql_escape_uri(uri.graph.kanselarij),
         start_date=sparql_escape_datetime(datetime.now()),
         signflow=sparql_escape_uri(signflow_uri)
     )
-    logger.info(update_activities_command)
     update(update_activities_command)
 
 _sh_package_id_query_template = Template("""

@@ -7,6 +7,9 @@ from .helpers import Template
 
 SH_SOURCE = "Kaleidos"
 
+# TODO:
+# validation:
+# - document is not uploaded yet
 def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, piece_uris: typing.List[str]):
     if len(piece_uris) == 0:
         raise exceptions.InvalidArgumentException(f"No piece to add specified.")
