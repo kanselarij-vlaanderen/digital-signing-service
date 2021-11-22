@@ -2,8 +2,9 @@ import typing
 from signinghub_api_client.client import SigningHubSession
 from helpers import log, logger, generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
+from .. import queries
 from .helpers import sparql_escape_list
-from . import exceptions, helpers, uri, validate
+from . import exceptions, helpers, uri, validate, __signflow_queries
 from .helpers import Template
 
 #TODO: validation:
@@ -23,15 +24,8 @@ def assign_signers(
     if mandatees_not_found:
         raise exceptions.ResourceNotFoundException(','.join(mandatees_not_found))
 
-    sh_document_query_command = _sh_documents_template.substitute(
-        graph=sparql_escape_uri(uri.graph.application),
-        signflow=sparql_escape_uri(signflow_uri),
-    )
-    sh_document_result = query(sh_document_query_command)
-    sh_document_records = helpers.to_recs(sh_document_result)
-    sh_document_record = helpers.ensure_1(sh_document_records)
-
-    sh_package_id = sh_document_record["sh_package_id"]
+    signflow_record = __signflow_queries.get_signflow(signflow_uri)
+    sh_package_id = signflow_record["sh_package_id"]
     sh_users = [{
         "user_email": r["email"],
         "user_name": ' '.join([name for name in [r["first_name"], r["family_name"]] if name]),
@@ -73,7 +67,7 @@ PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
 PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
-SELECT ?signflow ?piece ?sh_document ?sh_package_id ?sh_document_id
+SELECT ?signflow ?piece ?sh_document ?sh_package_id
 WHERE {
     GRAPH $graph {
         ?signflow a sign:Handtekenaangelegenheid ;
@@ -81,8 +75,7 @@ WHERE {
         ?sign_subcase a sign:HandtekenProcedurestap .
         ?sign_subcase ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
         ?preparation_activity sign:voorbereidingGenereert ?sh_document .
-        ?sh_document sh:packageId ?sh_package_id ;
-            sh:documentId ?sh_document_id .
+        ?sh_document sh:packageId ?sh_package_id .
     }
 
     VALUES ?signflow { $signflow }

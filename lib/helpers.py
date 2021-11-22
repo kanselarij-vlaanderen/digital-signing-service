@@ -1,7 +1,8 @@
 import typing
 
 import string
-from helpers import query as orig_query, update as orig_update, log, generate_uuid
+import collections
+from helpers import query as orig_query, update as orig_update, log, logger, generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from .. import config
 from . import exceptions
@@ -13,7 +14,9 @@ class Template():
     def substitute(self, **substitutions: typing.Dict[str, str]):
         if config.mode.dev:
             for (key, val) in substitutions.items():
-                valid_sparql_val = (val.startswith('"') or val.startswith("'")
+                valid_sparql_val = (
+                    val == ""
+                    or val.startswith('"') or val.startswith("'")
                     or val.startswith('<')
                     or val.isnumeric()
                     or val == "true" or val == "false"
@@ -23,9 +26,17 @@ class Template():
         
         return self.template.substitute(**substitutions)
 
+def query(query_command: str) -> str:
+    return orig_query(query_command)
+
 def to_recs(result):
     bindings = result["results"]["bindings"]
-    return [{k: v["value"] for k, v in b.items()} for b in bindings]
+    return [
+        collections.defaultdict(
+            lambda: None,
+            [(k, v["value"]) for k, v in b.items()
+        ])
+    for b in bindings]
 
 def to_answer(result):
     return result["boolean"]

@@ -4,7 +4,7 @@ from pytz import timezone
 from flask import g, request
 from signinghub_api_client.client import SigningHubSession
 from signinghub_api_client.exceptions import AuthenticationException
-from helpers import log, error, generate_uuid
+from helpers import log, logger, error, generate_uuid
 from .queries.session import construct_get_mu_session_query, \
     construct_get_signinghub_session_query, \
     construct_insert_signinghub_session_query, \
@@ -105,7 +105,12 @@ def signinghub_machine_session_required(f):
             ensure_signinghub_machine_user_session()
             return f(*args, **kwargs)
         except AuthenticationException as ex:
+            logger.exception("Authentication Error")
             return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.error_id))
         except NoQueryResultsException as ex:
+            logger.exception("No Query Results Error")
             return error(ex.args[0])
+        except BaseException as ex:
+            logger.exception("Internal Server Error")
+            return error("Internal Server Error", 500)
     return decorated_function
