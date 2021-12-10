@@ -62,7 +62,7 @@ WHERE {
         ?signinghub_document a sh:Document ;
             sh:packageId ?signinghub_package_id ;
             sh:documentId ?signinghub_document_id ;
-            prov:hadPrimarySource $piece .
+            prov:hadPrimarySource ?piece .
     }
 }
 """)
