@@ -1,12 +1,9 @@
 import typing
 
-import string
 import collections
 from helpers import query as orig_query, update as orig_update, log, logger, generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-from .. import config
 from . import exceptions
-
 
 def query(query_command: str) -> str:
     return orig_query(query_command)

@@ -1,6 +1,5 @@
 from .. import config as _config
 
-
 class __Graph:
     application = 'http://mu.semte.ch/application'
     kanselarij = "http://mu.semte.ch/graphs/organizations/kanselarij"
