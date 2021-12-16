@@ -7,27 +7,6 @@ class __Graph:
 
 graph = __Graph()
 
-
-class __Type(object):
-    __TYPE_PREFIX_MAP = {
-        "sign": "http://mu.semte.ch/vocabularies/ext/handteken/",
-        "dossier": "https://data.vlaanderen.be/ns/dossier#"
-    }
-    def __type_build(self, prefix: str, type: str):        
-        return self.__TYPE_PREFIX_MAP[prefix] + type
-
-    @property
-    def signflow(self):
-        return self.__type_build("sign", "Handtekenaangelegenheid")
-
-    @property
-    def piece(self):
-        return self.__type_build("dossier", "Stuk")
-
-type = __Type()
-
-
-
 class __Resource:
     __RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/"
 
