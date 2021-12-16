@@ -1,6 +1,6 @@
+from string import Template
 from escape_helpers import sparql_escape_uri
 from ..lib import uri
-from ..lib.helpers import Template
 
 def construct(signflow_uri: str) -> str:
     query_template = Template("""

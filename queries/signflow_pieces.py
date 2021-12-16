@@ -1,6 +1,6 @@
+from string import Template
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
 from ..lib import uri
-from ..lib.helpers import Template
 
 def construct(signflow_uri: str):
     query_template = Template("""
@@ -38,5 +38,5 @@ WHERE {
 """)
     return query_template.substitute(
         graph=sparql_escape_uri(uri.graph.application),
-        signflow= sparql_escape_uri(signflow_uri)
+        signflow=sparql_escape_uri(signflow_uri)
     )
