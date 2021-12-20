@@ -16,6 +16,9 @@ class __Resource:
     def piece(self, id: str):
         return self.__build("stuk", id)
 
+    def mandatee(self, id: str):
+        return self.__build("mandataris", id)
+
     def signflow(self, id: str):
         return self.__build("handtekenaangelegenheid", id)
 
