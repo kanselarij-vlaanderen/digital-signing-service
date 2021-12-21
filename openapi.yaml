@@ -159,6 +159,7 @@ components:
           type: string          
           enum:
           - pieces
+          - mandatees
         id:
           type: string
           format: uuid
