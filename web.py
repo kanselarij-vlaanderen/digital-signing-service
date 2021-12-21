@@ -126,8 +126,8 @@ def signers_assign(signflow_id, piece_id):
             return error(f"Bad Request: invalid payload", 400)
 
         signer_ids = [r["id"] for r in signers_identifications]
-        signer_uris = validate.ensure_mandatees_exist(signer_ids)
         try:
+            signer_uris = validate.ensure_mandatees_exist(signer_ids)
             assign_signers.assign_signers(
                 g.sh_session, signflow_uri, signer_uris)
         except exceptions.ResourceNotFoundException as exception:
