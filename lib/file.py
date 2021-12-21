@@ -15,27 +15,6 @@ TIMEZONE = timezone('Europe/Brussels')
 FILE_BASE_URI = "http://kanselarij.vo.data.gift/id/files/"
 SIGNED_FILES_GRAPH = "http://mu.semte.ch/graphs/organizations/kanselarij"
 
-def read_file_bytes(file_uri, max_file_size=None):
-    file_query = construct_get_file_query(file_uri)
-    file_results = query(file_query)['results']['bindings']
-    if not file_results:
-        raise NoQueryResultsException("No file found by uri <{}>".format(file_uri))
-    file = file_results[0]
-    if (max_file_size is not None) and (max_file_size < file["size"]["value"]):
-        raise NoQueryResultsException("File size {} is greater than maximum allowed size {}.".format(
-            file["size"]["value"], max_file_size))
-    file_path = file["physicalFile"]["value"].replace("share://", "/share/")
-    with open(file_path, "rb") as f:
-        return f.read()
-
-def get_file_by_id(file_id):
-    file_query = construct_get_file_by_id(file_id)
-    file_results = query(file_query)['results']['bindings']
-    if not file_results:
-        raise NoQueryResultsException("No file found by id '{}'".format(file_id))
-    file = {k: v["value"] for k, v in file_results[0].items()}
-    return file
-
 def download_sh_doc_to_mu_file(sh_package_id, sh_document_id):
     file_bytes = g.sh_session.download_document(sh_package_id, sh_document_id)
     physical_file = {

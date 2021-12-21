@@ -5,8 +5,7 @@ from helpers import query, update, generate_uuid, log
 from ..sudo_query import query as sudo_query, update as sudo_update
 from ..queries.document import construct_get_document_for_file, \
     construct_attach_document_to_previous_version
-from ..queries.activity import construct_insert_signing_activity, \
-    construct_get_signing_prep_from_subcase_file, \
+from ..queries.activity import \
     construct_get_signing_prep_from_sh_package_id, \
     construct_end_prep_start_signing, \
     construct_update_signing_activity, \
@@ -23,41 +22,6 @@ SIGNING_ACT_BASE_URI = "http://example.com/activities/"
 
 SIGNING_ACT_GRAPH = "http://mu.semte.ch/graphs/organizations/kanselarij"
 SIGNED_DOCS_GRAPH = "http://mu.semte.ch/graphs/organizations/kanselarij"
-
-def get_signing_prep_from_sh_package_id(sh_package_id):
-    query_string = construct_get_signing_prep_from_sh_package_id(sh_package_id)
-    signing_prep_results = query(query_string)['results']['bindings']
-    if not signing_prep_results:
-        raise NoQueryResultsException("No signing prep found for sh package id '{}'".format(sh_package_id))
-    signing_prep_result = {k: v["value"] for k, v in signing_prep_results[0].items()}
-    return signing_prep_result
-
-def get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri):
-    query_string = construct_get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri)
-    signing_prep_results = query(query_string)['results']['bindings']
-    if not signing_prep_results:
-        raise NoQueryResultsException("No signing prep found within subcase <{}> for file <{}>".format(signing_subcase_uri, file_uri))
-    signing_prep = {k: v["value"] for k, v in signing_prep_results[0].items()}
-    if any(["signing" in res for res in signing_prep_results]):
-        signing_prep["signing"] = [r["signing"]["value"] for r in signing_prep_results if "signing" in r] # Many signing activities for one prep activity
-    return signing_prep
-
-def add_signing_activity(signing_subcase_uri, file_uri, mandatee_uri):
-    signing_prep = get_signing_prep_from_subcase_file(signing_subcase_uri, file_uri)
-    mandatee = get_mandatee(mandatee_uri)
-    mandatee_email = get_mandatee_email(mandatee_uri)
-    g.sh_session.add_users_to_workflow(signing_prep["sh_package_id"], [{
-        "user_email": mandatee_email,
-        "user_name": "{} {}".format(mandatee["first_name"], mandatee["family_name"]), # Not sure how/where this appears, since I expect this to be fetched from SigningHub profile info 
-        "role": "SIGNER"
-    }])
-    activity = {"uuid": generate_uuid()}
-    activity["uri"] = SIGNING_ACT_BASE_URI + activity["uuid"]
-    query_str = construct_insert_signing_activity(activity,
-                                                  signing_prep["uri"],
-                                                  mandatee_uri)
-    update(query_str)
-    return activity
 
 def update_activities_signing_started(signing_prep_uri):
     time = datetime.now(TIMEZONE)
