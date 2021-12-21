@@ -32,7 +32,7 @@ paths:
           content:
             application/vnd.api+json:
               schema:
-                $ref: '#/components/schemas/JsonApiPieces'
+                $ref: '#/components/schemas/JsonApiData'
     post:
       tags:
       - Signing files
@@ -48,57 +48,12 @@ paths:
       responses:
         202:
           description: successful operation
-  /publication-flow/{pubf_id}/signing/files/{file_id}/signers:
+  /sign-flows/{signflow_id}/signing/pieces/{piece_id}/signers:
     get:
       tags:
       - File signers
       summary: List signers for a certain file that is part of a publication flow
       operationId: listFileSigners
-      parameters:
-      - name: pubf_id
-        in: path
-        description: ID of publication flow
-        required: true
-        schema:
-          type: string
-      - name: file_id
-        in: path
-        description: ID of file
-        required: true
-        schema:
-          type: string
-      responses:
-        200:
-          description: successful operation
-          content: {}
-    post:
-      tags:
-      - File signers
-      summary: Add signers for a certain file that is part of a publication flow
-      operationId: addFileSigners
-      parameters:
-      - name: pubf_id
-        in: path
-        description: ID of publication flow
-        required: true
-        schema:
-          type: string
-      - name: file_id
-        in: path
-        description: ID of file
-        required: true
-        schema:
-          type: string
-      responses:
-        202:
-          description: successful operation
-          content: {}
-  /sign-flow/{signflow_id}/signing/pieces/{piece_id}/signinghub:
-    get:
-      tags:
-      - Iframe link
-      summary: Get an Iframe link for SigningHub interface integration
-      operationId: getIframeLink
       parameters:
       - name: signflow_id
         in: path
@@ -113,24 +68,72 @@ paths:
         schema:
           type: string
       responses:
+        200:
+          description: successful operation
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/JsonApiData'
+    post:
+      tags:
+      - File signers
+      summary: Add signers for a certain file that is part of a publication flow
+      operationId: addFileSigners
+      parameters:
+      - name: signflow_id
+        in: path
+        description: ID of sign flow
+        required: true
+        schema:
+          type: string
+      - name: piece_id
+        in: path
+        description: ID of piece
+        required: true
+        schema:
+          type: string
+      responses:
+        202:
+          description: successful operation
+          content: {}
+  /sign-flows/{signflow_id}/signing/pieces/{piece_id}/signinghub:
+    get:
+      tags:
+      - Iframe link
+      summary: Get an Iframe link for SigningHub interface integration
+      operationId: getIframeLink
+      parameters:
+      - name: signflow_id
+        in: path
+        description: ID of sign flow
+        required: true
+        schema:
+          type: string
+      - name: piece_id
+        in: path
+        description: ID of piece
+        required: true
+        schema:
+          type: string
+      responses:
         303:
           description: Redirect to SigningHub page
-  /publication-flow/{pubf_id}/signing/files/{file_id}/start:
+  /sign-flows/{signflow_id}/signing/pieces/{piece_id}/start:
     post:
       tags:
       - Start signing
       summary: Send out file for signing by the appointed signers
       operationId: startSigning
       parameters:
-      - name: pubf_id
+      - name: signflow_id
         in: path
-        description: ID of publication flow
+        description: ID of sign flow
         required: true
         schema:
           type: string
-      - name: file_id
+      - name: piece_id
         in: path
-        description: ID of file
+        description: ID of piece
         required: true
         schema:
           type: string
@@ -139,7 +142,7 @@ paths:
           description: Sucessfully sent out signing-flow
 components:
   schemas:
-    Piece:
+    JsonApiResourceIdentification:
       type: object
       properties:
         type:
@@ -148,17 +151,10 @@ components:
           - pieces
         id:
           type: string
-        uri:
-          type: string
-        status:
-          type: string
-          enum:
-          - "marked"
-          - "prepared"
-    JsonApiPieces:
+    JsonApiData:
       type: object
       properties:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/Piece'
+            $ref: '#/components/schemas/JsonApiResourceIdentification'
