@@ -4,7 +4,7 @@ from flask import g, json, request, make_response, redirect
 from helpers import log, error, logger
 from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
 from . import jsonapi
-from .lib import uri, exceptions, \
+from .lib import uri, exceptions, validate, \
     get_signflow_pieces, prepare_signflow, generate_integration_url, \
     get_signflow_signers, assign_signers, start_signflow
 from .lib.pub_flow import get_subcase_from_pub_flow_id
@@ -126,8 +126,7 @@ def signers_assign(signflow_id, piece_id):
             return error(f"Bad Request: invalid payload", 400)
 
         signer_ids = [r["id"] for r in signers_identifications]
-        signer_uris = [uri.resource.mandatee(id) for id in signer_ids]
-
+        signer_uris = validate.ensure_mandatees_exist(signer_ids)
         try:
             assign_signers.assign_signers(
                 g.sh_session, signflow_uri, signer_uris)
