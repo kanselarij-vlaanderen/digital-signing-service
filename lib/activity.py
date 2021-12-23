@@ -1,5 +1,4 @@
 from datetime import datetime
-from pytz import timezone
 from flask import g
 from helpers import query, update, generate_uuid, log
 from ..sudo_query import query as sudo_query, update as sudo_update

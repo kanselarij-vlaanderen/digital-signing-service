@@ -1,7 +1,7 @@
 from string import Template
 from helpers import query
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-from . import helpers, exceptions, uri
+from . import helpers, exceptions
 from ..config import KANSELARIJ_GRAPH
 
 def ensure_signflow_exists(signflow_uri):
