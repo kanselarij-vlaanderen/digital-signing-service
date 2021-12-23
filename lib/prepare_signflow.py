@@ -1,10 +1,10 @@
+from string import Template
 import typing
 from signinghub_api_client.client import SigningHubSession
 from helpers import log, logger, generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import exceptions, helpers, uri, get_signflow_pieces
 from ..config import APPLICATION_GRAPH, KANSELARIJ_GRAPH
-from .helpers import Template
 
 SH_SOURCE = "Kaleidos"
 

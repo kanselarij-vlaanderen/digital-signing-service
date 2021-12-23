@@ -1,10 +1,10 @@
 from datetime import datetime
+from string import Template
 from signinghub_api_client.client import SigningHubSession
 from . import get_signflow_pieces
 from helpers import log, logger, generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
 from . import exceptions, helpers, uri, validate
-from .helpers import Template
 
 #TODO: validation
 # - not started yet
