@@ -4,11 +4,11 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escap
 from . import exceptions, helpers, uri, validate
 
 def get_signflow_pieces(signflow_uri: str):
-    query_command = _query_template.substitute(
+    query_string = _query_template.substitute(
         graph=sparql_escape_uri(uri.graph.application),
         signflow= sparql_escape_uri(signflow_uri)
     )
-    results = query(query_command)
+    results = query(query_string)
     records = helpers.to_recs(results)
     helpers.ensure_1(records)
 

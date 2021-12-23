@@ -16,12 +16,12 @@ def signflow_exists(signflow_uri):
         }
     """)
     
-    exists_command = exists_template.substitute(
+    existence_test_query_string = exists_template.substitute(
         graph=sparql_escape_uri(uri.graph.kanselarij),
         signflow=sparql_escape_uri(signflow_uri),
     )
 
-    result = query(exists_command)
+    result = query(existence_test_query_string)
     exists = helpers.to_answer(result)
     return exists
 
@@ -38,11 +38,11 @@ def piece_exists(piece_uri):
         }
     """)
     
-    exists_command = exists_template.substitute(
+    existence_test_query_string = exists_template.substitute(
         graph=sparql_escape_uri(uri.graph.kanselarij),
         piece=sparql_escape_uri(piece_uri)
     )
 
-    result = query(exists_command)
+    result = query(existence_test_query_string)
     exists = helpers.to_answer(result)
     return exists

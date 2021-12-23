@@ -21,11 +21,11 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidArgumentException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
 
-    query_file_command = _query_file_template.substitute(
+    get_file_query_string = _query_file_template.substitute(
         graph=sparql_escape_uri(uri.graph.application),
         piece=sparql_escape_uri(piece_uri),
     )
-    file_result = query(query_file_command)
+    file_result = query(get_file_query_string)
     file_records = helpers.to_recs(file_result)
     file_record = helpers.ensure_1(file_records)
     piece_uri = file_record["piece"]
@@ -53,7 +53,7 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
     signinghub_document_id = signinghub_document["documentid"]
 
     signinghub_document_uri = uri.resource.signinghub_document(signinghub_package_id, signinghub_document_id)
-    update_command = _update_template.substitute(
+    query_string = _update_template.substitute(
         graph=sparql_escape_uri(uri.graph.kanselarij),
         signflow=sparql_escape_uri(signflow_uri),
         preparation_activity=sparql_escape_uri(preparation_activity_uri),
@@ -63,7 +63,7 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
         sh_document_id=sparql_escape_string(str(signinghub_document_id)),
         sh_package_id=sparql_escape_string(str(signinghub_package_id)),
     )
-    update(update_command)
+    update(query_string)
 
 _query_file_template = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
