@@ -14,15 +14,16 @@ from ..queries.activity import construct_insert_signing_activity, \
 from .mandatee import get_mandatee, get_mandatee_email, get_mandatee_by_email
 from .document import download_sh_doc_to_kaleidos_doc
 from .exceptions import NoQueryResultsException
+from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
 
 TIMEZONE = timezone('Europe/Brussels')
 
-SIGNING_PREP_ACT_BASE_URI = "http://example.com/activities/"
+SIGNING_PREP_ACT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/activiteit/"
 
-SIGNING_ACT_BASE_URI = "http://example.com/activities/"
+SIGNING_ACT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/activiteit/"
 
-SIGNING_ACT_GRAPH = "http://mu.semte.ch/graphs/organizations/kanselarij"
-SIGNED_DOCS_GRAPH = "http://mu.semte.ch/graphs/organizations/kanselarij"
+SIGNING_ACT_GRAPH = KANSELARIJ_GRAPH
+SIGNED_DOCS_GRAPH = KANSELARIJ_GRAPH
 
 def get_signing_prep_from_sh_package_id(sh_package_id):
     query_string = construct_get_signing_prep_from_sh_package_id(sh_package_id)

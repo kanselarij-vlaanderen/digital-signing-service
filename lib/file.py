@@ -7,13 +7,14 @@ from ..queries.file import construct_get_file_query, \
     construct_insert_file_query
 from .exceptions import NoQueryResultsException
 from ..sudo_query import update as sudo_update
+from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
 
 SH_SOURCE = "Kaleidos" # TODO https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1022
 
 TIMEZONE = timezone('Europe/Brussels')
 
-FILE_BASE_URI = "http://kanselarij.vo.data.gift/id/files/"
-SIGNED_FILES_GRAPH = "http://mu.semte.ch/graphs/organizations/kanselarij"
+FILE_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/files/"
+SIGNED_FILES_GRAPH = KANSELARIJ_GRAPH
 
 def read_file_bytes(file_uri, max_file_size=None):
     file_query = construct_get_file_query(file_uri)

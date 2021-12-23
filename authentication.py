@@ -13,7 +13,7 @@ from .queries.session import construct_get_mu_session_query, \
     construct_mark_signinghub_session_as_machine_users_query
 from .sudo_query import query as sudo_query, update as sudo_update
 from .lib.exceptions import NoQueryResultsException
-
+from .config import KALEIDOS_RESOURCE_BASE_URI
 TIMEZONE = timezone('Europe/Brussels')
 
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
@@ -26,7 +26,7 @@ SIGNINGHUB_API_CLIENT_SECRET = os.environ.get("SIGNINGHUB_CLIENT_SECRET") # API 
 SIGNINGHUB_MACHINE_ACCOUNT_USERNAME = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_USERNAME")
 SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD")
 
-SIGNINGHUB_SESSION_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-sessions/"
+SIGNINGHUB_SESSION_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/signinghub-sessions/"
 
 def ensure_signinghub_session(mu_session_uri):
     mu_session_query = construct_get_mu_session_query(mu_session_uri)

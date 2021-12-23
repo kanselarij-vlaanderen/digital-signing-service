@@ -4,13 +4,13 @@ from ..queries.document import construct_get_file_for_document, construct_insert
 from ..sudo_query import update as sudo_update
 from .file import download_sh_doc_to_mu_file
 from .exceptions import NoQueryResultsException
+from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
 
 TIMEZONE = timezone('Europe/Brussels')
 
-APPLICATION_GRAPH = "http://mu.semte.ch/application"
-SIGNED_DOCS_GRAPH = "http://mu.semte.ch/graphs/organizations/kanselarij"
+SIGNED_DOCS_GRAPH = KANSELARIJ_GRAPH
 
-DOC_BASE_URI = "http://kanselarij.vo.data.gift/id/stukken/"
+DOC_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 
 def get_file_for_document(document_uri):
     query_string = construct_get_file_for_document(document_uri, file_mimetype="application/pdf")
