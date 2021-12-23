@@ -4,6 +4,7 @@ from signinghub_api_client.client import SigningHubSession
 from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import exceptions, helpers, uri, validate, get_signflow_pieces
+from ..config import APPLICATION_GRAPH, KANSELARIJ_GRAPH
 
 SH_SOURCE = "Kaleidos"
 
@@ -22,7 +23,7 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
         raise exceptions.InvalidArgumentException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
 
     get_file_query_string = _query_file_template.substitute(
-        graph=sparql_escape_uri(uri.graph.application),
+        graph=sparql_escape_uri(APPLICATION_GRAPH),
         piece=sparql_escape_uri(piece_uri),
     )
     file_result = query(get_file_query_string)
@@ -54,7 +55,7 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
 
     signinghub_document_uri = uri.resource.signinghub_document(signinghub_package_id, signinghub_document_id)
     query_string = _update_template.substitute(
-        graph=sparql_escape_uri(uri.graph.kanselarij), # TODO: determine why this cannot be the application graph
+        graph=sparql_escape_uri(KANSELARIJ_GRAPH), # TODO: determine why this cannot be the application graph
         signflow=sparql_escape_uri(signflow_uri),
         preparation_activity=sparql_escape_uri(preparation_activity_uri),
         preparation_activity_id=sparql_escape_string(preparation_activity_id),

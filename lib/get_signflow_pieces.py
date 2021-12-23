@@ -2,10 +2,11 @@ from string import Template
 from helpers import log, logger, generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
 from . import exceptions, helpers, uri, validate
+from ..config import APPLICATION_GRAPH
 
 def get_signflow_pieces(signflow_uri: str):
     query_string = _query_template.substitute(
-        graph=sparql_escape_uri(uri.graph.application),
+        graph=sparql_escape_uri(APPLICATION_GRAPH),
         signflow= sparql_escape_uri(signflow_uri)
     )
     results = query(query_string)

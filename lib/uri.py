@@ -1,12 +1,5 @@
 from .. import config as _config
 
-
-class __Graph:
-    application = 'http://mu.semte.ch/application'
-    kanselarij = "http://mu.semte.ch/graphs/organizations/kanselarij"
-
-graph = __Graph()
-
 class __Resource:
     __RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/"
 

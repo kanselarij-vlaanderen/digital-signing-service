@@ -3,6 +3,7 @@ from helpers import query
 from escape_helpers import sparql_escape_string, sparql_escape_uri
 from signinghub_api_client.client import SigningHubSession
 from . import exceptions, helpers, uri, validate, get_signflow_pieces
+from ..config import APPLICATION_GRAPH
 
 # TODO: validation:
 # - piece is uploaded to signinghub
@@ -18,7 +19,7 @@ def generate_integration_uri(signinghub_session: SigningHubSession,
         raise exceptions.InvalidArgumentException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")
 
     query_string = _query_signinghub_document.substitute(
-        graph=sparql_escape_uri(uri.graph.application),
+        graph=sparql_escape_uri(APPLICATION_GRAPH),
         signflow=sparql_escape_uri(signflow_uri),
         piece=sparql_escape_uri(piece_uri)
     )

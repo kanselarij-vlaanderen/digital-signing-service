@@ -2,6 +2,7 @@ from string import Template
 from helpers import query
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import helpers, exceptions, uri
+from ..config import KANSELARIJ_GRAPH
 
 def ensure_signflow_exists(signflow_uri):
     if not signflow_exists(signflow_uri):
@@ -17,7 +18,7 @@ def signflow_exists(signflow_uri):
     """)
     
     existence_test_query_string = exists_template.substitute(
-        graph=sparql_escape_uri(uri.graph.kanselarij), # TODO: determine why this cannot be the application graph
+        graph=sparql_escape_uri(KANSELARIJ_GRAPH), # TODO: determine why this cannot be the application graph
         signflow=sparql_escape_uri(signflow_uri),
     )
 
@@ -39,7 +40,7 @@ def piece_exists(piece_uri):
     """)
     
     existence_test_query_string = exists_template.substitute(
-        graph=sparql_escape_uri(uri.graph.kanselarij), # TODO: determine why this cannot be the application graph
+        graph=sparql_escape_uri(KANSELARIJ_GRAPH), # TODO: determine why this cannot be the application graph
         piece=sparql_escape_uri(piece_uri)
     )
 
