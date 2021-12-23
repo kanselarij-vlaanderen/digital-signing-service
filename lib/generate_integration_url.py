@@ -17,7 +17,7 @@ def generate_integration_uri(signinghub_session: SigningHubSession,
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidArgumentException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")
 
-    query_command = _query_signinghub_document.safe_substitute(
+    query_command = _query_signinghub_document.substitute(
         graph=sparql_escape_uri(uri.graph.application),
         signflow=sparql_escape_uri(signflow_uri),
         piece=sparql_escape_uri(piece_uri)
