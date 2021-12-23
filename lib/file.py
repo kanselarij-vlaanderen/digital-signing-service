@@ -1,5 +1,4 @@
 from datetime import datetime
-from pytz import timezone
 from flask import g
 from helpers import query, generate_uuid
 from ..queries.file import construct_get_file_query, \
@@ -7,11 +6,9 @@ from ..queries.file import construct_get_file_query, \
     construct_insert_file_query
 from .exceptions import NoQueryResultsException
 from ..sudo_query import update as sudo_update
-from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
+from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
 
 SH_SOURCE = "Kaleidos" # TODO https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1022
-
-TIMEZONE = timezone('Europe/Brussels')
 
 FILE_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/files/"
 SIGNED_FILES_GRAPH = KANSELARIJ_GRAPH

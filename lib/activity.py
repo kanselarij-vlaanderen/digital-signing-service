@@ -14,9 +14,7 @@ from ..queries.activity import construct_insert_signing_activity, \
 from .mandatee import get_mandatee, get_mandatee_email, get_mandatee_by_email
 from .document import download_sh_doc_to_kaleidos_doc
 from .exceptions import NoQueryResultsException
-from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
-
-TIMEZONE = timezone('Europe/Brussels')
+from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
 
 SIGNING_PREP_ACT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/activiteit/"
 

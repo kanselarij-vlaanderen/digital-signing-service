@@ -1,10 +1,9 @@
 from string import Template
 from datetime import datetime
-from pytz import timezone
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
+from ..constants import TIMEZONE
 
-TIMEZONE = timezone('Europe/Brussels')
 APPLICATION_GRAPH = "http://mu.semte.ch/application"
 
 DOCUMENT_BASE_URI = "http://kanselarij.vo.data.gift/id/stukken/"

@@ -1,12 +1,9 @@
-from pytz import timezone
 from helpers import query, generate_uuid
 from ..queries.document import construct_get_file_for_document, construct_insert_document
 from ..sudo_query import update as sudo_update
 from .file import download_sh_doc_to_mu_file
 from .exceptions import NoQueryResultsException
-from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
-
-TIMEZONE = timezone('Europe/Brussels')
+from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
 
 SIGNED_DOCS_GRAPH = KANSELARIJ_GRAPH
 

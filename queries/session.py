@@ -1,11 +1,10 @@
 import os
 from string import Template
 from datetime import datetime
-from pytz import timezone
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
+from ..constants import TIMEZONE
 
-TIMEZONE = timezone('Europe/Brussels')
 SESSION_GRAPH = "http://mu.semte.ch/graphs/sessions"
 ACCOUNT_GRAPH = "http://mu.semte.ch/graphs/public" # TODO: might change once user data is spread over different graphs
 SIGNINGHUB_TOKEN_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-tokens/"
