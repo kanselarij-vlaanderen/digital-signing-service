@@ -2,9 +2,7 @@ from string import Template
 from datetime import datetime
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
-from ..constants import TIMEZONE
-
-APPLICATION_GRAPH = "http://mu.semte.ch/application"
+from ..constants import APPLICATION_GRAPH, TIMEZONE
 
 def construct_insert_file_query(file, physical_file, graph=APPLICATION_GRAPH):
     """

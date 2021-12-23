@@ -2,9 +2,7 @@ import os
 from string import Template
 from datetime import datetime
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
-from ..constants import TIMEZONE
-
-APPLICATION_GRAPH = "http://mu.semte.ch/application"
+from ..constants import APPLICATION_GRAPH, SIGNINGHUB_RESOURCE_BASE_URI, TIMEZONE
 
 SIGNING_PREP_ACT_TYPE_URI = "http://kanselarij.vo.data.gift/id/concept/activiteit-types/001d38fb-b285-41ef-a252-4e70208e9266"
 SIGNING_ACT_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/publicatie/Handtekenactiviteit"
@@ -12,8 +10,7 @@ SIGNING_WRAP_TYPE_URI = "http://kanselarij.vo.data.gift/id/concept/activiteit-ty
 
 SH_DOC_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/signinghub/Document"
 
-sh_package_base_uri = os.environ.get("SIGNINGHUB_API_URL", "http://kanselarij.vo.data.gift/").strip("/") + "/"
-SH_DOC_BASE_URI = "{}package/{{package_id}}/document/{{document_id}}".format(sh_package_base_uri)
+SH_DOC_BASE_URI = "{}package/{{package_id}}/document/{{document_id}}".format(SIGNINGHUB_RESOURCE_BASE_URI)
 
 def construct_get_signing_prep_from_subcase_file(signing_subcase_uri,
                                                  file_uri,

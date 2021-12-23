@@ -1,7 +1,6 @@
 from string import Template
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-
-APPLICATION_GRAPH = "http://mu.semte.ch/application"
+from ..constants import APPLICATION_GRAPH
 
 PUB_FLOW_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/publicatie/Publicatieaangelegenheid"
 SIGNING_SUBC_TYPE_URI = "http://example.com/step/e711f906-34a9-11eb-adc1-0242ac120002" # TODO: change in source data
