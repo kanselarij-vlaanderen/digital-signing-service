@@ -54,7 +54,7 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
 
     signinghub_document_uri = uri.resource.signinghub_document(signinghub_package_id, signinghub_document_id)
     query_string = _update_template.substitute(
-        graph=sparql_escape_uri(uri.graph.kanselarij),
+        graph=sparql_escape_uri(uri.graph.kanselarij), # TODO: determine why this cannot be the application graph
         signflow=sparql_escape_uri(signflow_uri),
         preparation_activity=sparql_escape_uri(preparation_activity_uri),
         preparation_activity_id=sparql_escape_string(preparation_activity_id),
