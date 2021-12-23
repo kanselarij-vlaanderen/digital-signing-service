@@ -1,13 +1,13 @@
-from string import Template
-from helpers import query
-from escape_helpers import sparql_escape_string, sparql_escape_uri
+from helpers import log, logger, generate_uuid, query, update
+from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
 from signinghub_api_client.client import SigningHubSession
 from . import exceptions, helpers, uri, validate, get_signflow_pieces
 from ..config import APPLICATION_GRAPH
+from .helpers import Template
 
 # TODO: validation:
 # - piece is uploaded to signinghub
-def generate_integration_uri(signinghub_session: SigningHubSession,
+def generate_integration_url(signinghub_session: SigningHubSession,
     signflow_uri: str, piece_uri: str,
     collapse_panels: bool):
     validate.ensure_signflow_exists(signflow_uri)
@@ -16,10 +16,10 @@ def generate_integration_uri(signinghub_session: SigningHubSession,
     pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
     piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
-        raise exceptions.InvalidArgumentException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")
+        raise exceptions.InvalidStateException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")
 
     query_string = _query_signinghub_document.substitute(
-        graph=sparql_escape_uri(APPLICATION_GRAPH),
+        graph=sparql_escape_uri(uri.graph.application),
         signflow=sparql_escape_uri(signflow_uri),
         piece=sparql_escape_uri(piece_uri)
     )
