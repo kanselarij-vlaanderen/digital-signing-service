@@ -31,12 +31,12 @@ WHERE {
         ?signflow a sign:Handtekenaangelegenheid ;
             mu:uuid ?signflow_id .
         ?signflow sign:doorlooptHandtekening ?sign_subcase .
-        ?sign_subcase a sign:HandtekenProcedurestap .
-        ?sign_subcase ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
-        ?preparation_activity a sign:Voorbereidingsactiviteit .
-        ?preparation_activity sign:voorbereidingGenereert ?sh_document .
-        ?sh_document a sh:Document .
-        ?sh_document sh:packageId ?sh_package_id .
+        ?sign_subcase a sign:HandtekenProcedurestap ;
+            ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
+        ?preparation_activity a sign:Voorbereidingsactiviteit ;
+            sign:voorbereidingGenereert ?sh_document .
+        ?sh_document a sh:Document ;
+            sh:packageId ?sh_package_id .
     }
 
     OPTIONAL { VALUES ?signflow { $signflow } }
