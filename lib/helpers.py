@@ -1,8 +1,18 @@
+import collections
+from helpers import query as orig_query
 from . import exceptions
+
+def query(query_command: str) -> str:
+    return orig_query(query_command)
 
 def to_recs(result):
     bindings = result["results"]["bindings"]
-    return [{k: v["value"] for k, v in b.items()} for b in bindings]
+    return [
+        collections.defaultdict(
+            lambda: None,
+            [(k, v["value"]) for k, v in b.items()
+        ])
+    for b in bindings]
 
 def to_answer(result):
     return result["boolean"]

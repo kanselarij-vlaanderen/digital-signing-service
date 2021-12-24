@@ -4,7 +4,7 @@ class __Resource:
     __THEMIS_RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/"
 
     def __build (self, type: str, id: str):
-        return self.__THEMIS_RESOURCE_BASE_URI + type + "/" + id
+        return __Resource.__THEMIS_RESOURCE_BASE_URI + type + "/" + id
 
     def piece(self, id: str):
         return self.__build("stuk", id)

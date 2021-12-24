@@ -13,14 +13,6 @@ def get_mandatee(mandatee_uri):
     mandatee = {k: v["value"] for k, v in madatee_results[0].items()}
     return mandatee
 
-def get_mandatee_by_id(mandatee_id):
-    query_str = construct_get_mandatee_by_id(mandatee_id)
-    madatee_results = query(query_str)['results']['bindings']
-    if not madatee_results:
-        raise NoQueryResultsException("No mandatee found by id '{}'".format(mandatee_id))
-    mandatee = {k: v["value"] for k, v in madatee_results[0].items()}
-    return mandatee
-
 def get_mandatee_by_email(mandatee_email):
     query_str = construct_get_mandatee_by_email(mandatee_email)
     madatee_results = query(query_str)['results']['bindings']
@@ -30,14 +22,6 @@ def get_mandatee_by_email(mandatee_email):
         log("Multiple mandatees found for e-mail address '{}'. Picking one.".format(mandatee_email))
     mandatee = {k: v["value"] for k, v in madatee_results[0].items()}
     return mandatee
-
-def get_signing_mandatees(signing_prep_uri):
-    query_str = construct_get_signing_mandatees(signing_prep_uri)
-    madatee_results = query(query_str)['results']['bindings']
-    if not madatee_results:
-        raise NoQueryResultsException("No mandatees found for signing prep uri <{}>".format(signing_prep_uri))
-    madatee_results = [{k: v["value"] for k, v in res.items()} for res in madatee_results]
-    return madatee_results
 
 def get_mandatee_email(mandatee_uri):
     mandatee = get_mandatee(mandatee_uri)

@@ -3,11 +3,14 @@ import typing
 from signinghub_api_client.client import SigningHubSession
 from helpers import log, logger, generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-from . import exceptions, helpers, uri, get_signflow_pieces
+from . import exceptions, helpers, uri, __signflow_queries
 from ..config import APPLICATION_GRAPH, KANSELARIJ_GRAPH
 
 SH_SOURCE = "Kaleidos"
 
+# TODO:
+# validation:
+# - document is not uploaded yet
 def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, piece_uris: typing.List[str]):
     if len(piece_uris) == 0:
         raise exceptions.InvalidArgumentException(f"No piece to add specified.")
@@ -15,13 +18,13 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
         raise exceptions.InvalidArgumentException(f"Signflow can only add 1 piece.")
     piece_uri = piece_uris[0]
 
-    pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
+    pieces = __signflow_queries.get_pieces(signflow_uri)
     piece = helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidStateException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
 
     get_file_query_string = _query_file_template.substitute(
-        graph=sparql_escape_uri(uri.graph.application),
+        graph=sparql_escape_uri(APPLICATION_GRAPH),
         piece=sparql_escape_uri(piece_uri),
     )
     file_result = query(get_file_query_string)
@@ -43,6 +46,7 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
         "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
     })
     signinghub_package_id = signinghub_package["package_id"]
+    
     signinghub_document = signinghub_session.upload_document(
         signinghub_package_id,
         file_content,
@@ -51,14 +55,16 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
         convert_document=False)
     signinghub_document_id = signinghub_document["documentid"]
 
+    sh_document_muid = generate_uuid()
     signinghub_document_uri = uri.resource.signinghub_document(signinghub_package_id, signinghub_document_id)
     query_string = _update_template.substitute(
-        graph=sparql_escape_uri(uri.graph.kanselarij),
+        graph=sparql_escape_uri(KANSELARIJ_GRAPH),
         signflow=sparql_escape_uri(signflow_uri),
         preparation_activity=sparql_escape_uri(preparation_activity_uri),
         preparation_activity_id=sparql_escape_string(preparation_activity_id),
         piece=sparql_escape_uri(piece_uri),
         sh_document=sparql_escape_uri(signinghub_document_uri),
+        sh_document_muid=sparql_escape_string(sh_document_muid),
         sh_document_id=sparql_escape_string(str(signinghub_document_id)),
         sh_package_id=sparql_escape_string(str(signinghub_package_id)),
     )
@@ -105,6 +111,7 @@ INSERT {
             mu:uuid $preparation_activity_id .
         $preparation_activity sign:voorbereidingGenereert $sh_document .
         $sh_document a sh:Document ;
+            mu:uuid $sh_document_muid ;
             sh:packageId $sh_package_id ;
             sh:documentId $sh_document_id ;
             prov:hadPrimarySource $piece .
