@@ -1,12 +1,11 @@
 from string import Template
 import typing
-
-from string import Template
 from helpers import log, logger, generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
 from signinghub_api_client.client import SigningHubSession
 from .helpers import sparql_escape_list
 from . import exceptions, helpers, uri, validate, __signflow_queries
+from ..config import APPLICATION_GRAPH
 
 #TODO: validation:
 # - ensure signers are not assigned yet (SigningHub does not enforce single assignment)
@@ -16,7 +15,7 @@ def assign_signers(
     validate.ensure_signflow_exists(signflow_uri)
     #TODO: validation: ensure signflow is in draft
     mandatees_query_command = _query_mandatees_template.substitute(
-        graph=sparql_escape_uri(uri.graph.application),
+        graph=sparql_escape_uri(APPLICATION_GRAPH),
         mandatees=sparql_escape_list([sparql_escape_uri(uri) for uri in signer_uris]))
     mandatee_result = query(mandatees_query_command)
     mandatee_records = helpers.to_recs(mandatee_result)
@@ -43,7 +42,7 @@ def assign_signers(
     ] for r in signing_activities])
 
     assign_signers_command = _assign_signers_template.substitute(
-        graph=sparql_escape_uri(uri.graph.kanselarij),
+        graph=sparql_escape_uri(APPLICATION_GRAPH),
         signflow=sparql_escape_uri(signflow_uri),
         signing_activities=signing_activities_escaped)
     update(assign_signers_command)

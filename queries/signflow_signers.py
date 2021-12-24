@@ -1,6 +1,6 @@
 from string import Template
 from escape_helpers import sparql_escape_uri
-from ..lib import uri
+from ..config import APPLICATION_GRAPH
 
 def construct(signflow_uri: str) -> str:
     query_template = Template("""
@@ -30,6 +30,6 @@ WHERE {
 }
 """)
     return query_template.substitute(
-        graph=sparql_escape_uri(uri.graph.application),
+        graph=sparql_escape_uri(APPLICATION_GRAPH),
         signflow=sparql_escape_uri(signflow_uri)
     )

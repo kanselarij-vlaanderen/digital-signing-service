@@ -3,7 +3,8 @@ from datetime import datetime
 from signinghub_api_client.client import SigningHubSession
 from helpers import update
 from escape_helpers import sparql_escape_uri, sparql_escape_datetime
-from . import uri, __signflow_queries
+from . import __signflow_queries
+from ..config import KANSELARIJ_GRAPH
 
 #TODO: validation
 # - not started yet
@@ -24,7 +25,7 @@ def start_signflow_from_signinghub_callback(sh_package_id: str):
 def __register_start_signflow(signflow_uri: str):
     timestamp = datetime.now()
     update_activities_command = __update_activities_template.substitute(
-        graph=sparql_escape_uri(uri.graph.kanselarij),
+        graph=sparql_escape_uri(KANSELARIJ_GRAPH),
         signflow=sparql_escape_uri(signflow_uri),
         start_date=sparql_escape_datetime(timestamp)
     )

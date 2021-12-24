@@ -1,17 +1,17 @@
 from string import Template
-from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
-from ..lib import uri
+from escape_helpers import sparql_escape_uri, sparql_escape_string
+from ..config import APPLICATION_GRAPH
 
 def construct(signflow_uri: str):
     return __signflow_query_template.substitute(
-      graph=sparql_escape_uri(uri.graph.application),
+      graph=sparql_escape_uri(APPLICATION_GRAPH),
       signflow=sparql_escape_uri(signflow_uri),
       sh_package_id='',
     )
 
 def construct_by_signinghub_id(sh_package_id: str):
     return __signflow_query_template.substitute(
-      graph=sparql_escape_uri(uri.graph.application),
+      graph=sparql_escape_uri(APPLICATION_GRAPH),
       signflow='',
       sh_package_id=sparql_escape_string(sh_package_id),
     )
