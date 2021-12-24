@@ -16,19 +16,19 @@ WHERE {
         ?signflow a sign:Handtekenaangelegenheid ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap .
-        ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase .
-        ?marking_activity a sign:Markeringsactiviteit .
-        ?marking_activity sign:gemarkeerdStuk ?piece .
+        ?marking_activity a sign:Markeringsactiviteit ;
+            sign:markeringVindtPlaatsTijdens ?sign_subcase ;
+            sign:gemarkeerdStuk ?piece .
         ?piece a dossier:Stuk ;
             mu:uuid ?piece_id .
     
         OPTIONAL {
-            ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
-            ?preparation_activity a sign:Voorbereidingsactiviteit .
-            ?preparation_activity sign:voorbereidingGenereert ?signinghub_doc .
-            ?signinghub_doc a signinghub:Document .
-            ?signinghub_doc prov:hadPrimarySource ?piece .
-            ?signinghub_doc signinghub:documentId ?sh_document_id .
+            ?preparation_activity a sign:Voorbereidingsactiviteit ;
+                sign:voorbereidingVindtPlaatsTijdens ?sign_subcase ;
+                sign:voorbereidingGenereert ?signinghub_doc .
+            ?signinghub_doc a signinghub:Document ;
+                prov:hadPrimarySource ?piece ;
+                signinghub:documentId ?sh_document_id .
         }
     
     }
