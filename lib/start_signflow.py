@@ -44,12 +44,12 @@ INSERT {
     }
 } WHERE {
     GRAPH $graph {
-        ?signflow a sign:Handtekenaangelegenheid .
-        ?signflow sign:doorlooptHandtekening ?sign_subcase .
-        ?sign_subcase a sign:HandtekenProcedurestap .
-        ?sign_subcase ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
+        ?signflow a sign:Handtekenaangelegenheid ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?sign_subcase a sign:HandtekenProcedurestap ;
+            ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity ;
+            ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
         ?preparation_activity a sign:Voorbereidingsactiviteit .
-        ?sign_subcase ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
         ?signing_activity a sign:Handtekenactiviteit .
     }
     VALUES ?signflow { $signflow }
