@@ -1,5 +1,3 @@
-import typing
-
 from flask import g, json, request, make_response, redirect
 from helpers import log, error, logger
 from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session

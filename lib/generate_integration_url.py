@@ -1,6 +1,6 @@
 from string import Template
-from helpers import query, update
-from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
+from helpers import query
+from escape_helpers import sparql_escape_uri
 from signinghub_api_client.client import SigningHubSession
 from . import exceptions, helpers, validate, __signflow_queries
 from ..config import APPLICATION_GRAPH

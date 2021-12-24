@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import g
-from helpers import query, update, generate_uuid, log
+from helpers import log
 from ..sudo_query import query as sudo_query, update as sudo_update
 from ..queries.document import construct_get_document_for_file, \
     construct_attach_document_to_previous_version
@@ -9,9 +9,8 @@ from ..queries.activity import \
     construct_end_prep_start_signing, \
     construct_update_signing_activity, \
     construct_get_wrap_up_activity
-from .mandatee import get_mandatee, get_mandatee_email, get_mandatee_by_email
+from .mandatee import get_mandatee_by_email
 from .document import download_sh_doc_to_kaleidos_doc
-from .exceptions import NoQueryResultsException
 from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
 
 SIGNING_PREP_ACT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/activiteit/"

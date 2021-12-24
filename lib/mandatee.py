@@ -1,8 +1,6 @@
 from helpers import query, log
 from ..queries.mandatee import construct_get_mandatee, \
-    construct_get_mandatee_by_id, \
-    construct_get_mandatee_by_email, \
-    construct_get_signing_mandatees
+    construct_get_mandatee_by_email
 from .exceptions import NoQueryResultsException
 
 def get_mandatee(mandatee_uri):

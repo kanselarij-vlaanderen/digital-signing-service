@@ -12,7 +12,7 @@ from .queries.session import construct_get_mu_session_query, \
     construct_mark_signinghub_session_as_machine_users_query
 from .sudo_query import query as sudo_query, update as sudo_update
 from .lib.exceptions import NoQueryResultsException
-from .config import KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
+from .config import KALEIDOS_RESOURCE_BASE_URI
 
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
 CERT_FILE_PATH = os.environ.get("CERT_FILE_PATH")
