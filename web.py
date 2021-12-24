@@ -16,7 +16,6 @@ def sh_profile_info():
 
 
 @app.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
-@jsonapi.header_required
 def pieces_get(signflow_id):
     try:
         signflow_uri = uri.resource.signflow(signflow_id)
@@ -74,7 +73,6 @@ def prepare_post(signflow_id):
 # piece_id is a part of the URI for consistency with other URIs of this service
 # SigningHubs API does not link signers to pieces
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['GET'])
-@jsonapi.header_required
 def signers_get(signflow_id, piece_id):
     try:
         signflow_uri = uri.resource.signflow(signflow_id)
