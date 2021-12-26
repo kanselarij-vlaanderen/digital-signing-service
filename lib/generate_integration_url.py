@@ -8,8 +8,9 @@ from ..config import APPLICATION_GRAPH
 # TODO: validation:
 # - piece is uploaded to signinghub
 def generate_integration_url(signinghub_session: SigningHubSession,
-    signflow_uri: str, piece_uri: str,
-    collapse_panels: bool):
+                             signflow_uri: str,
+                             piece_uri: str,
+                             collapse_panels: bool):
     validate.ensure_signflow_exists(signflow_uri)
     validate.ensure_piece_exists(piece_uri)
 

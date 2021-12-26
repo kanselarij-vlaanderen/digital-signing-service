@@ -8,9 +8,9 @@ from ..config import APPLICATION_GRAPH
 
 #TODO: validation:
 # - ensure signers are not assigned yet (SigningHub does not enforce single assignment)
-def assign_signers(
-    signinghub_session: SigningHubSession,
-    signflow_uri: str, signer_uris: typing.List[str]):
+def assign_signers(signinghub_session: SigningHubSession,
+                   signflow_uri: str,
+                   signer_uris: typing.List[str]):
     validate.ensure_signflow_exists(signflow_uri)
     #TODO: validation: ensure signflow is in draft
     mandatees_query_command = _query_mandatees_template.substitute(
