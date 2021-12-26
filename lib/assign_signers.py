@@ -3,7 +3,7 @@ import typing
 from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from signinghub_api_client.client import SigningHubSession
-from . import exceptions, query_result_helpers, uri, validate, __signflow_queries
+from . import exceptions, query_result_helpers, uri, __signflow_queries
 from ..config import APPLICATION_GRAPH
 
 #TODO: validation:
@@ -11,7 +11,6 @@ from ..config import APPLICATION_GRAPH
 def assign_signers(signinghub_session: SigningHubSession,
                    signflow_uri: str,
                    signer_uris: typing.List[str]):
-    validate.ensure_signflow_exists(signflow_uri)
     #TODO: validation: ensure signflow is in draft
     mandatees_query_command = _query_mandatees_template.substitute(
         graph=sparql_escape_uri(APPLICATION_GRAPH),

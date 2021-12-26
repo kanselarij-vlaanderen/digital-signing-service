@@ -2,7 +2,7 @@ from string import Template
 from helpers import query
 from escape_helpers import sparql_escape_uri
 from signinghub_api_client.client import SigningHubSession
-from . import exceptions, query_result_helpers, validate, __signflow_queries
+from . import exceptions, query_result_helpers, __signflow_queries
 from ..config import APPLICATION_GRAPH
 
 # TODO: validation:
@@ -11,9 +11,6 @@ def generate_integration_url(signinghub_session: SigningHubSession,
                              signflow_uri: str,
                              piece_uri: str,
                              collapse_panels: bool):
-    validate.ensure_signflow_exists(signflow_uri)
-    validate.ensure_piece_exists(piece_uri)
-
     pieces = __signflow_queries.get_pieces(signflow_uri)
     piece = query_result_helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
