@@ -1,5 +1,5 @@
 from helpers import query
-from . import helpers
+from . import query_result_helpers
 from .. import queries
 
 def get_signflow(signflow_uri: str):
@@ -12,8 +12,8 @@ def get_signflow_by_signinghub_id(sh_package_id: str):
 
 def __get_signflow_record(query_command: str):
     result = query(query_command)
-    records = helpers.to_recs(result)
-    record = helpers.ensure_1(records)
+    records = query_result_helpers.to_recs(result)
+    record = query_result_helpers.ensure_1(records)
 
     record = {
         "id": record["signflow_id"],
@@ -26,8 +26,8 @@ def __get_signflow_record(query_command: str):
 def get_pieces(signflow_uri: str):
     query_command = queries.signflow_pieces.construct(signflow_uri)
     result = query(query_command)
-    records = helpers.to_recs(result)
-    helpers.ensure_1(records)
+    records = query_result_helpers.to_recs(result)
+    query_result_helpers.ensure_1(records)
 
     records = [{
         "id": r["piece_id"],
@@ -40,7 +40,7 @@ def get_pieces(signflow_uri: str):
 def get_signers(signflow_uri: str):
     query_command = queries.signflow_signers.construct(signflow_uri)
     result = query(query_command)
-    records = helpers.to_recs(result)
+    records = query_result_helpers.to_recs(result)
 
     records = [{
         "id": r["signer_id"],

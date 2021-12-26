@@ -3,7 +3,7 @@ import typing
 from signinghub_api_client.client import SigningHubSession
 from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-from . import exceptions, helpers, uri, __signflow_queries
+from . import exceptions, query_result_helpers, uri, __signflow_queries
 from ..config import APPLICATION_GRAPH, KANSELARIJ_GRAPH
 
 SH_SOURCE = "Kaleidos"
@@ -19,7 +19,7 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
     piece_uri = piece_uris[0]
 
     pieces = __signflow_queries.get_pieces(signflow_uri)
-    piece = helpers.ensure_1(pieces)
+    piece = query_result_helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidStateException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
 
@@ -28,8 +28,8 @@ def prepare_signflow(signinghub_session: SigningHubSession, signflow_uri: str, p
         piece=sparql_escape_uri(piece_uri),
     )
     file_result = query(get_file_query_string)
-    file_records = helpers.to_recs(file_result)
-    file_record = helpers.ensure_1(file_records)
+    file_records = query_result_helpers.to_recs(file_result)
+    file_record = query_result_helpers.ensure_1(file_records)
     piece_uri = file_record["piece"]
     file_name = file_record["piece_name"] + "." + file_record["file_extension"]
     file_path = file_record["file_path"]

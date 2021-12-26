@@ -3,8 +3,7 @@ import typing
 from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from signinghub_api_client.client import SigningHubSession
-from .helpers import sparql_escape_list
-from . import exceptions, helpers, uri, validate, __signflow_queries
+from . import exceptions, query_result_helpers, uri, validate, __signflow_queries
 from ..config import APPLICATION_GRAPH
 
 #TODO: validation:
@@ -16,9 +15,9 @@ def assign_signers(
     #TODO: validation: ensure signflow is in draft
     mandatees_query_command = _query_mandatees_template.substitute(
         graph=sparql_escape_uri(APPLICATION_GRAPH),
-        mandatees=sparql_escape_list([sparql_escape_uri(uri) for uri in signer_uris]))
+        mandatees=query_result_helpers.sparql_escape_list([sparql_escape_uri(uri) for uri in signer_uris]))
     mandatee_result = query(mandatees_query_command)
-    mandatee_records = helpers.to_recs(mandatee_result)
+    mandatee_records = query_result_helpers.to_recs(mandatee_result)
     mandatee_records_set = { r["mandatee"] for r in mandatee_records }
     mandatees_not_found = [uri for uri in signer_uris if uri not in mandatee_records_set]
     if mandatees_not_found:
@@ -35,7 +34,7 @@ def assign_signers(
 
     signing_activities = [_build_signing_activity(signer_uri) for signer_uri in signer_uris]
 
-    signing_activities_escaped = helpers.sparql_escape_table([[
+    signing_activities_escaped = query_result_helpers.sparql_escape_table([[
             sparql_escape_uri(r["uri"]),
             sparql_escape_string(r["id"]),
             sparql_escape_uri(r["mandatee_uri"])

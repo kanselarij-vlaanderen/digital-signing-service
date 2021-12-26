@@ -2,7 +2,7 @@ from string import Template
 from helpers import query
 from escape_helpers import sparql_escape_uri
 from signinghub_api_client.client import SigningHubSession
-from . import exceptions, helpers, validate, __signflow_queries
+from . import exceptions, query_result_helpers, validate, __signflow_queries
 from ..config import APPLICATION_GRAPH
 
 # TODO: validation:
@@ -14,7 +14,7 @@ def generate_integration_url(signinghub_session: SigningHubSession,
     validate.ensure_piece_exists(piece_uri)
 
     pieces = __signflow_queries.get_pieces(signflow_uri)
-    piece = helpers.ensure_1(pieces)
+    piece = query_result_helpers.ensure_1(pieces)
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidStateException(f"Piece <{piece_uri}> is not linked to signflow <{signflow_uri}>.")
 
@@ -25,7 +25,7 @@ def generate_integration_url(signinghub_session: SigningHubSession,
     )
 
     signinghub_document_result = query(query_string)
-    signinghub_documents = helpers.to_recs(signinghub_document_result)
+    signinghub_documents = query_result_helpers.to_recs(signinghub_document_result)
     signinghub_document = signinghub_documents[0]
     signinghub_package_id = signinghub_document["signinghub_package_id"]
 

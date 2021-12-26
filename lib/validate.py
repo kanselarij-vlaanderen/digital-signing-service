@@ -1,9 +1,8 @@
 from string import Template
 from helpers import query
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-from . import helpers, exceptions
+from . import query_result_helpers, exceptions
 from ..config import KANSELARIJ_GRAPH
-from .helpers import sparql_escape_list
 
 def ensure_signflow_exists(signflow_uri):
     if not signflow_exists(signflow_uri):
@@ -24,7 +23,7 @@ def signflow_exists(signflow_uri):
     )
 
     result = query(existence_test_query_string)
-    exists = helpers.to_answer(result)
+    exists = query_result_helpers.to_answer(result)
     return exists
 
 def ensure_piece_exists(piece_uri):
@@ -46,7 +45,7 @@ def piece_exists(piece_uri):
     )
 
     result = query(existence_test_query_string)
-    exists = helpers.to_answer(result)
+    exists = query_result_helpers.to_answer(result)
     return exists
 
 def ensure_mandatees_exist(mandatee_ids):
@@ -66,10 +65,10 @@ WHERE {
 """)
     uri_command = exists_template.substitute(
         graph=sparql_escape_uri(KANSELARIJ_GRAPH),
-        mandatee_ids=sparql_escape_list([sparql_escape_string(id) for id in mandatee_ids]),
+        mandatee_ids=query_result_helpers.sparql_escape_list([sparql_escape_string(id) for id in mandatee_ids]),
     )
     result = query(uri_command)
-    mandatee_records = helpers.to_recs(result)
+    mandatee_records = query_result_helpers.to_recs(result)
     mandatees_not_found = [r["mandatee_id"] for r in mandatee_records if not "mandatee" in mandatee_records]
     if not mandatees_not_found:
         raise exceptions.ResourceNotFoundException(','.join(mandatees_not_found))
