@@ -17,84 +17,73 @@ def sh_profile_info():
 
 @app.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
 def pieces_get(signflow_id):
+    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
     try:
-        signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
-        try:
-            pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
-        except exceptions.ResourceNotFoundException as exception:
-            logger.exception(f"Not found: {exception.uri}")
-            return error(f"Not Found: {exception.uri}", 404)
+        pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
+    except exceptions.ResourceNotFoundException as exception:
+        logger.exception(f"Not found: {exception.uri}")
+        return error(f"Not Found: {exception.uri}", 404)
 
-        data = [{
-            "type": "pieces",
-            "id": p["id"],
-        } for p in pieces]
-        res = make_response({ "data": data }, 200)
-        res.headers["Content-Type"] = "application/vnd.api+json"
-        return res
-    except BaseException as exception:
-        logger.exception("Internal Server Error")
-        return error("Internal Server Error", 500)
+    data = [{
+        "type": "pieces",
+        "id": p["id"],
+    } for p in pieces]
+    res = make_response({ "data": data }, 200)
+    res.headers["Content-Type"] = "application/vnd.api+json"
+    return res
+
 
 @app.route('/sign-flows/<signflow_id>/signing/prepare', methods=['POST'])
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def prepare_post(signflow_id):
+    signflow_uri = uri.resource.signflow(signflow_id)
     try:
-        signflow_uri = uri.resource.signflow(signflow_id)
-        try:
-            body = request.get_json(force=True)
-            data = body["data"]
-            piece_identifations = [jsonapi.require_identification(r, "pieces") for r in data]
-        except:
-            return error(f"Bad Request: invalid payload", 400)
+        body = request.get_json(force=True)
+        data = body["data"]
+        piece_identifations = [jsonapi.require_identification(r, "pieces") for r in data]
+    except:
+        return error(f"Bad Request: invalid payload", 400)
 
-        piece_ids = [r["id"] for r in piece_identifations]
-        piece_uris = [uri.resource.piece(id) for id in piece_ids]
+    piece_ids = [r["id"] for r in piece_identifations]
+    piece_uris = [uri.resource.piece(id) for id in piece_ids]
 
-        try:
-            prepare_signflow.prepare_signflow(
-                g.sh_session, signflow_uri, piece_uris)
-        except exceptions.ResourceNotFoundException as exception:
-            logger.exception(f"Not Found: {exception.uri}")
-            return error(f"Not Found: {exception.uri}", 404)
-        except exceptions.InvalidStateException as exception:
-            logger.exception(f"Invalid State: {str(exception)}")
-            return error(f"Invalid State: {exception}", 400)
+    try:
+        prepare_signflow.prepare_signflow(
+            g.sh_session, signflow_uri, piece_uris)
+    except exceptions.ResourceNotFoundException as exception:
+        logger.exception(f"Not Found: {exception.uri}")
+        return error(f"Not Found: {exception.uri}", 404)
+    except exceptions.InvalidStateException as exception:
+        logger.exception(f"Invalid State: {str(exception)}")
+        return error(f"Invalid State: {exception}", 400)
 
-        res = make_response("", 204)
-        res.headers["Content-Type"] = "application/vnd.api+json"
-        return res
-    except BaseException as exception:
-        logger.exception("Internal Server Error")
-        return error("Internal Server Error", 500)
+    res = make_response("", 204)
+    res.headers["Content-Type"] = "application/vnd.api+json"
+    return res
 
 
 # piece_id is a part of the URI for consistency with other URIs of this service
 # SigningHubs API does not link signers to pieces
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['GET'])
 def signers_get(signflow_id, piece_id):
+    signflow_uri = uri.resource.signflow(signflow_id)
     try:
-        signflow_uri = uri.resource.signflow(signflow_id)
-        try:
-            signers = get_signflow_signers.get_signflow_signers(signflow_uri)
-        except exceptions.ResourceNotFoundException as exception:
-            logger.exception(f"Not Found: {exception.uri}")
-            return error(f"Not Found: {exception.uri}", 404)
-        except exceptions.InvalidStateException as exception:
-            logger.exception(f"Invalid State: {str(exception)}")
-            return error(f"Invalid State: {exception}", 400)
+        signers = get_signflow_signers.get_signflow_signers(signflow_uri)
+    except exceptions.ResourceNotFoundException as exception:
+        logger.exception(f"Not Found: {exception.uri}")
+        return error(f"Not Found: {exception.uri}", 404)
+    except exceptions.InvalidStateException as exception:
+        logger.exception(f"Invalid State: {str(exception)}")
+        return error(f"Invalid State: {exception}", 400)
 
-        data = [{
-            "type": "mandatees",
-            "id": r["id"],
-        } for r in signers]
-        res = make_response({"data": data}, 200)
-        res.headers["Content-Type"] = "application/vnd.api+json"
-        return res
-    except BaseException as exception:
-        logger.exception("Internal Server Error")
-        return error("Internal Server Error", 500)
+    data = [{
+        "type": "mandatees",
+        "id": r["id"],
+    } for r in signers]
+    res = make_response({"data": data}, 200)
+    res.headers["Content-Type"] = "application/vnd.api+json"
+    return res
 
 
 # piece_id is a part of the URI for consistency with other URIs of this service
@@ -103,78 +92,66 @@ def signers_get(signflow_id, piece_id):
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def signers_assign(signflow_id, piece_id):
+    signflow_uri = uri.resource.signflow(signflow_id)
     try:
-        signflow_uri = uri.resource.signflow(signflow_id)
-        try:
-            body = request.get_json(force=True)
-            data = body["data"]
-            signers_identifications = [jsonapi.require_identification(r, "mandatees") for r in data]
-        except:
-            return error(f"Bad Request: invalid payload", 400)
+        body = request.get_json(force=True)
+        data = body["data"]
+        signers_identifications = [jsonapi.require_identification(r, "mandatees") for r in data]
+    except:
+        return error(f"Bad Request: invalid payload", 400)
 
-        signer_ids = [r["id"] for r in signers_identifications]
-        try:
-            signer_uris = validate.ensure_mandatees_exist(signer_ids)
-            assign_signers.assign_signers(
-                g.sh_session, signflow_uri, signer_uris)
-        except exceptions.ResourceNotFoundException as exception:
-            logger.exception(f"Not Found: {exception.uri}")
-            return error(f"Not Found: {exception.uri}", 404)
-        except exceptions.InvalidStateException as exception:
-            logger.exception(f"Invalid State: {str(exception)}")
-            return error(f"Invalid State: {exception}", 400)
-        
-        res = make_response({}, 204)
-        res.headers["Content-Type"] = "application/vnd.api+json"
-        return res
-    except BaseException as exception:
-        logger.exception("Internal Server Error")
-        return error("Internal Server Error", 500)
+    signer_ids = [r["id"] for r in signers_identifications]
+    try:
+        signer_uris = validate.ensure_mandatees_exist(signer_ids)
+        assign_signers.assign_signers(
+            g.sh_session, signflow_uri, signer_uris)
+    except exceptions.ResourceNotFoundException as exception:
+        logger.exception(f"Not Found: {exception.uri}")
+        return error(f"Not Found: {exception.uri}", 404)
+    except exceptions.InvalidStateException as exception:
+        logger.exception(f"Invalid State: {str(exception)}")
+        return error(f"Invalid State: {exception}", 400)
+    
+    res = make_response({}, 204)
+    res.headers["Content-Type"] = "application/vnd.api+json"
+    return res
 
 
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signinghub-url', methods=['GET'])
 @signinghub_session_required  # provides g.sh_session
 def signinghub_integration_url(signflow_id, piece_id):
+    signflow_uri = uri.resource.signflow(signflow_id)
+    piece_uri = uri.resource.piece(piece_id)
+    collapse_panels = request.args.get(
+        "collapse_panels", default="true", type=str) != "false"
     try:
-        signflow_uri = uri.resource.signflow(signflow_id)
-        piece_uri = uri.resource.piece(piece_id)
-        collapse_panels = request.args.get(
-            "collapse_panels", default="true", type=str) != "false"
-        try:
-            integration_url = generate_integration_url.generate_integration_url(
-                g.sh_session, signflow_uri, piece_uri, collapse_panels)
-        except exceptions.ResourceNotFoundException as exception:
-            logger.exception(f"Not found: {exception.uri}")
-            return error(f"Not Found: {exception.uri}", 404)
-        except exceptions.InvalidStateException as exception:
-            logger.exception(f"Invalid state: {exception}")
-            return error(f"Invalid State: {exception}", 400)
-        return make_response({"url": integration_url}, 200)
-    except BaseException as exception:
-        logger.exception("Internal server error")
-        return error("Internal Server Error", 500)
+        integration_url = generate_integration_url.generate_integration_url(
+            g.sh_session, signflow_uri, piece_uri, collapse_panels)
+    except exceptions.ResourceNotFoundException as exception:
+        logger.exception(f"Not found: {exception.uri}")
+        return error(f"Not Found: {exception.uri}", 404)
+    except exceptions.InvalidStateException as exception:
+        logger.exception(f"Invalid state: {exception}")
+        return error(f"Invalid State: {exception}", 400)
+    return make_response({"url": integration_url}, 200)
 
 
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/start', methods=['POST'])
 @jsonapi.header_required
 @signinghub_session_required
 def start(signflow_id, piece_id):
+    signflow_uri = uri.resource.signflow(signflow_id)
     try:
-        signflow_uri = uri.resource.signflow(signflow_id)
-        try:
-            start_signflow.start_signflow(g.sh_session, signflow_uri)
-        except exceptions.ResourceNotFoundException as exception:
-            logger.exception(exception.uri)
-            return error(f"Not Found: {exception.uri}", 404)
-        except exceptions.InvalidStateException as exception:
-            logger.exception(f"Invalid State: {exception}")
-            return error(f"Invalid State: {exception}", 400)
-        res = make_response({}, 200)
-        res.headers["Content-Type"] = "application/vnd.api+json"
-        return res
-    except BaseException as exception:
-        logger.exception("Internal server error")
-        return error("Internal Server Error", 500)
+        start_signflow.start_signflow(g.sh_session, signflow_uri)
+    except exceptions.ResourceNotFoundException as exception:
+        logger.exception(exception.uri)
+        return error(f"Not Found: {exception.uri}", 404)
+    except exceptions.InvalidStateException as exception:
+        logger.exception(f"Invalid State: {exception}")
+        return error(f"Invalid State: {exception}", 400)
+    res = make_response({}, 200)
+    res.headers["Content-Type"] = "application/vnd.api+json"
+    return res
 
 
 # HTTP method not specified in api documentation
