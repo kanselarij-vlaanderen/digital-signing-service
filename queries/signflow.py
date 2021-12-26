@@ -16,6 +16,13 @@ def construct_by_signinghub_id(sh_package_id: str):
       sh_package_id=sparql_escape_string(sh_package_id),
     )
 
+def construct_by_mu_uuid(uuid: str):
+    return __signflow_by_uuid_query_template.substitute(
+      graph=sparql_escape_uri(APPLICATION_GRAPH),
+      uuid=sparql_escape_string(uuid),
+    )
+
+
 # matches on ?signflow or ?sh_package_id, depending on the provided and empty parameter.
 __signflow_query_template = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -43,3 +50,18 @@ WHERE {
     OPTIONAL { VALUES ?sh_package_id { $sh_package_id } }
 }
 """)
+
+__signflow_by_uuid_query_template = Template("""
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
+
+SELECT ?signflow
+WHERE {
+    GRAPH $graph {
+        ?signflow a sign:Handtekenaangelegenheid ;
+            mu:uuid $uuid .
+    }
+}
+""")
+
+

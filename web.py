@@ -4,7 +4,7 @@ from .authentication import signinghub_session_required, ensure_signinghub_machi
 from . import jsonapi
 from .lib import uri, exceptions, validate, \
     get_signflow_pieces, prepare_signflow, generate_integration_url, \
-    get_signflow_signers, assign_signers, start_signflow
+    signflow, get_signflow_signers, assign_signers, start_signflow
 from .lib.activity import update_signing_status, \
     wrap_up_signing_flow
 
@@ -18,7 +18,7 @@ def sh_profile_info():
 @app.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
 def pieces_get(signflow_id):
     try:
-        signflow_uri = uri.resource.signflow(signflow_id)
+        signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
         try:
             pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
         except exceptions.ResourceNotFoundException as exception:
