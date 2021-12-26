@@ -18,6 +18,7 @@ def ensure_1(collection):
         raise exceptions.InvalidStateException(f"expected: 1 - found: {len(collection)}")
     return collection[0]
 
+# TODO: below functions don't "escape" anything. Fix naming + consider added value
 def sparql_escape_table(table):
     rows = ['(' + sparql_escape_list(row) + ')' for row in table]
     return '\n'.join(rows)
