@@ -2,11 +2,12 @@ from flask import g, json, request, make_response, redirect
 from helpers import log, error, logger
 from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
 from . import jsonapi
-from .lib import uri, exceptions, validate, \
+from .lib import exceptions, validate, \
     get_signflow_pieces, prepare_signflow, generate_integration_url, \
     signflow, get_signflow_signers, assign_signers, start_signflow
 from .lib.activity import update_signing_status, \
     wrap_up_signing_flow
+from .lib.document import get_document_by_uuid
 
 @app.route("/signinghub-profile")
 @signinghub_session_required  # provides g.sh_session
@@ -46,7 +47,7 @@ def prepare_post(signflow_id):
         return error(f"Bad Request: invalid payload", 400)
 
     piece_ids = [r["id"] for r in piece_identifations]
-    piece_uris = [uri.resource.piece(id) for id in piece_ids]
+    piece_uris = [get_document_by_uuid(id) for id in piece_ids]
 
     try:
         prepare_signflow.prepare_signflow(
@@ -121,7 +122,7 @@ def signers_assign(signflow_id, piece_id):
 @signinghub_session_required  # provides g.sh_session
 def signinghub_integration_url(signflow_id, piece_id):
     signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
-    piece_uri = uri.resource.piece(piece_id)
+    piece_uri = get_document_by_uuid(piece_id)
     collapse_panels = request.args.get(
         "collapse_panels", default="true", type=str) != "false"
     try:
