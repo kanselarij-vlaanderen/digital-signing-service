@@ -37,7 +37,7 @@ def pieces_get(signflow_id):
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def prepare_post(signflow_id):
-    signflow_uri = uri.resource.signflow(signflow_id)
+    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
     try:
         body = request.get_json(force=True)
         data = body["data"]
@@ -67,7 +67,7 @@ def prepare_post(signflow_id):
 # SigningHubs API does not link signers to pieces
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['GET'])
 def signers_get(signflow_id, piece_id):
-    signflow_uri = uri.resource.signflow(signflow_id)
+    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
     try:
         signers = get_signflow_signers.get_signflow_signers(signflow_uri)
     except exceptions.ResourceNotFoundException as exception:
@@ -92,7 +92,7 @@ def signers_get(signflow_id, piece_id):
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def signers_assign(signflow_id, piece_id):
-    signflow_uri = uri.resource.signflow(signflow_id)
+    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
     try:
         body = request.get_json(force=True)
         data = body["data"]
@@ -120,7 +120,7 @@ def signers_assign(signflow_id, piece_id):
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signinghub-url', methods=['GET'])
 @signinghub_session_required  # provides g.sh_session
 def signinghub_integration_url(signflow_id, piece_id):
-    signflow_uri = uri.resource.signflow(signflow_id)
+    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
     piece_uri = uri.resource.piece(piece_id)
     collapse_panels = request.args.get(
         "collapse_panels", default="true", type=str) != "false"
@@ -140,7 +140,7 @@ def signinghub_integration_url(signflow_id, piece_id):
 @jsonapi.header_required
 @signinghub_session_required
 def start(signflow_id, piece_id):
-    signflow_uri = uri.resource.signflow(signflow_id)
+    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
     try:
         start_signflow.start_signflow(g.sh_session, signflow_uri)
     except exceptions.ResourceNotFoundException as exception:
