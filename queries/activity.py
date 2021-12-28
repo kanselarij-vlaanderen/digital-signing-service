@@ -1,6 +1,6 @@
 from string import Template
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..constants import APPLICATION_GRAPH, SIGNINGHUB_RESOURCE_BASE_URI
+from ..config import APPLICATION_GRAPH, SIGNINGHUB_RESOURCE_BASE_URI
 
 SIGNING_PREP_ACT_TYPE_URI = "http://kanselarij.vo.data.gift/id/concept/activiteit-types/001d38fb-b285-41ef-a252-4e70208e9266"
 SIGNING_ACT_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/publicatie/Handtekenactiviteit"

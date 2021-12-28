@@ -3,7 +3,7 @@ from string import Template
 from datetime import datetime
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..constants import TIMEZONE
+from ..config import TIMEZONE
 
 SESSION_GRAPH = "http://mu.semte.ch/graphs/sessions"
 ACCOUNT_GRAPH = "http://mu.semte.ch/graphs/public" # TODO: might change once user data is spread over different graphs

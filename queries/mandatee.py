@@ -1,7 +1,7 @@
 from string import Template
 from datetime import datetime, timedelta
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..constants import APPLICATION_GRAPH
+from ..config import APPLICATION_GRAPH
 
 SIGNING_ACT_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/publicatie/Handtekenactiviteit"
 

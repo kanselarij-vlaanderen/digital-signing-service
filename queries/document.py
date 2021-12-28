@@ -2,7 +2,7 @@ from string import Template
 from datetime import datetime
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..constants import APPLICATION_GRAPH, KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
+from ..config import APPLICATION_GRAPH, KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
 
 DOCUMENT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 
