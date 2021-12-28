@@ -118,7 +118,7 @@ def signers_assign(signflow_id, piece_id):
     return res
 
 
-@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signinghub-url', methods=['GET'])
+@app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url', methods=['GET'])
 @signinghub_session_required  # provides g.sh_session
 def signinghub_integration_url(signflow_id, piece_id):
     signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
