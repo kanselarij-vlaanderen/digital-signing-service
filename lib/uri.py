@@ -1,10 +1,10 @@
 from .. import config as _config
 
-class __Resource:
-    __THEMIS_RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/"
+THEMIS_RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/"
 
+class __Resource:
     def __build (self, type: str, id: str):
-        return __Resource.__THEMIS_RESOURCE_BASE_URI + type + "/" + id
+        return THEMIS_RESOURCE_BASE_URI + type + "/" + id
 
     def piece(self, id: str):
         return self.__build("stuk", id)
