@@ -9,8 +9,7 @@ DOCUMENT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 def construct_get_document_by_uuid(document_uuid, graph=APPLICATION_GRAPH):
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 
 SELECT (?document AS ?uri)
 WHERE {
