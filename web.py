@@ -34,7 +34,7 @@ def pieces_get(signflow_id):
     return res
 
 
-@app.route('/sign-flows/<signflow_id>/signing/prepare', methods=['POST'])
+@app.route('/signing-flows/<signflow_id>/upload-document-to-signinghub', methods=['POST'])
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def prepare_post(signflow_id):
