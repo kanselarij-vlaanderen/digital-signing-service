@@ -137,10 +137,9 @@ def signinghub_integration_url(signflow_id, piece_id):
     return make_response({"url": integration_url}, 200)
 
 
-@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/start', methods=['POST'])
-@jsonapi.header_required
 @signinghub_session_required
-def start(signflow_id, piece_id):
+@app.route('/signing-flows/<signflow_id>/start', methods=['POST'])
+def start(signflow_id):
     signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
     try:
         start_signflow.start_signflow(g.sh_session, signflow_uri)
