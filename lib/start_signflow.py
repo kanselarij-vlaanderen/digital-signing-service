@@ -3,7 +3,7 @@ from datetime import datetime
 from signinghub_api_client.client import SigningHubSession
 from helpers import update
 from escape_helpers import sparql_escape_uri, sparql_escape_datetime
-from . import __signflow_queries
+from . import signflow as signflow_lib_functions
 from ..config import KANSELARIJ_GRAPH
 
 #TODO: validation
@@ -12,13 +12,13 @@ from ..config import KANSELARIJ_GRAPH
 def start_signflow(
     sh_session: SigningHubSession,
     signflow_uri: str):
-    signflow = __signflow_queries.get_signflow(signflow_uri)
+    signflow = signflow_lib_functions.get_signflow(signflow_uri)
     sh_package_id = signflow["sh_package_id"]
     sh_session.share_document_package(sh_package_id)
     __register_start_signflow(signflow_uri)
 
 def start_signflow_from_signinghub_callback(sh_package_id: str):
-    signflow = __signflow_queries.get_signflow_by_signinghub_id(sh_package_id)
+    signflow = signflow_lib_functions.get_signflow_by_signinghub_id(sh_package_id)
     signflow_uri = signflow["uri"]
     __register_start_signflow(signflow_uri)
 
