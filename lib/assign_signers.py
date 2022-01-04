@@ -3,7 +3,7 @@ import typing
 from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from signinghub_api_client.client import SigningHubSession
-from . import exceptions, query_result_helpers, uri, signflow
+from . import exceptions, query_result_helpers, uri, signing_flow
 from ..config import APPLICATION_GRAPH
 
 #TODO: validation:
@@ -22,7 +22,7 @@ def assign_signers(signinghub_session: SigningHubSession,
     if mandatees_not_found:
         raise exceptions.ResourceNotFoundException(','.join(mandatees_not_found))
 
-    signflow_record = signflow.get_signflow(signflow_uri)
+    signflow_record = signing_flow.get_signflow(signflow_uri)
     sh_package_id = signflow_record["sh_package_id"]
     sh_users = [{
         "user_email": r["email"],

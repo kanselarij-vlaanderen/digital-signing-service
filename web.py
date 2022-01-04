@@ -4,7 +4,7 @@ from .authentication import signinghub_session_required, ensure_signinghub_machi
 from . import jsonapi
 from .lib import exceptions, validate, \
     get_signflow_pieces, prepare_signflow, generate_integration_url, \
-    signflow, get_signflow_signers, assign_signers, start_signflow
+    signing_flow, get_signflow_signers, assign_signers, start_signflow
 from .lib.activity import update_signing_status, \
     wrap_up_signing_flow
 from .lib.document import get_document_by_uuid
@@ -18,7 +18,7 @@ def sh_profile_info():
 
 @app.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
 def pieces_get(signflow_id):
-    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
     try:
         pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
     except exceptions.ResourceNotFoundException as exception:
@@ -38,7 +38,7 @@ def pieces_get(signflow_id):
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def prepare_post(signflow_id):
-    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
     try:
         body = request.get_json(force=True)
         data = body["data"]
@@ -68,7 +68,7 @@ def prepare_post(signflow_id):
 # SigningHubs API does not link signers to pieces
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['GET'])
 def signers_get(signflow_id, piece_id):
-    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
     try:
         signers = get_signflow_signers.get_signflow_signers(signflow_uri)
     except exceptions.ResourceNotFoundException as exception:
@@ -93,7 +93,7 @@ def signers_get(signflow_id, piece_id):
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def signers_assign(signflow_id, piece_id):
-    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
     try:
         body = request.get_json(force=True)
         data = body["data"]
@@ -121,7 +121,7 @@ def signers_assign(signflow_id, piece_id):
 @app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url', methods=['GET'])
 @signinghub_session_required  # provides g.sh_session
 def signinghub_integration_url(signflow_id, piece_id):
-    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
     piece_uri = get_document_by_uuid(piece_id)
     collapse_panels = request.args.get(
         "collapse_panels", default="true", type=str) != "false"
@@ -140,7 +140,7 @@ def signinghub_integration_url(signflow_id, piece_id):
 @signinghub_session_required
 @app.route('/signing-flows/<signflow_id>/start', methods=['POST'])
 def start(signflow_id):
-    signflow_uri = signflow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
     try:
         start_signflow.start_signflow(g.sh_session, signflow_uri)
     except exceptions.ResourceNotFoundException as exception:
