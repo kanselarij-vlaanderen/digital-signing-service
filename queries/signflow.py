@@ -34,6 +34,8 @@ PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
 SELECT ?signflow ?signflow_id ?piece ?sh_document ?sh_package_id
 WHERE {
+    OPTIONAL { VALUES ?signflow { $signflow } }
+    OPTIONAL { VALUES ?sh_package_id { $sh_package_id } }
     GRAPH $graph {
         ?signflow a sign:Handtekenaangelegenheid ;
             mu:uuid ?signflow_id .
@@ -45,9 +47,6 @@ WHERE {
         ?sh_document a sh:Document ;
             sh:packageId ?sh_package_id .
     }
-
-    OPTIONAL { VALUES ?signflow { $signflow } }
-    OPTIONAL { VALUES ?sh_package_id { $sh_package_id } }
 }
 """)
 
