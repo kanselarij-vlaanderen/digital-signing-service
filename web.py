@@ -3,7 +3,7 @@ from helpers import log, error, logger
 from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
 from . import jsonapi
 from .lib import exceptions, validate, \
-    get_signflow_pieces, prepare_signflow, generate_integration_url, \
+    prepare_signflow, generate_integration_url, \
     signing_flow, get_signflow_signers, assign_signers, start_signflow
 from .lib.activity import update_signing_status, \
     wrap_up_signing_flow
@@ -20,15 +20,18 @@ def sh_profile_info():
 def pieces_get(signflow_id):
     signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
     try:
-        pieces = get_signflow_pieces.get_signflow_pieces(signflow_uri)
+        records = signing_flow.get_pieces(signflow_uri)
     except exceptions.ResourceNotFoundException as exception:
         logger.exception(f"Not found: {exception.uri}")
         return error(f"Not Found: {exception.uri}", 404)
 
     data = [{
         "type": "pieces",
-        "id": p["id"],
-    } for p in pieces]
+        "id": r["id"],
+        "attributes": {
+            "uri": r["uri"]
+        }
+    } for r in records]
     res = make_response({ "data": data }, 200)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
