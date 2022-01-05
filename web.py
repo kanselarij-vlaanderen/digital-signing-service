@@ -4,7 +4,7 @@ from .authentication import signinghub_session_required, ensure_signinghub_machi
 from . import jsonapi
 from .lib import exceptions, validate, \
     prepare_signflow, generate_integration_url, \
-    signing_flow, get_signflow_signers, assign_signers, start_signflow
+    signing_flow, assign_signers, start_signflow
 from .lib.activity import update_signing_status, \
     wrap_up_signing_flow
 from .lib.document import get_document_by_uuid
@@ -73,7 +73,7 @@ def prepare_post(signflow_id):
 def signers_get(signflow_id, piece_id):
     signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
     try:
-        signers = get_signflow_signers.get_signflow_signers(signflow_uri)
+        records = signing_flow.get_signers(signflow_uri)
     except exceptions.ResourceNotFoundException as exception:
         logger.exception(f"Not Found: {exception.uri}")
         return error(f"Not Found: {exception.uri}", 404)
@@ -84,7 +84,10 @@ def signers_get(signflow_id, piece_id):
     data = [{
         "type": "mandatees",
         "id": r["id"],
-    } for r in signers]
+        "attributes": {
+            "uri": r["uri"]
+        }
+    } for r in records]
     res = make_response({"data": data}, 200)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
