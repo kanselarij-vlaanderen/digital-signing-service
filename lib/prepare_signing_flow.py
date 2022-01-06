@@ -11,7 +11,7 @@ SH_SOURCE = "Kaleidos"
 # TODO:
 # validation:
 # - document is not uploaded yet
-def prepare_signflow(signinghub_session: SigningHubSession,
+def prepare_signing_flow(signinghub_session: SigningHubSession,
                      signflow_uri: str,
                      piece_uris: typing.List[str]):
     if len(piece_uris) == 0:

@@ -9,15 +9,15 @@ from ..config import APPLICATION_GRAPH
 #TODO: validation
 # - not started yet
 # - assigned
-def start_signflow(
+def start_signing_flow(
     sh_session: SigningHubSession,
     signflow_uri: str):
-    signflow = signing_flow.get_signflow(signflow_uri)
+    signflow = signing_flow.get_signing_flow(signflow_uri)
     sh_package_id = signflow["sh_package_id"]
     sh_session.share_document_package(sh_package_id)
-    __register_start_signflow(signflow_uri)
+    __register_start_signing_flow(signflow_uri)
 
-def __register_start_signflow(signflow_uri: str):
+def __register_start_signing_flow(signflow_uri: str):
     timestamp = datetime.now()
     update_activities_command = __update_activities_template.substitute(
         graph=sparql_escape_uri(APPLICATION_GRAPH),

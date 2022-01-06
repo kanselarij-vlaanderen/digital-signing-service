@@ -22,7 +22,7 @@ def assign_signers(signinghub_session: SigningHubSession,
     if mandatees_not_found:
         raise exceptions.ResourceNotFoundException(','.join(mandatees_not_found))
 
-    signflow_record = signing_flow.get_signflow(signflow_uri)
+    signflow_record = signing_flow.get_signing_flow(signflow_uri)
     sh_package_id = signflow_record["sh_package_id"]
     sh_users = [{
         "user_email": r["email"],

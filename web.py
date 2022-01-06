@@ -15,7 +15,7 @@ def sh_profile_info():
 
 @app.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
 def pieces_get(signflow_id):
-    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     records = signing_flow.get_pieces(signflow_uri)
 
     data = [{
@@ -34,7 +34,7 @@ def pieces_get(signflow_id):
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def prepare_post(signflow_id):
-    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     try:
         body = request.get_json(force=True)
         data = body["data"]
@@ -45,7 +45,7 @@ def prepare_post(signflow_id):
     piece_ids = [r["id"] for r in piece_identifations]
     piece_uris = [get_document_by_uuid(id) for id in piece_ids]
 
-    prepare_signing_flow.prepare_signflow(g.sh_session, signflow_uri, piece_uris)
+    prepare_signing_flow.prepare_signing_flow(g.sh_session, signflow_uri, piece_uris)
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
@@ -56,7 +56,7 @@ def prepare_post(signflow_id):
 # SigningHubs API does not link signers to pieces
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['GET'])
 def signers_get(signflow_id, piece_id):
-    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     records = signing_flow.get_signers(signflow_uri)
 
     data = [{
@@ -77,7 +77,7 @@ def signers_get(signflow_id, piece_id):
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def signers_assign(signflow_id, piece_id):
-    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     try:
         body = request.get_json(force=True)
         data = body["data"]
@@ -98,7 +98,7 @@ def signers_assign(signflow_id, piece_id):
 @app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url', methods=['GET'])
 @signinghub_session_required  # provides g.sh_session
 def signinghub_integration_url(signflow_id, piece_id):
-    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     piece_uri = get_document_by_uuid(piece_id)
     collapse_panels = request.args.get(
         "collapse_panels", default="true", type=str) != "false"
@@ -111,9 +111,9 @@ def signinghub_integration_url(signflow_id, piece_id):
 @signinghub_session_required
 @app.route('/signing-flows/<signflow_id>/start', methods=['POST'])
 def start(signflow_id):
-    signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
+    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
 
-    start_signing_flow.start_signflow(g.sh_session, signflow_uri)
+    start_signing_flow.start_signing_flow(g.sh_session, signflow_uri)
 
     res = make_response({}, 200)
     res.headers["Content-Type"] = "application/vnd.api+json"
