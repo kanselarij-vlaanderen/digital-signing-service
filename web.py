@@ -12,8 +12,7 @@ def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
     return g.sh_session.get_general_profile_information()
 
-
-@app.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
+@app.route('/signing-flows/<signflow_id>/pieces')
 def pieces_get(signflow_id):
     signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     records = signing_flow.get_pieces(signflow_uri)
@@ -54,7 +53,7 @@ def prepare_post(signflow_id):
 
 # piece_id is a part of the URI for consistency with other URIs of this service
 # SigningHubs API does not link signers to pieces
-@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['GET'])
+@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers')
 def signers_get(signflow_id, piece_id):
     signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     records = signing_flow.get_signers(signflow_uri)
@@ -95,8 +94,8 @@ def signers_assign(signflow_id, piece_id):
     return res
 
 
-@app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url', methods=['GET'])
 @signinghub_session_required  # provides g.sh_session
+@app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url')
 def signinghub_integration_url(signflow_id, piece_id):
     signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     piece_uri = get_document_by_uuid(piece_id)
