@@ -2,8 +2,8 @@ from flask import g, json, request, make_response, redirect
 from helpers import log, error, logger
 from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
 from . import jsonapi
-from .lib import exceptions, prepare_signflow, generate_integration_url, \
-    signing_flow, assign_signers, start_signflow, mandatee
+from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
+    signing_flow, assign_signers, start_signing_flow, mandatee
 from .lib.document import get_document_by_uuid
 
 @app.route("/signinghub-profile")
@@ -45,7 +45,7 @@ def prepare_post(signflow_id):
     piece_ids = [r["id"] for r in piece_identifations]
     piece_uris = [get_document_by_uuid(id) for id in piece_ids]
 
-    prepare_signflow.prepare_signflow(g.sh_session, signflow_uri, piece_uris)
+    prepare_signing_flow.prepare_signflow(g.sh_session, signflow_uri, piece_uris)
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
@@ -113,7 +113,7 @@ def signinghub_integration_url(signflow_id, piece_id):
 def start(signflow_id):
     signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
 
-    start_signflow.start_signflow(g.sh_session, signflow_uri)
+    start_signing_flow.start_signflow(g.sh_session, signflow_uri)
 
     res = make_response({}, 200)
     res.headers["Content-Type"] = "application/vnd.api+json"
