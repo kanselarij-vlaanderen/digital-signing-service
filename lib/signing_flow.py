@@ -13,11 +13,11 @@ def get_signflow_by_uuid(uuid):
     return signflow_uri
 
 def get_signflow(signflow_uri: str):
-    query_command = queries.signflow.construct(signflow_uri)
+    query_command = queries.signing_flow.construct(signflow_uri)
     return __get_signflow_record(query_command)
 
 def get_signflow_by_signinghub_id(sh_package_id: str):
-    query_command = queries.signflow.construct_by_signinghub_id(sh_package_id)
+    query_command = queries.signing_flow.construct_by_signinghub_id(sh_package_id)
     return __get_signflow_record(query_command)
 
 def __get_signflow_record(query_command: str):
@@ -34,7 +34,7 @@ def __get_signflow_record(query_command: str):
     return record
 
 def get_pieces(signflow_uri: str):
-    query_command = queries.signflow_pieces.construct(signflow_uri)
+    query_command = queries.signing_flow_pieces.construct(signflow_uri)
     result = query(query_command)
     records = query_result_helpers.to_recs(result)
     query_result_helpers.ensure_1(records)
@@ -48,7 +48,7 @@ def get_pieces(signflow_uri: str):
     return records
 
 def get_signers(signflow_uri: str):
-    query_command = queries.signflow_signers.construct(signflow_uri)
+    query_command = queries.signing_flow_signers.construct(signflow_uri)
     result = query(query_command)
     records = query_result_helpers.to_recs(result)
 
