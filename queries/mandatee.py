@@ -3,8 +3,6 @@ from datetime import datetime, timedelta
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
 from ..config import APPLICATION_GRAPH
 
-SIGNING_ACT_TYPE_URI = "http://mu.semte.ch/vocabularies/ext/publicatie/Handtekenactiviteit"
-
 def construct_get_mandatee_by_id(mandatee_id, graph=APPLICATION_GRAPH):
     query_template = Template("""
 PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
@@ -72,29 +70,3 @@ ORDER BY DESC(?end_date)
         graph=sparql_escape_uri(graph),
         mail_uri=sparql_escape_uri(mail_uri),
         end_date=sparql_escape_datetime(maximal_end_date))
-
-def construct_get_signing_mandatees(signing_prep_uri,
-                                    graph=APPLICATION_GRAPH):
-    query_template = Template("""
-PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX dct: <http://purl.org/dc/terms/>
-
-SELECT DISTINCT (?mandatee as ?uri) ?uuid
-WHERE {
-    GRAPH $graph {
-        ?signing a prov:Activity ;
-            dct:type $type ;
-            prov:wasInformedBy $signing_prep ;
-            prov:qualifiedAssociation ?mandatee .
-        ?mandatee a mandaat:Mandataris ;
-            mu:uuid ?uuid .
-    }
-}
-""")
-    return query_template.substitute(
-        graph=sparql_escape_uri(graph),
-        type=sparql_escape_uri(SIGNING_ACT_TYPE_URI),
-        signing_prep=sparql_escape_uri(signing_prep_uri))
-
