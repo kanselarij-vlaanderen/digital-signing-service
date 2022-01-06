@@ -4,7 +4,7 @@ from signinghub_api_client.client import SigningHubSession
 from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import exceptions, query_result_helpers, uri, signing_flow
-from ..config import APPLICATION_GRAPH, KANSELARIJ_GRAPH
+from ..config import APPLICATION_GRAPH
 
 SH_SOURCE = "Kaleidos"
 
@@ -60,7 +60,7 @@ def prepare_signflow(signinghub_session: SigningHubSession,
     sh_document_muid = generate_uuid()
     signinghub_document_uri = uri.resource.signinghub_document(signinghub_package_id, signinghub_document_id)
     query_string = _update_template.substitute(
-        graph=sparql_escape_uri(KANSELARIJ_GRAPH),
+        graph=sparql_escape_uri(APPLICATION_GRAPH),
         signflow=sparql_escape_uri(signflow_uri),
         preparation_activity=sparql_escape_uri(preparation_activity_uri),
         preparation_activity_id=sparql_escape_string(preparation_activity_id),
