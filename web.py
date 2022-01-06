@@ -5,8 +5,6 @@ from . import jsonapi
 from .lib import exceptions, validate, \
     prepare_signflow, generate_integration_url, \
     signing_flow, assign_signers, start_signflow
-from .lib.activity import update_signing_status, \
-    wrap_up_signing_flow
 from .lib.document import get_document_by_uuid
 
 @app.route("/signinghub-profile")
@@ -171,12 +169,8 @@ def signinghub_callback():
     elif action == "shared":  # Start signflow.
         ensure_signinghub_machine_user_session()  # provides g.sh_session
         start_signflow.start_signflow_from_signinghub_callback(sh_package_id)
-    elif action in ("signed", "declined", "reviewed"):
-        # TODO: align with new data model
-        ensure_signinghub_machine_user_session()  # provides g.sh_session
-        update_signing_status(sh_package_id)
-        # Attempt to wrap up in case this was the last signature required
-        wrap_up_signing_flow(sh_package_id)
+    # elif action in ("signed", "declined", "reviewed"):
+        # TODO
     elif action == "forbidden":
         log("Someone tried to access forbidden package_id '{}' through SigningHub Iframe")
     return make_response("", 200)  # Because Flask expects a response
