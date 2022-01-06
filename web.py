@@ -17,11 +17,7 @@ def sh_profile_info():
 @app.route('/sign-flows/<signflow_id>/signing/pieces', methods=['GET'])
 def pieces_get(signflow_id):
     signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
-    try:
-        records = signing_flow.get_pieces(signflow_uri)
-    except exceptions.ResourceNotFoundException as exception:
-        logger.exception(f"Not found: {exception.uri}")
-        return error(f"Not Found: {exception.uri}", 404)
+    records = signing_flow.get_pieces(signflow_uri)
 
     data = [{
         "type": "pieces",
@@ -50,15 +46,7 @@ def prepare_post(signflow_id):
     piece_ids = [r["id"] for r in piece_identifations]
     piece_uris = [get_document_by_uuid(id) for id in piece_ids]
 
-    try:
-        prepare_signflow.prepare_signflow(
-            g.sh_session, signflow_uri, piece_uris)
-    except exceptions.ResourceNotFoundException as exception:
-        logger.exception(f"Not Found: {exception.uri}")
-        return error(f"Not Found: {exception.uri}", 404)
-    except exceptions.InvalidStateException as exception:
-        logger.exception(f"Invalid State: {str(exception)}")
-        return error(f"Invalid State: {exception}", 400)
+    prepare_signflow.prepare_signflow(g.sh_session, signflow_uri, piece_uris)
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
@@ -70,14 +58,7 @@ def prepare_post(signflow_id):
 @app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['GET'])
 def signers_get(signflow_id, piece_id):
     signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
-    try:
-        records = signing_flow.get_signers(signflow_uri)
-    except exceptions.ResourceNotFoundException as exception:
-        logger.exception(f"Not Found: {exception.uri}")
-        return error(f"Not Found: {exception.uri}", 404)
-    except exceptions.InvalidStateException as exception:
-        logger.exception(f"Invalid State: {str(exception)}")
-        return error(f"Invalid State: {exception}", 400)
+    records = signing_flow.get_signers(signflow_uri)
 
     data = [{
         "type": "mandatees",
@@ -106,17 +87,10 @@ def signers_assign(signflow_id, piece_id):
         return error(f"Bad Request: invalid payload", 400)
 
     signer_ids = [r["id"] for r in signers_identifications]
-    try:
-        signer_uris = [mandatee.get_mandatee_by_id(id) for id in signer_ids]
-        assign_signers.assign_signers(
-            g.sh_session, signflow_uri, signer_uris)
-    except exceptions.ResourceNotFoundException as exception:
-        logger.exception(f"Not Found: {exception.uri}")
-        return error(f"Not Found: {exception.uri}", 404)
-    except exceptions.InvalidStateException as exception:
-        logger.exception(f"Invalid State: {str(exception)}")
-        return error(f"Invalid State: {exception}", 400)
-    
+    signer_uris = [mandatee.get_mandatee_by_id(id) for id in signer_ids]
+    assign_signers.assign_signers(
+        g.sh_session, signflow_uri, signer_uris)
+
     res = make_response({}, 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
@@ -129,15 +103,9 @@ def signinghub_integration_url(signflow_id, piece_id):
     piece_uri = get_document_by_uuid(piece_id)
     collapse_panels = request.args.get(
         "collapse_panels", default="true", type=str) != "false"
-    try:
-        integration_url = generate_integration_url.generate_integration_url(
+
+    integration_url = generate_integration_url.generate_integration_url(
             g.sh_session, signflow_uri, piece_uri, collapse_panels)
-    except exceptions.ResourceNotFoundException as exception:
-        logger.exception(f"Not found: {exception.uri}")
-        return error(f"Not Found: {exception.uri}", 404)
-    except exceptions.InvalidStateException as exception:
-        logger.exception(f"Invalid state: {exception}")
-        return error(f"Invalid State: {exception}", 400)
     return make_response({"url": integration_url}, 200)
 
 
@@ -145,14 +113,9 @@ def signinghub_integration_url(signflow_id, piece_id):
 @app.route('/signing-flows/<signflow_id>/start', methods=['POST'])
 def start(signflow_id):
     signflow_uri = signing_flow.get_signflow_by_uuid(signflow_id)
-    try:
-        start_signflow.start_signflow(g.sh_session, signflow_uri)
-    except exceptions.ResourceNotFoundException as exception:
-        logger.exception(exception.uri)
-        return error(f"Not Found: {exception.uri}", 404)
-    except exceptions.InvalidStateException as exception:
-        logger.exception(f"Invalid State: {exception}")
-        return error(f"Invalid State: {exception}", 400)
+
+    start_signflow.start_signflow(g.sh_session, signflow_uri)
+
     res = make_response({}, 200)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
@@ -174,3 +137,13 @@ def signinghub_callback():
     elif action == "forbidden":
         log("Someone tried to access forbidden package_id '{}' through SigningHub Iframe")
     return make_response("", 200)  # Because Flask expects a response
+
+@app.errorhandler(exceptions.ResourceNotFoundException)
+def handle_resource_not_found(e):
+    logger.exception(e.uri)
+    return error(f"Not Found: {e.uri}", 404)
+
+@app.errorhandler(exceptions.InvalidStateException)
+def handle_invalid_state(e):
+    logger.exception(f"Invalid State: {e}")
+    return error(f"Invalid State: {e}", 400)
