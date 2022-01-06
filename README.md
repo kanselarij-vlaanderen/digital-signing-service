@@ -40,23 +40,10 @@ Credentials of the Kaleidos machine user at SigningHub
     restart: always
 ```
 
-#### Authorization
-
-Users of this service should have `:read`, `:write` and `:read-for-write` access to following rdf types
-```
-"http://www.w3.org/ns/prov#Activity"
-"http://mu.semte.ch/vocabularies/ext/signinghub/Document"
-```
-
 ## REST API
 
 The available API-endpoints are documented in an [OpenAPI v3](http://spec.openapis.org/oas/v3.0.3) spec-file `openapi.yaml`.
 
 ## Used models
 
-#### Concepts
-
-- Signing subcase type: `"http://kanselarij.vo.data.gift/id/concept/procedurestap-types/fd98c5d0-a218-4fbe-a4d3-029c79aea5c5`
-- Signing preparation activity type: `http://kanselarij.vo.data.gift/id/concept/activiteit-types/001d38fb-b285-41ef-a252-4e70208e9266`
-- Signing activity type: `http://mu.semte.ch/vocabularies/ext/publicatie/Handtekenactiviteit`
-- Signing "wrap-up" type (receiving the final signed document): `http://kanselarij.vo.data.gift/id/concept/activiteit-types/d05978cb-3219-4ed4-9ab5-45b03c58a0ae`
+Read the Kaleidos documentation regarding the [digital signing data model](https://github.com/kanselarij-vlaanderen/kaleidos-documentation/blob/master/data-model/signing-flow.md).
