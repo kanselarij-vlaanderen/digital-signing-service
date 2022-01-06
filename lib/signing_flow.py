@@ -1,4 +1,4 @@
-from ..queries.signflow import construct_by_mu_uuid
+from ..queries.signing_flow import construct_by_mu_uuid
 from .exceptions import NoQueryResultsException
 from helpers import query
 from . import query_result_helpers
