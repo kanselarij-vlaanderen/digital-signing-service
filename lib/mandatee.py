@@ -1,7 +1,14 @@
 from helpers import query, log
 from ..queries.mandatee import construct_get_mandatee, \
-    construct_get_mandatee_by_email
+    construct_get_mandatee_by_id, construct_get_mandatee_by_email
 from .exceptions import NoQueryResultsException
+
+def get_mandatee_by_id(mandatee_id):
+    query_str = construct_get_mandatee_by_id(mandatee_id)
+    mandatee_results = query(query_str)['results']['bindings']
+    if not mandatee_results:
+        raise NoQueryResultsException("No mandatee found by id '{}'".format(mandatee_id))
+    return mandatee_results[0]["uri"]["value"]
 
 def get_mandatee(mandatee_uri):
     query_str = construct_get_mandatee(mandatee_uri)

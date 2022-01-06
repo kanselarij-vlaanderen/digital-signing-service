@@ -4,7 +4,7 @@ from .authentication import signinghub_session_required, ensure_signinghub_machi
 from . import jsonapi
 from .lib import exceptions, validate, \
     prepare_signflow, generate_integration_url, \
-    signing_flow, assign_signers, start_signflow
+    signing_flow, assign_signers, start_signflow, mandatee
 from .lib.document import get_document_by_uuid
 
 @app.route("/signinghub-profile")
@@ -107,7 +107,7 @@ def signers_assign(signflow_id, piece_id):
 
     signer_ids = [r["id"] for r in signers_identifications]
     try:
-        signer_uris = validate.ensure_mandatees_exist(signer_ids)
+        signer_uris = [mandatee.get_mandatee_by_id(id) for id in signer_ids]
         assign_signers.assign_signers(
             g.sh_session, signflow_uri, signer_uris)
     except exceptions.ResourceNotFoundException as exception:
