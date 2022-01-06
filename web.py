@@ -2,8 +2,7 @@ from flask import g, json, request, make_response, redirect
 from helpers import log, error, logger
 from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
 from . import jsonapi
-from .lib import exceptions, validate, \
-    prepare_signflow, generate_integration_url, \
+from .lib import exceptions, prepare_signflow, generate_integration_url, \
     signing_flow, assign_signers, start_signflow, mandatee
 from .lib.document import get_document_by_uuid
 
