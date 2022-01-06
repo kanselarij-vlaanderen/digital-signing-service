@@ -128,9 +128,8 @@ def signinghub_callback():
     action = data["action"]
     if action == "none":
         log("Someone looked at package_id '{}' through SigningHub Iframe")
-    elif action == "shared":  # Start signflow.
-        ensure_signinghub_machine_user_session()  # provides g.sh_session
-        start_signflow.start_signflow_from_signinghub_callback(sh_package_id)
+    # elif action == "shared":  # Start signflow.
+        # TODO
     # elif action in ("signed", "declined", "reviewed"):
         # TODO
     elif action == "forbidden":

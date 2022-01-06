@@ -17,11 +17,6 @@ def start_signflow(
     sh_session.share_document_package(sh_package_id)
     __register_start_signflow(signflow_uri)
 
-def start_signflow_from_signinghub_callback(sh_package_id: str):
-    signflow = signing_flow.get_signflow_by_signinghub_id(sh_package_id)
-    signflow_uri = signflow["uri"]
-    __register_start_signflow(signflow_uri)
-
 def __register_start_signflow(signflow_uri: str):
     timestamp = datetime.now()
     update_activities_command = __update_activities_template.substitute(
