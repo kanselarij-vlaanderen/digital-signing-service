@@ -34,7 +34,7 @@ def __register_start_signflow(signflow_uri: str):
 __update_activities_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
 INSERT {

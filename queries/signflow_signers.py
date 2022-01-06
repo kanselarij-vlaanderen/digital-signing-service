@@ -8,7 +8,7 @@ PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
 SELECT ?signing_activity ?start_date ?end_date ?signer ?signer_id

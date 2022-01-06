@@ -81,7 +81,7 @@ PREFIX dbpedia: <http://dbpedia.org/ontology/>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
 SELECT ?piece ?piece_name ?file ?file_extension ?file_path
@@ -103,7 +103,7 @@ WHERE {
 _update_template = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handteken/>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
 INSERT {
