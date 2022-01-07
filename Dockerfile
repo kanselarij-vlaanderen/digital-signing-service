@@ -1,1 +1,1 @@
-FROM mikidi/mu-python-template:latest
+FROM semtech/mu-python-template:feature-improve-escape-uri
