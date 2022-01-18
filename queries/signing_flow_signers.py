@@ -13,20 +13,23 @@ PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
 SELECT ?signing_activity ?start_date ?end_date ?signer ?signer_id
 WHERE {
+    BIND($signflow AS ?signflow)
     GRAPH $graph {
         ?signflow a sign:Handtekenaangelegenheid ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap ;
             ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
         ?signing_activity a sign:Handtekenactiviteit ;
-            dossier:Activiteit.startdatum ?start_date ;
-            dossier:Activiteit.einddatum ?end_date ;
             sign:ondertekenaar ?signer .
         ?signer a mandaat:Mandataris ;
             mu:uuid ?signer_id .
+        OPTIONAL {
+            ?signing_activity dossier:Activiteit.startdatum ?start_date .
+        }
+        OPTIONAL {
+            ?signing_activity dossier:Activiteit.einddatum ?end_date .
+        }
     }
-
-    VALUES ?signflow { $signflow }
 }
 """)
     return query_template.substitute(
