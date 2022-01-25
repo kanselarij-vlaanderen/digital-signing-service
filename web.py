@@ -1,6 +1,6 @@
 from flask import g, json, request, make_response, redirect
 from helpers import log, error, logger
-from .authentication import signinghub_session_required, ensure_signinghub_machine_user_session
+from .authentication import signinghub_session_required, signinghub_machine_session_required, ensure_signinghub_machine_user_session
 from . import jsonapi
 from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
     signing_flow, assign_signers, start_signing_flow, mandatee
@@ -53,7 +53,14 @@ def prepare_post(signflow_id):
 
 # piece_id is a part of the URI for consistency with other URIs of this service
 # SigningHubs API does not link signers to pieces
-@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers')
+@app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signers', methods=['POST', 'GET'])
+def signers(signflow_id, piece_id):
+    if request.method == 'GET':
+        return signers_get(signflow_id, piece_id)
+    elif request.method == 'POST':
+        ensure_signinghub_machine_user_session() # TODO
+        return signers_assign(signflow_id, piece_id)
+
 def signers_get(signflow_id, piece_id):
     signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     records = signing_flow.get_signers(signflow_uri)
@@ -69,12 +76,7 @@ def signers_get(signflow_id, piece_id):
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
-
-# piece_id is a part of the URI for consistency with other URIs of this service
-# SigningHubs API does not link signers to pieces
-@app.route('/sign-flows/<signflow_id>/signing/pieces/<piece_id>/signers', methods=['POST'])
-@jsonapi.header_required
-@signinghub_session_required  # provides g.sh_session
+# @jsonapi.header_required
 def signers_assign(signflow_id, piece_id):
     signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     try:

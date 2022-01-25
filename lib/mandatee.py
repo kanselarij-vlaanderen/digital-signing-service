@@ -2,6 +2,7 @@ from helpers import query, log
 from ..queries.mandatee import construct_get_mandatee, \
     construct_get_mandatee_by_id, construct_get_mandatee_by_email
 from .exceptions import NoQueryResultsException
+from ..config import APPLICATION_GRAPH
 
 def get_mandatee_by_id(mandatee_id):
     query_str = construct_get_mandatee_by_id(mandatee_id)
@@ -18,8 +19,8 @@ def get_mandatee(mandatee_uri):
     mandatee = {k: v["value"] for k, v in madatee_results[0].items()}
     return mandatee
 
-def get_mandatee_by_email(mandatee_email):
-    query_str = construct_get_mandatee_by_email(mandatee_email)
+def get_mandatee_by_email(mandatee_email, graph=APPLICATION_GRAPH):
+    query_str = construct_get_mandatee_by_email(mandatee_email, graph)
     madatee_results = query(query_str)['results']['bindings']
     if not madatee_results:
         raise NoQueryResultsException("No mandatee found by id '{}'".format(mandatee_email))
