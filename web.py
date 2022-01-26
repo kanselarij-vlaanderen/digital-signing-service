@@ -53,15 +53,15 @@ def prepare_post(signflow_id):
 
 # piece_id is a part of the URI for consistency with other URIs of this service
 # SigningHubs API does not link signers to pieces
-@app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signers', methods=['POST', 'GET'])
-def signers(signflow_id, piece_id):
+@app.route('/signing-flows/<signflow_id>/signers', methods=['POST', 'GET'])
+def signers(signflow_id):
     if request.method == 'GET':
-        return signers_get(signflow_id, piece_id)
+        return signers_get(signflow_id)
     elif request.method == 'POST':
         ensure_signinghub_machine_user_session() # TODO
-        return signers_assign(signflow_id, piece_id)
+        return signers_assign(signflow_id)
 
-def signers_get(signflow_id, piece_id):
+def signers_get(signflow_id):
     signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     records = signing_flow.get_signers(signflow_uri)
 
@@ -77,7 +77,7 @@ def signers_get(signflow_id, piece_id):
     return res
 
 # @jsonapi.header_required
-def signers_assign(signflow_id, piece_id):
+def signers_assign(signflow_id):
     signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
     try:
         body = request.get_json(force=True)
