@@ -5,6 +5,7 @@ A service providing Kaleidos the functionality for digitally signing documents.
 ## Configuration
 
 - `SIGNINGHUB_API_URL`: Base-URL of the Signinghub-API
+- `SIGNINGHUB_IFRAME_REDIRECT_URL`: URL-path to redirect to when finishing Iframe interaction. Note that a default for this is configurable in SigningHub integration settings too, but for development purposes it's useful to be able to configure per environment.
 
 API-client identification at SigningHub. For more info, see the SigningHub user-manual on [managing third party integrations](https://manuals.ascertia.com/SigningHubv7/default.aspx#pageid=1111).
 - `SIGNINGHUB_CLIENT_ID`
@@ -28,6 +29,7 @@ Credentials of the Kaleidos machine user at SigningHub
     image: kanselarij/digital-signing # Make sure to specify a tagged version here
     environment:
       SIGNINGHUB_API_URL: ""
+      SIGNINGHUB_IFRAME_REDIRECT_URL: ""
       SIGNINGHUB_CLIENT_ID: ""
       SIGNINGHUB_CLIENT_SECRET: ""
       CERT_FILE_PATH: ""

@@ -3,7 +3,7 @@ from helpers import query
 from escape_helpers import sparql_escape_uri
 from signinghub_api_client.client import SigningHubSession
 from . import exceptions, query_result_helpers, signing_flow
-from ..config import APPLICATION_GRAPH
+from ..config import APPLICATION_GRAPH, SIGNINGHUB_IFRAME_REDIRECT_URL
 
 # TODO: validation:
 # - piece is uploaded to signinghub
@@ -30,7 +30,7 @@ def generate_integration_url(signinghub_session: SigningHubSession,
     integration_url = signinghub_session.get_integration_link(signinghub_package_id, {
         "language":"nl-NL",
         # "user_email": "joe@gmail.com", # Know through SSO login?
-        # "callback_url":"https://web.signinghub.com/", # default configured fir the app.
+        "callback_url": SIGNINGHUB_IFRAME_REDIRECT_URL,
         "collapse_panels": "true" if collapse_panels else "false",
         # "usercertificate_id": "31585" # Undocumented
     })
