@@ -44,7 +44,7 @@ WHERE {
         graph=sparql_escape_uri(graph),
         mandatee=sparql_escape_uri(mandatee_uri))
 
-def construct_get_mandatee_by_email(mandatee_email, graph=APPLICATION_GRAPH):
+def construct_get_active_mandatee_by_email(mandatee_email, graph=APPLICATION_GRAPH):
     mail_uri = "mailto:{}".format(mandatee_email)
     maximal_end_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) # Today
     # Sometimes a mandatee needs to sign some last docs a couple of days after the end of the mandate
@@ -58,14 +58,16 @@ WHERE {
     GRAPH $graph {
         ?mandatee a mandaat:Mandataris ;
             mandaat:isBestuurlijkeAliasVan ?person ;
-            mandaat:einde ?end_date ;
             mandaat:start ?start_date .
         ?person foaf:mbox $mail_uri .
         FILTER(?start_date < NOW())
-        FILTER(?end_date > $end_date)
+        OPTIONAL {
+            ?mandatee mandaat:einde ?end_date .
+            FILTER(?end_date > $end_date)
+        }
     }
 }
-ORDER BY DESC(?end_date)
+ORDER BY DESC(?start_date) DESC(?end_date)
 """)
     return query_template.substitute(
         graph=sparql_escape_uri(graph),
