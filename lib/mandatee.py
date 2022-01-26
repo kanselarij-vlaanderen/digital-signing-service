@@ -23,7 +23,7 @@ def get_mandatee_by_email(mandatee_email, graph=APPLICATION_GRAPH):
     query_str = construct_get_mandatee_by_email(mandatee_email, graph)
     madatee_results = query(query_str)['results']['bindings']
     if not madatee_results:
-        raise NoQueryResultsException("No mandatee found by id '{}'".format(mandatee_email))
+        raise NoQueryResultsException("No mandatee found by e-mail address '{}'".format(mandatee_email))
     if madatee_results.length > 1:
         log("Multiple mandatees found for e-mail address '{}'. Picking one.".format(mandatee_email))
     mandatee = {k: v["value"] for k, v in madatee_results[0].items()}

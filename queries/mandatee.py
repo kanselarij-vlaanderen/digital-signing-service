@@ -23,14 +23,15 @@ WHERE {
 def construct_get_mandatee(mandatee_uri, graph=APPLICATION_GRAPH):
     query_template = Template("""
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX persoon: <https://data.vlaanderen.be/ns/persoon#>
 PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 
-SELECT ?email ?first_name ?family_name
+SELECT DISTINCT ?email ?first_name ?family_name
 WHERE {
     GRAPH $graph {
         $mandatee a mandaat:Mandataris ;
             mandaat:isBestuurlijkeAliasVan ?person .
-        OPTIONAL { ?person foaf:firstName ?first_name }
+        OPTIONAL { ?person persoon:gebruikteVoornaam ?first_name }
         OPTIONAL { ?person foaf:familyName ?family_name }
         OPTIONAL {
             ?person foaf:mbox ?mail_uri .
@@ -52,7 +53,7 @@ def construct_get_mandatee_by_email(mandatee_email, graph=APPLICATION_GRAPH):
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 
-SELECT ?mandatee
+SELECT DISTINCT ?mandatee
 WHERE {
     GRAPH $graph {
         ?mandatee a mandaat:Mandataris ;
