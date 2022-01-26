@@ -4,6 +4,7 @@ from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from signinghub_api_client.client import SigningHubSession
 from . import exceptions, query_result_helpers, uri, signing_flow
+from .mandatee import get_mandatee
 from ..config import APPLICATION_GRAPH
 
 #TODO: validation:
@@ -12,15 +13,7 @@ def assign_signers(signinghub_session: SigningHubSession,
                    signflow_uri: str,
                    signer_uris: typing.List[str]):
     #TODO: validation: ensure signflow is in draft
-    mandatees_query_command = _query_mandatees_template.substitute(
-        graph=sparql_escape_uri(APPLICATION_GRAPH),
-        mandatees=query_result_helpers.sparql_escape_list([sparql_escape_uri(uri) for uri in signer_uris]))
-    mandatee_result = query(mandatees_query_command)
-    mandatee_records = query_result_helpers.to_recs(mandatee_result)
-    mandatee_records_set = { r["mandatee"] for r in mandatee_records }
-    mandatees_not_found = [uri for uri in signer_uris if uri not in mandatee_records_set]
-    if mandatees_not_found:
-        raise exceptions.ResourceNotFoundException(','.join(mandatees_not_found))
+    signer_records = [get_mandatee(signer_uri) for signer_uri in signer_uris]
 
     signflow_record = signing_flow.get_signing_flow(signflow_uri)
     sh_package_id = signflow_record["sh_package_id"]
@@ -28,7 +21,7 @@ def assign_signers(signinghub_session: SigningHubSession,
         "user_email": r["email"],
         "user_name": ' '.join([name for name in [r["first_name"], r["family_name"]] if name]),
         "role": "SIGNER"
-    } for r in mandatee_records]
+    } for r in signer_records]
     signinghub_session.add_users_to_workflow(sh_package_id, sh_users)
 
     signing_activities = [_build_signing_activity(signer_uri) for signer_uri in signer_uris]
@@ -77,28 +70,6 @@ WHERE {
     }
 
     VALUES ?signflow { $signflow }
-}
-""")
-
-# TODO: update to persoon:gebruikteVoornaam
-_query_mandatees_template = Template("""
-PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
-
-SELECT ?mandatee ?email ?first_name ?family_name
-WHERE {
-    GRAPH $graph {
-        ?mandatee a mandaat:Mandataris ;
-            mandaat:isBestuurlijkeAliasVan ?person .
-        OPTIONAL { ?person foaf:firstName ?first_name }
-        OPTIONAL { ?person foaf:familyName ?family_name }
-        OPTIONAL {
-            ?person foaf:mbox ?email_uri .
-            BIND( REPLACE(STR(?email_uri), "mailto:", "") AS ?email)
-        }
-
-        VALUES ?mandatee { $mandatees }
-    }
 }
 """)
 
