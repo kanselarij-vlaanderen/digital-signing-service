@@ -1,3 +1,4 @@
+---
 kind: pipeline
 type: docker
 name: build-dry-run
@@ -51,3 +52,16 @@ steps:
 trigger:
   event:
     - tag
+---
+kind: secret
+name: docker_username
+data: DVlQT2S4ILWGmcHdzSZnshMVTSVbW5s0CztE8D81pS4q/QmhioELB5hZFyCj
+---
+kind: secret
+name: docker_password
+data: dWlzacd2591ZGjyGmzalfmEcYzQTt7R6Nafi52TMWhgl8/usXLkUe02hK2TkevnREWYUX6fjAlOro4QN7nBtUg==
+---
+kind: signature
+hmac: 0bd2ee3fb60534a3d44e858d2b4564bd23528a0232a4a66fa30985f2fd568397
+
+...
