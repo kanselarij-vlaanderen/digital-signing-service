@@ -3,6 +3,7 @@ from .exceptions import NoQueryResultsException
 from helpers import query
 from . import query_result_helpers
 from .. import queries
+from ..config import APPLICATION_GRAPH
 
 def get_signing_flow_by_uuid(uuid):
     query_str = construct_by_mu_uuid(uuid)
@@ -12,8 +13,8 @@ def get_signing_flow_by_uuid(uuid):
     signflow_uri = signflow_results[0]["signflow"]["value"]
     return signflow_uri
 
-def get_signing_flow(signflow_uri: str):
-    query_command = queries.signing_flow.construct(signflow_uri)
+def get_signing_flow(signflow_uri: str, graph=APPLICATION_GRAPH):
+    query_command = queries.signing_flow.construct(signflow_uri, graph=graph)
     return __get_signflow_record(query_command)
 
 def get_signflow_by_signinghub_id(sh_package_id: str):
@@ -47,8 +48,8 @@ def get_pieces(signflow_uri: str):
 
     return records
 
-def get_signers(signflow_uri: str):
-    query_command = queries.signing_flow_signers.construct(signflow_uri)
+def get_signers(signflow_uri: str, graph=APPLICATION_GRAPH):
+    query_command = queries.signing_flow_signers.construct(signflow_uri, graph=graph)
     result = query(query_command)
     records = query_result_helpers.to_recs(result)
 

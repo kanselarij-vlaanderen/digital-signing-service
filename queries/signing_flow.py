@@ -2,9 +2,9 @@ from string import Template
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from ..config import APPLICATION_GRAPH
 
-def construct(signflow_uri: str):
+def construct(signflow_uri: str, graph=APPLICATION_GRAPH):
     return __signflow_query_template.substitute(
-      graph=sparql_escape_uri(APPLICATION_GRAPH),
+      graph=sparql_escape_uri(graph),
       signflow=sparql_escape_uri(signflow_uri),
       sh_package_id='',
     )
