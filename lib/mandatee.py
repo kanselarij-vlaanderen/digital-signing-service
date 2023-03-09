@@ -19,8 +19,8 @@ def get_mandatee(mandatee_uri):
     mandatee = {k: v["value"] for k, v in madatee_results[0].items()}
     return mandatee
 
-def get_active_mandatee_by_email(mandatee_email, graph=APPLICATION_GRAPH):
-    query_str = construct_get_active_mandatee_by_email(mandatee_email, graph)
+def get_active_mandatee_by_email(mandatee_email):
+    query_str = construct_get_active_mandatee_by_email(mandatee_email)
     madatee_results = query(query_str)['results']['bindings']
     if not madatee_results:
         raise NoQueryResultsException("No mandatee found by e-mail address '{}'".format(mandatee_email))
