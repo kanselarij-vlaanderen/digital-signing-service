@@ -32,7 +32,6 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
     file_result = query(get_file_query_string)
     file_records = query_result_helpers.to_recs(file_result)
     file_record = query_result_helpers.ensure_1(file_records)
-    piece_uri = file_record["piece"]
     file_name = file_record["piece_name"] + "." + file_record["file_extension"]
     file_path = file_record["file_path"]
 
@@ -48,7 +47,7 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
         "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
     })
     signinghub_package_id = signinghub_package["package_id"]
-    
+
     signinghub_document = signinghub_session.upload_document(
         signinghub_package_id,
         file_content,
@@ -73,27 +72,19 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
     update(query_string)
 
 _query_file_template = Template("""
-PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
 PREFIX dbpedia: <http://dbpedia.org/ontology/>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
-PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
-PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
 
-SELECT ?piece ?piece_name ?file ?file_extension ?file_path
+SELECT ?piece_name ?file ?file_extension ?file_path
 WHERE {
-    VALUES ?piece { $piece }
-
     GRAPH $graph {
-
-        ?piece a dossier:Stuk ;
+        $piece a dossier:Stuk ;
             dct:title ?piece_name .
 
-        ?piece ext:file ?file .
+        $piece ext:file ?file .
         ?file dbpedia:fileExtension ?file_extension ;
              ^nie:dataSource ?file_path .
     }
