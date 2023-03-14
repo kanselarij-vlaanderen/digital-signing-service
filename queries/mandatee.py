@@ -26,15 +26,17 @@ def construct_get_mandatee(mandatee_uri):
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 PREFIX persoon: <https://data.vlaanderen.be/ns/persoon#>
 PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 
 SELECT DISTINCT ?email ?first_name ?family_name
 WHERE {
     $mandatee a mandaat:Mandataris ;
-        mandaat:isBestuurlijkeAliasVan ?person .
-    OPTIONAL { ?person persoon:gebruikteVoornaam ?first_name }
-    OPTIONAL { ?person foaf:familyName ?family_name }
+        mandaat:isBestuurlijkeAliasVan ?personMandatee .
+    OPTIONAL { ?personMandatee persoon:gebruikteVoornaam ?first_name }
+    OPTIONAL { ?personMandatee foaf:familyName ?family_name }
     OPTIONAL {
-        ?person foaf:mbox ?mail_uri .
+        ?personUser sign:isOndertekenaarVoor ?personMandatee .
+        ?personUser foaf:mbox ?mail_uri .
         BIND( REPLACE(STR(?mail_uri), "mailto:", "") AS ?email)
     }
 }
@@ -52,13 +54,15 @@ def construct_get_active_mandatee_by_email(mandatee_email):
     query_template = Template("""
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 
 SELECT DISTINCT ?mandatee
 WHERE {
     ?mandatee a mandaat:Mandataris ;
-        mandaat:isBestuurlijkeAliasVan ?person ;
+        mandaat:isBestuurlijkeAliasVan ?personMandatee ;
         mandaat:start ?start_date .
-    ?person foaf:mbox $mail_uri .
+    ?personUser foaf:mbox $mail_uri .
+    ?personUser sign:isOndertekenaarVoor ?personMandatee .
     FILTER(?start_date < NOW())
     OPTIONAL {
         ?mandatee mandaat:einde ?end_date .
