@@ -29,6 +29,8 @@ def construct_get_file_for_document(document_uri, file_mimetype=None, graph=APPL
         format_filter = "FILTER( CONTAINS( ?format, {} ) )".format(sparql_escape_string(file_mimetype))
     else:
         format_filter = ""
+    # Union between both paths to file. We want to be able to select a certain format (pdf)
+    # regardless of the fact if it was derived (converted between formats) or not.
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
@@ -37,14 +39,20 @@ PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT (?file AS ?uri)
 WHERE {
-    GRAPH $graph {
-        $document a dossier:Stuk ;
-            prov:value ?file .
-        ?file a nfo:FileDataObject ;
-            nfo:fileName ?name ;
-            dct:format ?format .
-        $format_filter
+GRAPH $graph {
+    $document a dossier:Stuk .
+    {
+        $document prov:value ?file .
     }
+    UNION
+    {
+        $document prov:value/^prov:hadPrimarySource ?file .
+    }
+    ?file a nfo:FileDataObject ;
+        nfo:fileName ?name ;
+        dct:format ?format .
+    $format_filter
+}
 }
 LIMIT 1
 """)
