@@ -33,13 +33,13 @@ def construct_get_file_for_document(document_uri, file_mimetype=None, graph=APPL
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
 PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT (?file AS ?uri)
 WHERE {
     GRAPH $graph {
         $document a dossier:Stuk ;
-            ext:file ?file .
+            prov:value ?file .
         ?file a nfo:FileDataObject ;
             nfo:fileName ?name ;
             dct:format ?format .
@@ -57,13 +57,13 @@ def construct_get_document_for_file(file_uri, graph=APPLICATION_GRAPH):
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT (?document AS ?uri)
 WHERE {
     GRAPH $graph {
         ?document a dossier:Stuk ;
-            ext:file $file .
+            prov:value $file .
         $file a nfo:FileDataObject .
     }
 }
@@ -85,7 +85,7 @@ PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 INSERT {
     GRAPH $graph {
@@ -93,7 +93,7 @@ INSERT {
             mu:uuid $uuid ;
             dct:title $name ;
             dct:created $created ;
-            ext:file $file .
+            prov:value $file .
     }
 }
 WHERE {

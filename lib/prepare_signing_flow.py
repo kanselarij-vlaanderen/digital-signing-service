@@ -75,8 +75,8 @@ _query_file_template = Template("""
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX dbpedia: <http://dbpedia.org/ontology/>
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 
 SELECT ?piece_name ?file ?file_extension ?file_path
 WHERE {
@@ -84,7 +84,7 @@ WHERE {
         $piece a dossier:Stuk ;
             dct:title ?piece_name .
 
-        $piece ext:file ?file .
+        $piece prov:value ?file .
         ?file dbpedia:fileExtension ?file_extension ;
              ^nie:dataSource ?file_path .
     }
