@@ -1,0 +1,27 @@
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+# http://themis.vlaanderen.be/id/gebruiker/10afadbc-6d4c-474e-a1e5-3f8e1af99948 # kanselarij
+# http://themis.vlaanderen.be/id/gebruiker/7a992b2f-a437-4919-8965-25b3d7942f93 # Minister
+
+# regular user accounts are in http://mu.semte.ch/graphs/system/users
+# mock-login users are in http://mu.semte.ch/graphs/public
+
+DELETE {
+  GRAPH <http://mu.semte.ch/graphs/system/users> {
+    ?person foaf:mbox ?mail .
+  }
+}
+INSERT {
+  GRAPH <http://mu.semte.ch/graphs/system/users> {
+    ?person foaf:mbox <mailto:test@vlaanderen.be> .
+  }
+}
+WHERE {
+  GRAPH <http://mu.semte.ch/graphs/system/users> {
+    BIND(<> AS ?person)
+    ?person a foaf:Person .
+    OPTIONAL {
+      ?person foaf:mbox ?mail .
+    }
+  }
+}

@@ -1,0 +1,29 @@
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX person: <http://www.w3.org/ns/person#>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+
+# <http://themis.vlaanderen.be/id/persoon/5fed907ee6670526694a0707> Jambon
+# <http://themis.vlaanderen.be/id/persoon/5fed907ee6670526694a0714> Demir
+# <http://themis.vlaanderen.be/id/persoon/5fed907ee6670526694a0718> Beke
+# <http://themis.vlaanderen.be/id/persoon/5fed907ee6670526694a071a> Diependaele
+# <http://themis.vlaanderen.be/id/persoon/5fed907ee6670526694a071d> Dalle
+
+# http://themis.vlaanderen.be/id/gebruiker/10afadbc-6d4c-474e-a1e5-3f8e1af99948 # kanselarij
+# http://themis.vlaanderen.be/id/gebruiker/7a992b2f-a437-4919-8965-25b3d7942f93 # Minister
+
+# regular user accounts are in http://mu.semte.ch/graphs/system/users
+# mock-login users are in http://mu.semte.ch/graphs/public
+
+INSERT {
+  GRAPH <http://mu.semte.ch/graphs/public> {
+    <http://themis.vlaanderen.be/id/gebruiker/7a992b2f-a437-4919-8965-25b3d7942f93> sign:isOndertekenaarVoor <http://themis.vlaanderen.be/id/persoon/5fed907ee6670526694a0707> .
+  }
+}
+WHERE {
+  GRAPH <http://mu.semte.ch/graphs/public> {
+    <http://themis.vlaanderen.be/id/persoon/5fed907ee6670526694a0707> a person:Person .
+  }
+  GRAPH <http://mu.semte.ch/graphs/public> {
+    <http://themis.vlaanderen.be/id/gebruiker/7a992b2f-a437-4919-8965-25b3d7942f93> a foaf:Person .
+  }
+}
