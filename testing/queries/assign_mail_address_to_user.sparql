@@ -6,22 +6,17 @@ PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 # regular user accounts are in http://mu.semte.ch/graphs/system/users
 # mock-login users are in http://mu.semte.ch/graphs/public
 
-DELETE {
-  GRAPH <http://mu.semte.ch/graphs/system/users> {
-    ?person foaf:mbox ?mail .
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX person: <http://www.w3.org/ns/person#>
+
+DELETE WHERE {
+  GRAPH <http://mu.semte.ch/graphs/public> {
+    <http://themis.vlaanderen.be/id/gebruiker/10afadbc-6d4c-474e-a1e5-3f8e1af99948> foaf:mbox ?mail .
   }
 }
-INSERT {
-  GRAPH <http://mu.semte.ch/graphs/system/users> {
-    ?person foaf:mbox <mailto:test@vlaanderen.be> .
-  }
-}
-WHERE {
-  GRAPH <http://mu.semte.ch/graphs/system/users> {
-    BIND(<> AS ?person)
-    ?person a foaf:Person .
-    OPTIONAL {
-      ?person foaf:mbox ?mail .
-    }
+;
+INSERT DATA {
+  GRAPH <http://mu.semte.ch/graphs/public> {
+    <http://themis.vlaanderen.be/id/gebruiker/10afadbc-6d4c-474e-a1e5-3f8e1af99948> foaf:mbox <mailto:michael.dierick@redpencil.io> .
   }
 }
