@@ -1,0 +1,11 @@
+POST /signing-flows/:id/signers
+// mandatee "Minister-president Jan Jambon"
+
+{
+  "data": [
+    {
+      "type": "mandatees",
+      "id": "5deb9bb2-204a-4fbe-93ba-edeb5fa7a57b"
+    }
+  ]
+}
