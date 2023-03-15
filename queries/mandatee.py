@@ -32,8 +32,9 @@ SELECT DISTINCT ?email ?first_name ?family_name
 WHERE {
     $mandatee a mandaat:Mandataris ;
         mandaat:isBestuurlijkeAliasVan ?personMandatee .
-    ?personMandatee persoon:gebruikteVoornaam ?first_name }
-    ?personMandatee foaf:familyName ?family_name }
+    ?personMandatee
+        persoon:gebruikteVoornaam ?first_name ;
+        foaf:familyName ?family_name .
     ?personUser sign:isOndertekenaarVoor ?personMandatee .
     ?personUser foaf:mbox ?mail_uri .
     BIND( REPLACE(STR(?mail_uri), "mailto:", "") AS ?email)
