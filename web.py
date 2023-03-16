@@ -1,10 +1,12 @@
 from flask import g, json, request, make_response, redirect
-from helpers import log, error, logger
+from helpers import log, error, logger, update
 from .authentication import signinghub_session_required, signinghub_machine_session_required, ensure_signinghub_machine_user_session
 from . import jsonapi
 from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
-    signing_flow, assign_signers, start_signing_flow, mandatee
+    signing_flow, assign_signers, start_signing_flow, mandatee, update_signing_flow
 from .lib.document import get_document_by_uuid
+from .lib.generic import get_by_uuid
+from .queries.signing_flow_signers import construct_add_signer
 
 @app.route("/signinghub-profile")
 @signinghub_session_required  # provides g.sh_session
@@ -53,16 +55,18 @@ def prepare_post(signflow_id):
 
 # piece_id is a part of the URI for consistency with other URIs of this service
 # SigningHubs API does not link signers to pieces
-@app.route('/signing-flows/<signflow_id>/signers', methods=['POST', 'GET'])
+@app.route('/signing-flows/<signflow_id>/signers', methods=['GET', 'POST', 'DELETE'])
 def signers(signflow_id):
+    signflow_uri = get_by_uuid(signflow_id)
+    signflow = signing_flow.get_signing_flow(signflow_uri)
+    # if signflow["sh_package_id"]: # already on SH
+        # ensure_signinghub_user_session()
     if request.method == 'GET':
-        return signers_get(signflow_id)
+        return signers_get(signflow_uri)
     elif request.method == 'POST':
-        ensure_signinghub_machine_user_session() # TODO
-        return signers_assign(signflow_id)
+        return signers_assign(signflow_uri)
 
-def signers_get(signflow_id):
-    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
+def signers_get(signflow_uri):
     records = signing_flow.get_signers(signflow_uri)
 
     data = [{
@@ -77,8 +81,7 @@ def signers_get(signflow_id):
     return res
 
 # @jsonapi.header_required
-def signers_assign(signflow_id):
-    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
+def signers_assign(signflow_uri):
     try:
         body = request.get_json(force=True)
         data = body["data"]
@@ -87,10 +90,9 @@ def signers_assign(signflow_id):
         return error(f"Bad Request: invalid payload", 400)
 
     signer_ids = [r["id"] for r in signers_identifications]
-    signer_uris = [mandatee.get_mandatee_by_id(id) for id in signer_ids]
-    assign_signers.assign_signers(
-        g.sh_session, signflow_uri, signer_uris)
-
+    signer_uris = [get_by_uuid(id) for id in signer_ids]
+    for signer_uri in signer_uris:
+        update(construct_add_signer(signflow_uri, signer_uri))
     res = make_response({}, 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res

@@ -15,9 +15,6 @@ class __Resource:
     def preparation_activity(self, id: str):
         return self.__build("handteken-voorbereidingsactiviteit", id)
 
-    def signing_activity(self, id: str):
-        return self.__build("handteken-handtekenactiviteit", id)
-
     def signinghub_document(self, package_id: str, document_id: str):
         return f"{_config.SIGNINGHUB_RESOURCE_BASE_URI}package/{package_id}/document/{document_id}"
 

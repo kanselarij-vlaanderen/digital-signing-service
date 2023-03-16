@@ -1,24 +1,20 @@
-from ..queries.signing_flow import construct_by_mu_uuid
+# from ..queries.signing_flow import construct_by_mu_uuid
 from .exceptions import NoQueryResultsException
 from helpers import query
 from . import query_result_helpers
+from ..queries.signing_flow import construct_get_signing_flow_by_uri, construct_get_signing_flow_by_package_id
 from .. import queries
 from ..config import APPLICATION_GRAPH
 
-def get_signing_flow_by_uuid(uuid):
-    query_str = construct_by_mu_uuid(uuid)
-    signflow_results = query(query_str)['results']['bindings']
-    if not signflow_results:
-        raise NoQueryResultsException("No signflow found by uuid '{}'".format(uuid))
-    signflow_uri = signflow_results[0]["signflow"]["value"]
-    return signflow_uri
-
-def get_signing_flow(signflow_uri: str, graph=APPLICATION_GRAPH):
-    query_command = queries.signing_flow.construct(signflow_uri, graph=graph)
-    return __get_signflow_record(query_command)
+def get_signing_flow(signflow_uri: str):
+    query_string = construct_get_signing_flow_by_uri(signflow_uri)
+    result = query(query_string)
+    records = query_result_helpers.to_recs(result)
+    record = query_result_helpers.ensure_1(records)
+    return record
 
 def get_signflow_by_signinghub_id(sh_package_id: str):
-    query_command = queries.signing_flow.construct_by_signinghub_id(sh_package_id)
+    query_command = construct_get_signing_flow_by_package_id(sh_package_id)
     return __get_signflow_record(query_command)
 
 def __get_signflow_record(query_command: str):

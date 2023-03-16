@@ -1,10 +1,14 @@
 from string import Template
 import typing
+from flask import g
 from signinghub_api_client.client import SigningHubSession
 from helpers import generate_uuid, query, update
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import exceptions, query_result_helpers, uri, signing_flow
+from .mandatee import get_mandatee
 from ..config import APPLICATION_GRAPH
+from ..queries.document import construct_get_file_for_document
+from ..queries.file import construct_get_file_query
 
 SH_SOURCE = "Kaleidos"
 
@@ -25,15 +29,21 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidStateException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
 
-    get_file_query_string = _query_file_template.substitute(
-        graph=sparql_escape_uri(APPLICATION_GRAPH),
-        piece=sparql_escape_uri(piece_uri),
+    get_file_query_string = construct_get_file_for_document(
+        piece_uri,
+        "application/pdf"
     )
     file_result = query(get_file_query_string)
     file_records = query_result_helpers.to_recs(file_result)
     file_record = query_result_helpers.ensure_1(file_records)
-    file_name = file_record["piece_name"] + "." + file_record["file_extension"]
-    file_path = file_record["file_path"]
+    get_file_query_string = construct_get_file_query(
+        file_record["uri"],
+    )
+    file_result = query(get_file_query_string)
+    file_records = query_result_helpers.to_recs(file_result)
+    file_record = query_result_helpers.ensure_1(file_records)
+    file_name = file_record["name"]
+    file_path = file_record["physicalFile"]
 
     file_path = file_path.replace("share://", "/share/")
     with open(file_path, "rb") as f:
@@ -71,26 +81,17 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
     )
     update(query_string)
 
-_query_file_template = Template("""
-PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX dbpedia: <http://dbpedia.org/ontology/>
-PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
+    signers = signing_flow.get_signers(signflow_uri)
+    for signer in signers:
+        signer = get_mandatee(signer["uri"])
+        g.sh_session.add_users_to_workflow(signinghub_package_id, [{
+          "user_email": signer["email"],
+          "user_name": f"{signer['first_name']} {signer['family_name']}",
+          "role": "SIGNER",
+          "email_notification": True,
+       }])
 
-SELECT ?piece_name ?file ?file_extension ?file_path
-WHERE {
-    GRAPH $graph {
-        $piece a dossier:Stuk ;
-            dct:title ?piece_name .
-
-        $piece prov:value ?file .
-        ?file dbpedia:fileExtension ?file_extension ;
-             ^nie:dataSource ?file_path .
-    }
-}
-""")
-
+# optional sign activities to link in case some were already created before sending to SH
 _update_template = Template("""
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
@@ -108,12 +109,16 @@ INSERT {
             sh:packageId $sh_package_id ;
             sh:documentId $sh_document_id ;
             prov:hadPrimarySource $piece .
+        ?signing_activity prov:wasInformedBy $preparation_activity .
     }
 } WHERE {
     GRAPH $graph {
         $signflow a sign:Handtekenaangelegenheid ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap .
+        OPTIONAL {
+            ?signing_activity sign:handtekeningVindtPlaatsTijdens ?sign_subcase .
+        }
     }
 }
 """)
