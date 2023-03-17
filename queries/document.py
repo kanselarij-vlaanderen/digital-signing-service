@@ -6,24 +6,6 @@ from ..config import APPLICATION_GRAPH, KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
 
 DOCUMENT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 
-def construct_get_document_by_uuid(document_uuid, graph=APPLICATION_GRAPH):
-    query_template = Template("""
-PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-
-SELECT (?document AS ?uri)
-WHERE {
-    GRAPH $graph {
-        ?document a dossier:Stuk ;
-            mu:uuid $uuid .
-    }
-}
-LIMIT 1
-""")
-    return query_template.substitute(
-        graph=sparql_escape_uri(graph),
-        uuid=sparql_escape_string(document_uuid))
-
 def construct_get_file_for_document(document_uri, file_mimetype=None, graph=APPLICATION_GRAPH):
     if file_mimetype is not None:
         format_filter = "FILTER( CONTAINS( ?format, {} ) )".format(sparql_escape_string(file_mimetype))

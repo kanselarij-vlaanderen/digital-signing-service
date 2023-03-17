@@ -4,7 +4,6 @@ from .authentication import signinghub_session_required, signinghub_machine_sess
 from . import jsonapi
 from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
     signing_flow, assign_signers, start_signing_flow, mandatee, update_signing_flow
-from .lib.document import get_document_by_uuid
 from .lib.generic import get_by_uuid
 from .queries.signing_flow_signers import construct_add_signer
 
@@ -16,7 +15,7 @@ def sh_profile_info():
 
 @app.route('/signing-flows/<signflow_id>/pieces')
 def pieces_get(signflow_id):
-    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
+    signflow_uri = get_by_uuid(signflow_id)
     records = signing_flow.get_pieces(signflow_uri)
 
     data = [{
@@ -35,7 +34,7 @@ def pieces_get(signflow_id):
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def prepare_post(signflow_id):
-    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
+    signflow_uri = get_by_uuid(signflow_id)
     try:
         body = request.get_json(force=True)
         data = body["data"]
@@ -44,7 +43,7 @@ def prepare_post(signflow_id):
         return error(f"Bad Request: invalid payload", 400)
 
     piece_ids = [r["id"] for r in piece_identifations]
-    piece_uris = [get_document_by_uuid(id) for id in piece_ids]
+    piece_uris = [get_by_uuid(id) for id in piece_ids]
 
     prepare_signing_flow.prepare_signing_flow(g.sh_session, signflow_uri, piece_uris)
 
@@ -101,8 +100,8 @@ def signers_assign(signflow_uri):
 @signinghub_session_required  # provides g.sh_session
 @app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url')
 def signinghub_integration_url(signflow_id, piece_id):
-    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
-    piece_uri = get_document_by_uuid(piece_id)
+    signflow_uri = get_by_uuid(signflow_id)
+    piece_uri = get_by_uuid(piece_id)
     collapse_panels = request.args.get(
         "collapse_panels", default="true", type=str) != "false"
 
@@ -114,7 +113,7 @@ def signinghub_integration_url(signflow_id, piece_id):
 @signinghub_session_required
 @app.route('/signing-flows/<signflow_id>/start', methods=['POST'])
 def start(signflow_id):
-    signflow_uri = signing_flow.get_signing_flow_by_uuid(signflow_id)
+    signflow_uri = get_by_uuid(signflow_id)
 
     start_signing_flow.start_signing_flow(g.sh_session, signflow_uri)
 
