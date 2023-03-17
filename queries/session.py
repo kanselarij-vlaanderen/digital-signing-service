@@ -6,7 +6,8 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escap
 from ..config import TIMEZONE
 
 SESSION_GRAPH = "http://mu.semte.ch/graphs/sessions"
-ACCOUNT_GRAPH = "http://mu.semte.ch/graphs/system/users"
+ACCOUNT_GRAPH = "http://mu.semte.ch/graphs/system/users" # http://mu.semte.ch/graphs/public for mock-login
+ACCOUNT_GRAPH = "http://mu.semte.ch/graphs/public"
 SIGNINGHUB_TOKEN_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-tokens/"
 
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
