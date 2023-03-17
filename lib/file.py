@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import g
 from helpers import generate_uuid
 from ..queries.file import construct_insert_file_query
-from ..sudo_query import update as sudo_update
+from ..agent_query import update as agent_update
 from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
 
 SH_SOURCE = "Kaleidos" # TODO https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1022
@@ -30,6 +30,6 @@ def download_sh_doc_to_mu_file(sh_package_id, sh_document_id):
     }
     virtual_file["uri"] = FILE_BASE_URI + virtual_file["uuid"]
     virtual_file["name"] = virtual_file["uuid"] + "." + virtual_file["extension"]
-    ins_f_query_string = construct_insert_file_query(virtual_file, physical_file, SIGNED_FILES_GRAPH)
-    sudo_update(ins_f_query_string)
+    ins_f_query_string = construct_insert_file_query(virtual_file, physical_file)
+    agent_update(ins_f_query_string)
     return virtual_file

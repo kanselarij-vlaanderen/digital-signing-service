@@ -1,6 +1,6 @@
 from helpers import generate_uuid, query
-from ..sudo_query import update as sudo_update
 from ..queries.document import construct_insert_document
+from ..agent_query import update as agent_update
 from .file import download_sh_doc_to_mu_file
 from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
 
@@ -15,6 +15,6 @@ def download_sh_doc_to_kaleidos_doc(sh_package_id, sh_document_id, document_name
         "name": document_name
     }
     doc["uri"] = DOC_BASE_URI + doc["uuid"]
-    ins_doc_query_string = construct_insert_document(document_name, virtual_file["uri"], SIGNED_DOCS_GRAPH)
-    sudo_update(ins_doc_query_string)
+    ins_doc_query_string = construct_insert_document(document_name, virtual_file["uri"])
+    agent_update(ins_doc_query_string)
     return doc
