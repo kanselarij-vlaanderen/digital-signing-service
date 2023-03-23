@@ -138,6 +138,14 @@ def signinghub_callback():
         log("Someone tried to access forbidden package_id '{}' through SigningHub Iframe")
     return make_response("", 200)  # Because Flask expects a response
 
+# Service endpoint for manually initiating sync for a given signing flow
+@app.route('/signing-flows/<signflow_id>/sync', methods=['POST'])
+@signinghub_session_required  # provides g.sh_session
+def signinghub_sync(signflow_id):
+    signflow_uri = get_by_uuid(signflow_id, None, agent_query)
+    update_signing_flow(signflow_uri)
+    return make_response({}, 200)
+
 @app.errorhandler(exceptions.ResourceNotFoundException)
 def handle_resource_not_found(e):
     logger.exception(e.uri)
