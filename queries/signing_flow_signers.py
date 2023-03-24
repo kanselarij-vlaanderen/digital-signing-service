@@ -5,7 +5,7 @@ from ..config import APPLICATION_GRAPH
 
 HANDTEKENACTIVITEIT_RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/handtekenactiviteit/"
 
-def construct(signflow_uri: str, graph=APPLICATION_GRAPH) -> str:
+def construct(signflow_uri: str) -> str:
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
@@ -14,26 +14,23 @@ PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 
 SELECT DISTINCT ?signing_activity ?start_date ?end_date ?signer ?signer_id
 WHERE {
-    GRAPH $graph {
-        $signflow a sign:Handtekenaangelegenheid ;
-            sign:doorlooptHandtekening ?sign_subcase .
-        ?sign_subcase a sign:HandtekenProcedurestap ;
-            ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
-        ?signing_activity a sign:Handtekenactiviteit ;
-            sign:ondertekenaar ?signer .
-        ?signer a mandaat:Mandataris ;
-            mu:uuid ?signer_id .
-        OPTIONAL {
-            ?signing_activity dossier:Activiteit.startdatum ?start_date .
-        }
-        OPTIONAL {
-            ?signing_activity dossier:Activiteit.einddatum ?end_date .
-        }
+    $signflow a sign:Handtekenaangelegenheid ;
+        sign:doorlooptHandtekening ?sign_subcase .
+    ?sign_subcase a sign:HandtekenProcedurestap ;
+        ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
+    ?signing_activity a sign:Handtekenactiviteit ;
+        sign:ondertekenaar ?signer .
+    ?signer a mandaat:Mandataris ;
+        mu:uuid ?signer_id .
+    OPTIONAL {
+        ?signing_activity dossier:Activiteit.startdatum ?start_date .
+    }
+    OPTIONAL {
+        ?signing_activity dossier:Activiteit.einddatum ?end_date .
     }
 }
 """)
     return query_template.substitute(
-        graph=sparql_escape_uri(APPLICATION_GRAPH),
         signflow=sparql_escape_uri(signflow_uri)
     )
 
