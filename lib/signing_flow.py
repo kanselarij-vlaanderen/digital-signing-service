@@ -45,9 +45,9 @@ def get_pieces(signflow_uri: str):
 
     return records
 
-def get_signers(signflow_uri: str, graph=APPLICATION_GRAPH):
-    query_command = queries.signing_flow_signers.construct(signflow_uri, graph=graph)
-    result = query(query_command)
+def get_signers(signflow_uri: str, query_method: Callable = query):
+    query_command = queries.signing_flow_signers.construct(signflow_uri)
+    result = query_method(query_command)
     records = query_result_helpers.to_recs(result)
 
     records = [{
