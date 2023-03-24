@@ -13,7 +13,7 @@ externalDocs:
 servers:
 - url: /
 paths:
-  /sign-flows/{signflow_id}/signing/pieces:
+  /signing-flows/{signflow_id}/pieces:
     get:
       tags:
       - Signing files
@@ -34,39 +34,16 @@ paths:
             application/vnd.api+json:
               schema:
                 $ref: '#/components/schemas/JsonApiData'
-    post:
-      tags:
-      - Signing files
-      summary: Prepare sign flow by uploading pieces to SigningHub
-      operationId: addSignPieces
-      parameters:
-      - name: signflow_id
-        in: path
-        description: ID of sign flow
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        202:
-          description: successful operation
-  /sign-flows/{signflow_id}/signing/pieces/{piece_id}/signers:
+  /signing-flows/{signflow_id}/signers:
     get:
       tags:
       - File signers
-      summary: List signers for a certain file that is part of a publication flow
+      summary: List signers for a a given signing-flow
       operationId: listFileSigners
       parameters:
       - name: signflow_id
         in: path
         description: ID of sign flow
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: piece_id
-        in: path
-        description: ID of file
         required: true
         schema:
           type: string
@@ -81,7 +58,7 @@ paths:
     post:
       tags:
       - File signers
-      summary: Add signers for a certain file that is part of a publication flow
+      summary: Add signers for a a given signing-flow
       operationId: addFileSigners
       parameters:
       - name: signflow_id
@@ -91,58 +68,20 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: piece_id
-        in: path
-        description: ID of piece
-        required: true
-        schema:
-          type: string
-          format: uuid
       responses:
         202:
           description: successful operation
           content: {}
-  /sign-flows/{signflow_id}/signing/pieces/{piece_id}/signinghub:
-    get:
-      tags:
-      - Iframe link
-      summary: Get an Iframe link for SigningHub interface integration
-      operationId: getIframeLink
-      parameters:
-      - name: signflow_id
-        in: path
-        description: ID of sign flow
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: piece_id
-        in: path
-        description: ID of piece
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        303:
-          description: Redirect to SigningHub page
-  /sign-flows/{signflow_id}/signing/pieces/{piece_id}/start:
+  /signing-flows/{signflow_id}/upload-document-to-signinghub:
     post:
       tags:
-      - Start signing
-      summary: Send out file for signing by the appointed signers
+      - Upload to SigningHub
+      summary: Upload documents associated to the Signing-flow to SigningHub and assign Signers that have already been assigned within Kaleidos too.
       operationId: startSigning
       parameters:
       - name: signflow_id
         in: path
         description: ID of sign flow
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: piece_id
-        in: path
-        description: ID of piece
         required: true
         schema:
           type: string
@@ -156,7 +95,7 @@ components:
       type: object
       properties:
         type:
-          type: string          
+          type: string
           enum:
           - pieces
           - mandatees
