@@ -10,10 +10,10 @@ PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 PREFIX signinghub: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
-SELECT ?piece ?piece_id ?sh_document_id
+SELECT DISTINCT ?piece ?piece_id ?sh_document_id
 WHERE {
     GRAPH $graph {
-        ?signflow a sign:Handtekenaangelegenheid ;
+        $signflow a sign:Handtekenaangelegenheid ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap .
         ?marking_activity a sign:Markeringsactiviteit ;
@@ -21,7 +21,7 @@ WHERE {
             sign:gemarkeerdStuk ?piece .
         ?piece a dossier:Stuk ;
             mu:uuid ?piece_id .
-    
+
         OPTIONAL {
             ?preparation_activity a sign:Voorbereidingsactiviteit ;
                 sign:voorbereidingVindtPlaatsTijdens ?sign_subcase ;
@@ -30,10 +30,8 @@ WHERE {
                 prov:hadPrimarySource ?piece ;
                 signinghub:documentId ?sh_document_id .
         }
-    
+
     }
-            
-    VALUES ?signflow { $signflow }
 }
 """)
     return query_template.substitute(
