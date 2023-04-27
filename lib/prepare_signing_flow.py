@@ -2,15 +2,12 @@ from string import Template
 import typing
 from flask import g
 from signinghub_api_client.client import SigningHubSession
-from helpers import generate_uuid, query, update
+from helpers import generate_uuid, update, logger
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import exceptions, query_result_helpers, uri, signing_flow
 from .mandatee import get_mandatee
+from .document import upload_piece_to_sh
 from ..config import APPLICATION_GRAPH
-from ..queries.document import construct_get_file_for_document
-from ..queries.file import construct_get_file_query
-
-SH_SOURCE = "Kaleidos"
 
 # TODO:
 # validation:
@@ -29,55 +26,16 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidStateException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
 
-    get_file_query_string = construct_get_file_for_document(
-        piece_uri,
-        "application/pdf"
-    )
-    file_result = query(get_file_query_string)
-    file_records = query_result_helpers.to_recs(file_result)
-    file_record = query_result_helpers.ensure_1(file_records)
-    get_file_query_string = construct_get_file_query(
-        file_record["uri"],
-    )
-    file_result = query(get_file_query_string)
-    file_records = query_result_helpers.to_recs(file_result)
-    file_record = query_result_helpers.ensure_1(file_records)
-    file_name = file_record["name"]
-    file_path = file_record["physicalFile"]
-
-    file_path = file_path.replace("share://", "/share/")
-    with open(file_path, "rb") as f:
-        file_content = f.read()
-
+    signinghub_document_uri, signinghub_package_id, signinghub_document_id = upload_piece_to_sh(piece_uri)
     preparation_activity_id = generate_uuid()
     preparation_activity_uri = uri.resource.preparation_activity(preparation_activity_id)
 
-    signinghub_package = signinghub_session.add_package({
-        # package_name: "New Package", # Defaults to "Undefined"
-        "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
-    })
-    signinghub_package_id = signinghub_package["package_id"]
-
-    signinghub_document = signinghub_session.upload_document(
-        signinghub_package_id,
-        file_content,
-        file_name,
-        SH_SOURCE,
-        convert_document=False)
-    signinghub_document_id = signinghub_document["documentid"]
-
-    sh_document_muid = generate_uuid()
-    signinghub_document_uri = uri.resource.signinghub_document(signinghub_package_id, signinghub_document_id)
     query_string = _update_template.substitute(
         graph=sparql_escape_uri(APPLICATION_GRAPH),
         signflow=sparql_escape_uri(signflow_uri),
         preparation_activity=sparql_escape_uri(preparation_activity_uri),
         preparation_activity_id=sparql_escape_string(preparation_activity_id),
-        piece=sparql_escape_uri(piece_uri),
         sh_document=sparql_escape_uri(signinghub_document_uri),
-        sh_document_muid=sparql_escape_string(sh_document_muid),
-        sh_document_id=sparql_escape_string(str(signinghub_document_id)),
-        sh_package_id=sparql_escape_string(str(signinghub_package_id)),
     )
     update(query_string)
 
@@ -104,11 +62,6 @@ INSERT {
         $preparation_activity a sign:Voorbereidingsactiviteit ;
             mu:uuid $preparation_activity_id .
         $preparation_activity sign:voorbereidingGenereert $sh_document .
-        $sh_document a sh:Document ;
-            mu:uuid $sh_document_muid ;
-            sh:packageId $sh_package_id ;
-            sh:documentId $sh_document_id ;
-            prov:hadPrimarySource $piece .
         ?signing_activity prov:wasInformedBy $preparation_activity .
     }
 } WHERE {
