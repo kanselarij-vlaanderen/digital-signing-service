@@ -2,12 +2,13 @@ from string import Template
 import typing
 from flask import g
 from signinghub_api_client.client import SigningHubSession
-from helpers import generate_uuid, update, logger
+from helpers import generate_uuid, query, update, logger
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from . import exceptions, query_result_helpers, uri, signing_flow
 from .mandatee import get_mandatee
 from .document import upload_piece_to_sh
 from ..config import APPLICATION_GRAPH
+from ..queries.signing_flow_pieces import construct_get_decision_report
 
 # TODO:
 # validation:
@@ -26,7 +27,15 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
     if piece["uri"] != piece_uri:
         raise exceptions.InvalidStateException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
 
-    signinghub_document_uri, signinghub_package_id, signinghub_document_id = upload_piece_to_sh(piece_uri)
+    # Beslissingfiche
+    decision_report_query = construct_get_decision_report(signflow_uri)
+    decision_report_query_result = query_result_helpers.ensure_1(
+                                       query_result_helpers.to_recs(query(decision_report_query)))
+    _, signinghub_package_id, _ = upload_piece_to_sh(decision_report_query_result["decision_report"])
+
+    # Document
+    signinghub_document_uri, signinghub_package_id, _ = upload_piece_to_sh(piece_uri, signinghub_package_id)
+
     preparation_activity_id = generate_uuid()
     preparation_activity_uri = uri.resource.preparation_activity(preparation_activity_id)
 
@@ -41,6 +50,7 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
 
     signers = signing_flow.get_signers(signflow_uri)
     for signer in signers:
+        logger.info(f"adding signer {signer['uri']} to flow")
         signer = get_mandatee(signer["uri"])
         g.sh_session.add_users_to_workflow(signinghub_package_id, [{
           "user_email": signer["email"],
