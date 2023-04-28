@@ -30,20 +30,16 @@ def pieces_get(signflow_id):
     return res
 
 
-@app.route('/signing-flows/<signflow_id>/upload-document-to-signinghub', methods=['POST'])
+@app.route('/signing-flows/<signflow_id>/upload-to-signinghub', methods=['POST'])
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def prepare_post(signflow_id):
     signflow_uri = get_by_uuid(signflow_id)
-    try:
-        body = request.get_json(force=True)
-        data = body["data"]
-        piece_identifations = [jsonapi.require_identification(r, "pieces") for r in data]
-    except:
-        return error(f"Bad Request: invalid payload", 400)
+    pieces = signing_flow.get_pieces(signflow_uri)
+    if any(piece["sh_document_id"] for piece in pieces):
+        raise Exception("Signingflow has already been uploaded previously.")
 
-    piece_ids = [r["id"] for r in piece_identifations]
-    piece_uris = [get_by_uuid(id) for id in piece_ids]
+    piece_uris = [piece["uri"] for piece in pieces]
 
     prepare_signing_flow.prepare_signing_flow(g.sh_session, signflow_uri, piece_uris)
 
