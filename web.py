@@ -3,9 +3,11 @@ from helpers import log, error, logger, update
 from .authentication import signinghub_session_required, signinghub_machine_session_required, ensure_signinghub_machine_user_session
 from . import jsonapi
 from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
-    signing_flow, assign_signers, start_signing_flow, mandatee, update_signing_flow
+    signing_flow, assign_signers, start_signing_flow, mandatee
 from .lib.generic import get_by_uuid
+from .lib.update_signing_flow import update_signing_flow
 from .queries.signing_flow_signers import construct_add_signer
+from .agent_query import query as agent_query
 
 @app.route("/signinghub-profile")
 @signinghub_session_required  # provides g.sh_session
@@ -136,7 +138,6 @@ def signinghub_callback():
 
 # Service endpoint for manually initiating sync for a given signing flow
 @app.route('/signing-flows/<signflow_id>/sync', methods=['POST'])
-@signinghub_session_required  # provides g.sh_session
 def signinghub_sync(signflow_id):
     signflow_uri = get_by_uuid(signflow_id, None, agent_query)
     update_signing_flow(signflow_uri)
