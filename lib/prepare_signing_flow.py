@@ -48,6 +48,16 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
     )
     update(query_string)
 
+    approvers = signing_flow.get_approvers(signflow_uri)
+    for approver in approvers:
+        logger.info(f"adding approver {approver['email']} to flow")
+        g.sh_session.add_users_to_workflow(signinghub_package_id, [{
+          "user_email": approver["email"],
+          "user_name": approver["email"],
+          "role": "REVIEWER",
+          "email_notification": True,
+       }])
+
     signers = signing_flow.get_signers(signflow_uri)
     for signer in signers:
         logger.info(f"adding signer {signer['uri']} to flow")
@@ -73,6 +83,7 @@ INSERT {
             mu:uuid $preparation_activity_id .
         $preparation_activity sign:voorbereidingGenereert $sh_document .
         ?signing_activity prov:wasInformedBy $preparation_activity .
+        ?approval_activity sign:isGoedgekeurdDoor $preparation_activity .
     }
 } WHERE {
     GRAPH $graph {
@@ -81,6 +92,9 @@ INSERT {
         ?sign_subcase a sign:HandtekenProcedurestap .
         OPTIONAL {
             ?signing_activity sign:handtekeningVindtPlaatsTijdens ?sign_subcase .
+        }
+        OPTIONAL {
+            ?approval_activity sign:goedkeuringVindtPlaatsTijdens ?sign_subcase .
         }
     }
 }
