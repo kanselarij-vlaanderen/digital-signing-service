@@ -52,3 +52,19 @@ def construct_get_signing_flow_by_package_id(sh_package_id: str):
     return query_template.substitute(
       sh_package_id=sparql_escape_string(sh_package_id)
     )
+
+def construct_get_signing_flow_notifiers(signflow_uri: str):
+    query_template = Template("""
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+
+    SELECT DISTINCT ?notified
+    WHERE {
+        $signflow a sign:Handtekenaangelegenheid ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?sign_subcase a sign:HandtekenProcedurestap ;
+            sign:genotificeerde ?notified .
+    }
+    """)
+    return query_template.substitute(
+      signflow=sparql_escape_uri(signflow_uri)
+    )
