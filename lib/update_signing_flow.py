@@ -18,7 +18,7 @@ def update_signing_flow(signflow_uri: str):
     ensure_signinghub_machine_user_session(creator["email"])
     sh_package_id = signing_flow["sh_package_id"]
     sh_workflow_details = g.sh_session.get_workflow_details(sh_package_id)
-    logger.info(f'Signing flow {signflow_uri}, workflow status {sh_workflow_details["workflow"]["workflow_status"]}')
+    logger.debug(f'Signing flow {signflow_uri}, workflow status {sh_workflow_details["workflow"]["workflow_status"]}')
     if sh_workflow_details["workflow"]["workflow_status"] == "DRAFT":
         # TODO
         pass
@@ -28,7 +28,7 @@ def update_signing_flow(signflow_uri: str):
     elif sh_workflow_details["workflow"]["workflow_status"] == "COMPLETED":
         # TODO: check if everyone signed/approved/reviewed/... (didnt reject)
         doc = download_sh_doc_to_kaleidos_doc(sh_workflow_details["package_id"],
-                                        sh_workflow_details["documents"][0]["document_id"],
+                                        signing_flow["sh_document_id"],
                                         "getekend document" # TODO: same name as exising doc
                                         )
 
