@@ -91,6 +91,9 @@ def download_sh_doc_to_kaleidos_doc(sh_package_id, sh_document_id, document_name
         "name": document_name
     }
     doc["uri"] = DOC_BASE_URI + doc["uuid"]
-    ins_doc_query_string = construct_insert_document(document_name, virtual_file["uri"])
+    ins_doc_query_string = construct_insert_document(document_name,
+                                                     doc["uri"],
+                                                     doc["uuid"],
+                                                     virtual_file["uri"])
     agent_update(ins_doc_query_string)
     return doc

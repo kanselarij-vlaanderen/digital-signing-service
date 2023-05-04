@@ -63,13 +63,12 @@ LIMIT 1
         graph=sparql_escape_uri(graph),
         file=sparql_escape_uri(file_uri))
 
-def construct_insert_document(document_name, file_uri, graph=APPLICATION_GRAPH):
-    document = {
-        "name": document_name,
-        "created": datetime.now(TIMEZONE)
-    }
-    document["uuid"] = generate_uuid()
-    document["uri"] = DOCUMENT_BASE_URI + document["uuid"]
+def construct_insert_document(document_name,
+                              document_uri,
+                              document_uuid,
+                              file_uri,
+                              graph=APPLICATION_GRAPH):
+    creation_date = datetime.now(TIMEZONE)
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
@@ -94,10 +93,10 @@ WHERE {
 """)
     return query_template.substitute(
         graph=sparql_escape_uri(graph),
-        document=sparql_escape_uri(document["uri"]),
-        uuid=sparql_escape_string(document["uuid"]),
-        name=sparql_escape_string(document["name"]),
-        created=sparql_escape_datetime(document["created"]),
+        document=sparql_escape_uri(document_uri),
+        uuid=sparql_escape_string(document_uuid),
+        name=sparql_escape_string(document_name),
+        created=sparql_escape_datetime(creation_date),
         file=sparql_escape_uri(file_uri))
 
 def construct_attach_document_to_previous_version(doc_uri, prev_ver_doc_uri, graph=APPLICATION_GRAPH):
