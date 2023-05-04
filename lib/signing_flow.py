@@ -60,6 +60,20 @@ def get_signers(signflow_uri: str, query_method: Callable = query):
 
     return records
 
+def get_approvers(signflow_uri: str, query_method: Callable = query):
+    query_command = queries.signing_flow_approvers.construct(signflow_uri)
+    result = query_method(query_command)
+    records = query_result_helpers.to_recs(result)
+
+    records = [{
+        "email": r["approver"].replace("mailto:", ""),
+        "approval_activity": r["approval_activity"],
+        "start_date": r["start_date"],
+        "end_date": r["end_date"],
+    } for r in records]
+
+    return records
+
 def get_creator(signflow_uri: str, query_method: Callable = query):
     query_string = construct_get_signing_flow_creator(signflow_uri)
     result = query_method(query_string)
