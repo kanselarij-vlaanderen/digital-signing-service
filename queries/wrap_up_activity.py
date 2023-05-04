@@ -18,7 +18,7 @@ PREFIX prov: <http://www.w3.org/ns/prov#>
 INSERT {
     $wrap_up_activity
         a sign:Afrondingsactiviteit ;
-        mu:uuid: $wrap_up_activity_id ;
+        mu:uuid $wrap_up_activity_id ;
         dossier:Activiteit.einddatum $wrap_up_end ;
         sign:afrondingVindtPlaatsTijdens ?signing_subcase ;
         prov:wasInformedBy ?signing_activity ;
