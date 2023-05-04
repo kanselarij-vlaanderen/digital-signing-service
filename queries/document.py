@@ -114,22 +114,34 @@ WHERE {
         created=sparql_escape_datetime(creation_date),
         file=sparql_escape_uri(file_uri))
 
-def construct_attach_document_to_previous_version(doc_uri, prev_ver_doc_uri, graph=APPLICATION_GRAPH):
-    """ Also handles attaching the new version to the previous one's case"""
+def construct_attach_document_to_unsigned_version(doc_uri, prev_ver_doc_uri, graph=APPLICATION_GRAPH):
+    """ Also handles attaching the signed version to the previous one's case"""
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX pav: <http://purl.org/pav/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 
+DELETE {
+    GRAPH $graph {
+        $doc dct:title ?old_title .
+    }
+}
 INSERT {
     GRAPH $graph {
-        $doc pav:previousVersion $prev_doc .
+        $doc sign:ongetekendStuk $prev_doc .
+        $doc dct:title ?prev_title .
         ?case dossier:Dossier.bestaatUit $doc .
     }
 }
 WHERE {
     GRAPH $graph {
         $doc a dossier:Stuk .
-        $prev_doc a dossier:Stuk .
+        $prev_doc a dossier:Stuk ;
+            dct:title ?prev_title .
+        OPTIONAL {
+            $doc dct:title ?old_title .
+        }
         OPTIONAL {
             ?case a dossier:Dossier ;
                 dossier:Dossier.bestaatUit $prev_doc .
