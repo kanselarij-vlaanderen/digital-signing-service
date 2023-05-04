@@ -50,6 +50,10 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
     )
     update(query_string)
 
+    g.sh_session.update_workflow_details(signinghub_package_id, {
+      "workflow_type": "CUSTOM",
+    })
+
     approvers = signing_flow.get_approvers(signflow_uri)
     for approver in approvers:
         logger.info(f"adding approver {approver['email']} to flow")
@@ -58,6 +62,18 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
           "user_name": approver["email"],
           "role": "REVIEWER",
           "email_notification": True,
+          "signing_order": 1,
+       }])
+
+    notified = signing_flow.get_notified(signflow_uri)
+    for notify in notified:
+        logger.info(f"adding notified {notify['email']} to flow")
+        g.sh_session.add_users_to_workflow(signinghub_package_id, [{
+          "user_email": notify["email"],
+          "user_name": notify["email"],
+          "role": "CARBON_COPY",
+          "email_notification": True,
+          "signing_order": 1,
        }])
 
     signers = signing_flow.get_signers(signflow_uri)
@@ -69,6 +85,7 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
           "user_name": f"{signer['first_name']} {signer['family_name']}",
           "role": "SIGNER",
           "email_notification": True,
+          "signing_order": 2,
        }])
 
 # optional sign activities to link in case some were already created before sending to SH

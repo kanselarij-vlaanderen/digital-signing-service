@@ -74,6 +74,17 @@ def get_approvers(signflow_uri: str, query_method: Callable = query):
 
     return records
 
+def get_notified(signflow_uri: str, query_method: Callable = query):
+    query_command = queries.signing_flow.construct_get_signing_flow_notifiers(signflow_uri)
+    result = query_method(query_command)
+    records = query_result_helpers.to_recs(result)
+
+    records = [{
+        "email": r["notified"].replace("mailto:", ""),
+    } for r in records]
+
+    return records
+
 def get_creator(signflow_uri: str, query_method: Callable = query):
     query_string = construct_get_signing_flow_creator(signflow_uri)
     result = query_method(query_string)
