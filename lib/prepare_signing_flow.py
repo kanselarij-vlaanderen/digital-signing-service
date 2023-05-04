@@ -29,9 +29,11 @@ def prepare_signing_flow(signinghub_session: SigningHubSession,
 
     # Beslissingfiche
     decision_report_query = construct_get_decision_report(signflow_uri)
-    decision_report_query_result = query_result_helpers.ensure_1(
+    decision_report_query_result = query_result_helpers.ensure_0_or_1(
                                        query_result_helpers.to_recs(query(decision_report_query)))
-    _, signinghub_package_id, _ = upload_piece_to_sh(decision_report_query_result["decision_report"])
+    signinghub_package_id = None
+    if decision_report_query_result:
+        _, signinghub_package_id, _ = upload_piece_to_sh(decision_report_query_result["decision_report"])
 
     # Document
     signinghub_document_uri, signinghub_package_id, _ = upload_piece_to_sh(piece_uri, signinghub_package_id)

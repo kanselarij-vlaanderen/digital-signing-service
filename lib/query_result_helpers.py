@@ -13,6 +13,12 @@ def to_recs(result):
 def to_answer(result):
     return result["boolean"]
 
+def ensure_0_or_1(collection):
+    if len(collection) > 1:
+        raise exceptions.InvalidStateException(f"expected: 1 - found: {len(collection)}")
+    elif len(collection) == 1:
+        return collection[0]
+
 def ensure_1(collection):
     if len(collection) != 1:
         raise exceptions.InvalidStateException(f"expected: 1 - found: {len(collection)}")
