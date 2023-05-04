@@ -33,3 +33,9 @@ def download_sh_doc_to_mu_file(sh_package_id, sh_document_id):
     ins_f_query_string = construct_insert_file_query(virtual_file, physical_file)
     agent_update(ins_f_query_string)
     return virtual_file
+
+def fs_sanitize_filename(filename, replace_char=""):
+    # Covers the most common case.
+    # In case more is needed, merge https://gitlab.com/jplusplus/sanitize-filename/-/merge_requests/1
+    # and use that library instead
+    return filename.replace("/", replace_char)

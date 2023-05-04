@@ -63,6 +63,21 @@ LIMIT 1
         graph=sparql_escape_uri(graph),
         file=sparql_escape_uri(file_uri))
 
+def construct_get_document(document_uri):
+    query_template = Template("""
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX dct: <http://purl.org/dc/terms/>
+
+SELECT ?name
+WHERE {
+    $document a dossier:Stuk ;
+        dct:title ?name .
+}
+LIMIT 1
+""")
+    return query_template.substitute(
+        document=sparql_escape_uri(document_uri))
+
 def construct_insert_document(document_name,
                               document_uri,
                               document_uuid,

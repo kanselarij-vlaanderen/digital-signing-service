@@ -4,9 +4,9 @@ from flask import g
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 from ..queries.document import construct_insert_document
 from ..agent_query import update as agent_update
-from .file import download_sh_doc_to_mu_file
+from .file import download_sh_doc_to_mu_file, fs_sanitize_filename
 from ..config import APPLICATION_GRAPH, KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
-from ..queries.document import construct_get_file_for_document
+from ..queries.document import construct_get_file_for_document, construct_get_document
 from ..queries.file import construct_get_file_query
 from . import exceptions, query_result_helpers, uri, signing_flow
 
@@ -17,6 +17,11 @@ SIGNED_DOCS_GRAPH = KANSELARIJ_GRAPH
 DOC_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 
 def upload_piece_to_sh(piece_uri, signinghub_package_id=None):
+    get_doc_query_string = construct_get_document(piece_uri)
+    doc_result = query(get_doc_query_string)
+    doc_records = query_result_helpers.to_recs(doc_result)
+    doc_record = query_result_helpers.ensure_1(doc_records)
+
     get_file_query_string = construct_get_file_for_document(
         piece_uri,
         "application/pdf"
@@ -30,8 +35,8 @@ def upload_piece_to_sh(piece_uri, signinghub_package_id=None):
     file_result = query(get_file_query_string)
     file_records = query_result_helpers.to_recs(file_result)
     file_record = query_result_helpers.ensure_1(file_records)
-    file_name = file_record["name"]
     file_path = file_record["physicalFile"]
+    file_name = fs_sanitize_filename(doc_record["name"] + "." + file_record["extension"])
 
     file_path = file_path.replace("share://", "/share/")
     with open(file_path, "rb") as f:
