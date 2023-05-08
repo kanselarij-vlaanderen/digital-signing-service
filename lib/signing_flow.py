@@ -3,7 +3,12 @@ from typing import Callable
 from .exceptions import NoQueryResultsException
 from helpers import query
 from . import query_result_helpers
-from ..queries.signing_flow import construct_get_signing_flow_by_uri, construct_get_signing_flow_by_package_id, construct_get_signing_flow_creator
+from ..queries.signing_flow import (
+    construct_get_signing_flow_by_uri,
+    construct_get_signing_flow_by_package_id,
+    construct_get_signing_flow_creator,
+    construct_get_ongoing_signing_flows,
+)
 from .. import queries
 from ..config import APPLICATION_GRAPH
 
@@ -91,3 +96,9 @@ def get_creator(signflow_uri: str, query_method: Callable = query):
     records = query_result_helpers.to_recs(result)
     record = query_result_helpers.ensure_1(records)
     return record
+
+def get_ongoing_signing_flows(query_method: Callable = query):
+    query_string = construct_get_ongoing_signing_flows()
+    result = query_method(query_string)
+    records = query_result_helpers.to_recs(result)
+    return records

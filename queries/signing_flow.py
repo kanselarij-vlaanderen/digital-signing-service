@@ -86,3 +86,24 @@ def construct_get_signing_flow_creator(signflow_uri: str):
     return query_template.substitute(
       signflow=sparql_escape_uri(signflow_uri)
     )
+
+def construct_get_ongoing_signing_flows() -> str:
+    return """
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+
+    SELECT DISTINCT ?sign_flow_id
+    WHERE {
+        ?sign_flow a sign:Handtekenaangelegenheid ;
+            mu:uuid ?sign_flow_id ;
+            sign:doorlooptHandtekening ?signing_subcase .
+        ?signing_subcase ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
+        FILTER NOT EXISTS {
+            ?wrap_up_activity
+                a sign:Afrondingsactiviteit ;
+                    sign:afrondingVindtPlaatsTijdens ?signing_subcase ;
+                    prov:wasInformedBy ?signing_activity .
+        }
+    }
+    """
