@@ -7,6 +7,8 @@ DIGITAL_SIGNING_AGENT_ALLOWED_GROUPS =   [ # Secretarie
     { "variables": [], "name": "public" },
     { "variables": [], "name": "authenticated" },
     { "variables": [], "name": "secretarie" },
+    { "variables": [], "name": "sign-flow-read" },
+    { "variables": [], "name": "sign-flow-write" },
     { "variables": [], "name": "clean" }
 ]
 
