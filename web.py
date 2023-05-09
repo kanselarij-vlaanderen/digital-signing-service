@@ -13,6 +13,7 @@ from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
 from .queries.signing_flow_signers import construct_add_signer
 from .agent_query import query as agent_query
+from .config import SYNC_CRON_PATTERN
 
 def sync_all_ongoing_flows():
     records = signing_flow.get_ongoing_signing_flows(agent_query)
@@ -21,7 +22,7 @@ def sync_all_ongoing_flows():
         requests.post(f"http://localhost/signing-flows/{id}/sync")
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab("*/1 * * * *"))
+scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab(SYNC_CRON_PATTERN))
 scheduler.start()
 
 @app.route("/signinghub-profile")

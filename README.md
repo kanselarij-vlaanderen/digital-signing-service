@@ -21,6 +21,8 @@ Credentials of the Kaleidos machine user at SigningHub
 - `SIGNINGHUB_MACHINE_ACCOUNT_USERNAME`
 - `SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD`
 
+- `SYNC_CRON_PATTERN`: Cronjob pattern that will be used to periodically sync all ongoing sign flows (default: `*/2 * * * *`)
+
 
 #### docker-compose snippet
 
