@@ -1,5 +1,10 @@
+import requests
+
 from flask import g, json, request, make_response, redirect
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 from helpers import log, error, logger, update
+
 from .authentication import signinghub_session_required, signinghub_machine_session_required, ensure_signinghub_machine_user_session
 from . import jsonapi
 from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
@@ -8,6 +13,17 @@ from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
 from .queries.signing_flow_signers import construct_add_signer
 from .agent_query import query as agent_query
+from .config import SYNC_CRON_PATTERN
+
+def sync_all_ongoing_flows():
+    records = signing_flow.get_ongoing_signing_flows(agent_query)
+    ids = list(map(lambda r: r["sign_flow_id"], records))
+    for id in ids:
+        requests.post(f"http://localhost/signing-flows/{id}/sync")
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab(SYNC_CRON_PATTERN))
+scheduler.start()
 
 @app.route("/signinghub-profile")
 @signinghub_session_required  # provides g.sh_session
