@@ -6,7 +6,7 @@ from ..config import (
     APPLICATION_GRAPH,
     KALEIDOS_RESOURCE_BASE_URI,
     TIMEZONE,
-    ACCESS_LEVEL_SECRETARY,
+    ACCESS_LEVEL_CABINET,
 )
 
 DOCUMENT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
@@ -160,4 +160,4 @@ WHERE {
         graph=sparql_escape_uri(graph),
         doc=sparql_escape_uri(doc_uri),
         prev_doc=sparql_escape_uri(prev_ver_doc_uri),
-        access_level=sparql_escape_uri(ACCESS_LEVEL_SECRETARY))
+        access_level=sparql_escape_uri(ACCESS_LEVEL_CABINET))
