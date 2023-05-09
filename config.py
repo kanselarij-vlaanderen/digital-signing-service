@@ -11,3 +11,4 @@ SYNC_CRON_PATTERN = os.environ.get("SYNC_CRON_PATTER", "*/2 * * * *")
 # Constants
 APPLICATION_GRAPH = "http://mu.semte.ch/application"
 KANSELARIJ_GRAPH = "http://mu.semte.ch/graphs/organizations/kanselarij"
+ACCESS_LEVEL_CABINET = "http://themis.vlaanderen.be/id/concept/toegangsniveau/13ae94b0-6188-49df-8ecd-4c4a17511d6d"
