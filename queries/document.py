@@ -120,7 +120,10 @@ WHERE {
         file=sparql_escape_uri(file_uri))
 
 def construct_attach_document_to_unsigned_version(doc_uri, prev_ver_doc_uri, graph=APPLICATION_GRAPH):
-    """ Also handles attaching the signed version to the previous one's case"""
+    """Also handles attaching the signed version to the previous one's case
+    The relation ?case dossier:Dossier.bestaatUit $doc is what lets
+    Yggdrasil propagate the signed pieces.
+    """
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX pav: <http://purl.org/pav/>
