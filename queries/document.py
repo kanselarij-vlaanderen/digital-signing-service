@@ -2,7 +2,12 @@ from string import Template
 from datetime import datetime
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..config import APPLICATION_GRAPH, KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
+from ..config import (
+    APPLICATION_GRAPH,
+    KALEIDOS_RESOURCE_BASE_URI,
+    TIMEZONE,
+    ACCESS_LEVEL_SECRETARY,
+)
 
 DOCUMENT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 
@@ -121,6 +126,7 @@ PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX pav: <http://purl.org/pav/>
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
 
 DELETE {
     GRAPH $graph {
@@ -132,6 +138,7 @@ INSERT {
         $doc sign:ongetekendStuk $prev_doc .
         $doc dct:title ?prev_title .
         ?case dossier:Dossier.bestaatUit $doc .
+        ?doc besluitvorming:vertrouwelijkheidsniveau $access_level .
     }
 }
 WHERE {
@@ -152,4 +159,5 @@ WHERE {
     return query_template.substitute(
         graph=sparql_escape_uri(graph),
         doc=sparql_escape_uri(doc_uri),
-        prev_doc=sparql_escape_uri(prev_ver_doc_uri))
+        prev_doc=sparql_escape_uri(prev_ver_doc_uri),
+        access_level=sparql_escape_uri(ACCESS_LEVEL_SECRETARY))
