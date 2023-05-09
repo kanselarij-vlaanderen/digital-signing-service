@@ -18,8 +18,7 @@ def sync_all_ongoing_flows():
     records = signing_flow.get_ongoing_signing_flows(agent_query)
     ids = list(map(lambda r: r["sign_flow_id"], records))
     for id in ids:
-        # requests.post(f"http://localhost/signing-flows/{id}/sync")
-        logger.info(id)
+        requests.post(f"http://localhost/signing-flows/{id}/sync")
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab("*/1 * * * *"))
