@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import g
 from helpers import generate_uuid, logger
 from ..authentication import ensure_signinghub_machine_user_session
-from .signing_flow import get_signing_flow, get_pieces, get_creator
+from .signing_flow import get_signing_flow, get_pieces
 from .document import download_sh_doc_to_kaleidos_doc
 from ..queries.document import construct_attach_document_to_unsigned_version
 from ..queries.wrap_up_activity import construct_insert_wrap_up_activity
@@ -14,8 +14,6 @@ WRAP_UP_ACTIVITY_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/afrondingsactivitei
 
 def update_signing_flow(signflow_uri: str):
     signing_flow = get_signing_flow(signflow_uri, agent_query)
-    creator = get_creator(signflow_uri, agent_query)
-    ensure_signinghub_machine_user_session(creator["email"])
     sh_package_id = signing_flow["sh_package_id"]
     sh_workflow_details = g.sh_session.get_workflow_details(sh_package_id)
     logger.debug(f'Signing flow {signflow_uri}, workflow status {sh_workflow_details["workflow"]["workflow_status"]}')
