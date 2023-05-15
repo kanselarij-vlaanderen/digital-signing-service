@@ -6,7 +6,7 @@ info:
   license:
     name: MIT
     url: https://github.com/kanselarij-vlaanderen/digital-signing-service/LICENSE.txt
-  version: 0.0.5
+  version: 0.0.6
 externalDocs:
   description: Git Repository
   url: https://github.com/kanselarij-vlaanderen/digital-signing-service
