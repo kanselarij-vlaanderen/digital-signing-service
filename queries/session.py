@@ -157,8 +157,8 @@ WHERE {
     GRAPH $session_graph {
         ?signinghubSession a ext:SigninghubSudoSession .
         ?signinghubSession oauth-2.0:hasEndpointURI $signinghub_token_endpoint ;
-            $signinghub_scope_filter
             oauth-2.0:hasTokenValue ?tokenUri.
+        $signinghub_scope_filter
         ?tokenUri oauth-2.0:hasTokenValue ?token ;
             oauth-2.0:hasExpirytime ?expiryTime .
         BIND($now as ?now)
@@ -168,9 +168,13 @@ WHERE {
 ORDER BY DESC(?expiryTime)
 LIMIT 1
 """)
+    if signinghub_scope:
+        signinghub_scope_filter = f"?signinghubSession ext:scope {sparql_escape_string(signinghub_scope)} ."
+    else:
+        signinghub_scope_filter = "FILTER NOT EXISTS { ?signinghubSession ext:scope ?scope }"
     query_string = query_template.substitute(
         session_graph=sparql_escape_uri(SESSION_GRAPH),
-        signinghub_scope_filter=f"ext:scope {sparql_escape_string(signinghub_scope)} ;" if signinghub_scope else "" ,
+        signinghub_scope_filter=signinghub_scope_filter,
         signinghub_token_endpoint=sparql_escape_uri(SIGNINGHUB_OAUTH_TOKEN_EP),
         now=sparql_escape_datetime(datetime.now(tz=TIMEZONE)))
     return query_string
