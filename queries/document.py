@@ -141,7 +141,7 @@ INSERT {
         $doc sign:ongetekendStuk $prev_doc .
         $doc dct:title ?prev_title .
         ?case dossier:Dossier.bestaatUit $doc .
-        ?doc besluitvorming:vertrouwelijkheidsniveau $access_level .
+        $doc besluitvorming:vertrouwelijkheidsniveau $access_level .
     }
 }
 WHERE {
