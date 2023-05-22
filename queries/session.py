@@ -68,6 +68,14 @@ LIMIT 1
     return query_string
 
 def construct_insert_signinghub_session_query(signinghub_session, signinghub_session_uri, signinghub_scope=None):
+    # At first sight it might seem unnecessary to add a SH scope address property to the session
+    # since sessions are directly linked to a users' mu-session already. This however isn't always the case.
+    # Due to SH's authorization model it isn't possible to download a file created by a scoped user with the machine user.
+    # To work around this limitation, we also open scoped sessions for the machine user in case the operation requires it.
+    # For this use-case, it thus ís necessary to store the scope on the session to be able to differentiate between the different
+    # scoped sessions initiated by the machine user.
+    # Note that it might be possible to reuse sessions opened by users themselves instead, but we prefer a clear distinction between
+    # sessions initiated by users and by the machine.
     signinghub_token_uri = SIGNINGHUB_TOKEN_BASE_URI + generate_uuid()
     expiry_time = signinghub_session.last_successful_auth_time + signinghub_session.access_token_expiry_time
     query_template = Template("""
