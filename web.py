@@ -26,7 +26,7 @@ scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab(SYNC_CRON_PAT
 scheduler.start()
 
 @app.route("/signinghub-profile")
-@signinghub_machine_session_required  # provides g.sh_session
+@signinghub_session_required  # provides g.sh_session
 def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
     return g.sh_session.get_general_profile_information()
@@ -50,7 +50,7 @@ def pieces_get(signflow_id):
 
 @app.route('/signing-flows/<signflow_id>/upload-to-signinghub', methods=['POST'])
 @jsonapi.header_required
-@signinghub_machine_session_required  # provides g.sh_session
+@signinghub_session_required  # provides g.sh_session
 def prepare_post(signflow_id):
     signflow_uri = get_by_uuid(signflow_id)
     pieces = signing_flow.get_pieces(signflow_uri)
@@ -112,7 +112,7 @@ def signers_assign(signflow_uri):
 
 
 @app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url')
-@signinghub_machine_session_required  # provides g.sh_session
+@signinghub_session_required  # provides g.sh_session
 def signinghub_integration_url(signflow_id, piece_id):
     signflow_uri = get_by_uuid(signflow_id)
     piece_uri = get_by_uuid(piece_id)
@@ -125,7 +125,7 @@ def signinghub_integration_url(signflow_id, piece_id):
 
 
 @app.route('/signing-flows/<signflow_id>/start', methods=['POST'])
-@signinghub_machine_session_required
+@signinghub_session_required
 def start(signflow_id):
     signflow_uri = get_by_uuid(signflow_id)
 
@@ -154,7 +154,6 @@ def signinghub_callback():
 
 # Service endpoint for manually initiating sync for a given signing flow
 @app.route('/signing-flows/<signflow_id>/sync', methods=['POST'])
-@signinghub_machine_session_required  # provides g.sh_session
 def signinghub_sync(signflow_id):
     signflow_uri = get_by_uuid(signflow_id, None, agent_query)
     update_signing_flow(signflow_uri)
