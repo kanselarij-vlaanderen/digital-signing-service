@@ -1,11 +1,11 @@
 import requests
 
-from flask import g, json, request, make_response, redirect
+from flask import g, request, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from helpers import log, error, logger, update
 
-from .authentication import signinghub_session_required, signinghub_machine_session_required, ensure_signinghub_machine_user_session
+from .authentication import signinghub_session_required
 from . import jsonapi
 from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
     signing_flow, assign_signers, start_signing_flow, mandatee
