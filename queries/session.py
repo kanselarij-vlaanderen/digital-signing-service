@@ -4,6 +4,7 @@ from datetime import datetime
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
 from ..config import TIMEZONE
+from ..authentication_config import MACHINE_ACCOUNTS
 
 SESSION_GRAPH = "http://mu.semte.ch/graphs/sessions"
 ACCOUNT_GRAPH = "http://mu.semte.ch/graphs/system/users" # http://mu.semte.ch/graphs/public for mock-login
@@ -11,14 +12,19 @@ SIGNINGHUB_TOKEN_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-tokens
 
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
 SIGNINGHUB_OAUTH_TOKEN_EP = SIGNINGHUB_API_URL.strip("/") + "/" + "authenticate" # https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1010
+AVAILABLE_OVO_CODES = MACHINE_ACCOUNTS.keys()
 
 def construct_get_mu_session_query(mu_session_uri):
+    # Note the filtering by ovo-code values. Since users might have memberships for
+    # multiple organizations, we want to restrict the returned value to one for which we have a
+    # technical user available.
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX session: <http://mu.semte.ch/vocabularies/session/>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX org: <http://www.w3.org/ns/org#>
 
-SELECT ?uuid ?email
+SELECT ?uuid ?email ?ovoCode
 WHERE {
     GRAPH $session_graph {
         $mu_session mu:uuid ?uuid ;
@@ -26,14 +32,37 @@ WHERE {
     }
     GRAPH $account_graph {
         ?person foaf:account ?account ;
-            foaf:mbox ?email_uri .
+            foaf:mbox ?email_uri ;
+            ^org:member / org:organization / org:identifier ?ovoCode .
         BIND(REPLACE(STR(?email_uri), "^mailto:", "") AS ?email)
+        FILTER(?ovoCode IN ($ovo_codes))
     }
 }""")
     query_string = query_template.substitute(
         session_graph=sparql_escape_uri(SESSION_GRAPH),
         account_graph=sparql_escape_uri(ACCOUNT_GRAPH),
-        mu_session=sparql_escape_uri(mu_session_uri))
+        mu_session=sparql_escape_uri(mu_session_uri),
+        ovo_codes=", ".join([sparql_escape_string(ovo_code) for ovo_code in AVAILABLE_OVO_CODES]))
+    return query_string
+
+def construct_get_org_for_email(email):
+    query_template = Template("""
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX org: <http://www.w3.org/ns/org#>
+
+SELECT ?ovoCode
+WHERE {
+    GRAPH $account_graph {
+        BIND(URI(CONCAT("mailto:", $email)) AS ?email_uri)
+        ?person foaf:mbox ?email_uri ;
+            ^org:member / org:organization / org:identifier ?ovoCode .
+        FILTER(?ovoCode IN ($ovo_codes))
+    }
+}""")
+    query_string = query_template.substitute(
+        account_graph=sparql_escape_uri(ACCOUNT_GRAPH),
+        email=sparql_escape_string(email),
+        ovo_codes=", ".join([sparql_escape_string(ovo_code) for ovo_code in AVAILABLE_OVO_CODES]))
     return query_string
 
 def construct_get_signinghub_session_query(mu_session_uri):
