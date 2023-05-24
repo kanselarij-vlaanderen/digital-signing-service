@@ -5,7 +5,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from helpers import log, error, logger, update
 
-from .authentication import signinghub_session_required
+from .authentication import signinghub_session_required, open_new_signinghub_machine_user_session, MACHINE_ACCOUNTS
 from . import jsonapi
 from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
     signing_flow, assign_signers, start_signing_flow, mandatee
@@ -25,11 +25,20 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab(SYNC_CRON_PATTERN))
 scheduler.start()
 
-@app.route("/signinghub-profile")
-@signinghub_session_required  # provides g.sh_session
+@app.route("/verify-credentials")
 def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
-    return g.sh_session.get_general_profile_information()
+    response_code = 200
+    for ovo_code in MACHINE_ACCOUNTS.keys():
+        try:
+            sh_session = open_new_signinghub_machine_user_session(ovo_code)
+            logger.info(f"Successful login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
+            sh_session.logout()
+        except Exception as e:
+            response_code = 500
+            logger.warn(f"Failed login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
+            logger.warn(e)
+    return make_response("", response_code)
 
 @app.route('/signing-flows/<signflow_id>/pieces')
 def pieces_get(signflow_id):
