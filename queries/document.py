@@ -7,6 +7,8 @@ from ..config import (
     KALEIDOS_RESOURCE_BASE_URI,
     TIMEZONE,
     ACCESS_LEVEL_CABINET,
+    ACCESS_LEVEL_GOVERNMENT,
+    ACCESS_LEVEL_PUBLIC,
 )
 
 DOCUMENT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
@@ -141,14 +143,15 @@ INSERT {
         $doc sign:ongetekendStuk $prev_doc .
         $doc dct:title ?prev_title .
         ?case dossier:Dossier.bestaatUit $doc .
-        $doc besluitvorming:vertrouwelijkheidsniveau $access_level .
+        $doc besluitvorming:vertrouwelijkheidsniveau ?access_level .
     }
 }
 WHERE {
     GRAPH $graph {
         $doc a dossier:Stuk .
         $prev_doc a dossier:Stuk ;
-            dct:title ?prev_title .
+            dct:title ?prev_title ;
+            besluitvorming:vertrouwelijkheidsniveau ?prev_access_level .
         OPTIONAL {
             $doc dct:title ?old_title .
         }
@@ -156,6 +159,13 @@ WHERE {
             ?case a dossier:Dossier ;
                 dossier:Dossier.bestaatUit $prev_doc .
         }
+        BIND(
+          COALESCE(
+            IF(?prev_access_level = $access_level_public, $access_level_cabinet, 1/0),
+            IF(?prev_access_level = $access_level_government, $access_level_cabinet, 1/0),
+            ?prev_access_level
+          ) AS ?access_level
+        )
     }
 }
 """)
@@ -163,4 +173,7 @@ WHERE {
         graph=sparql_escape_uri(graph),
         doc=sparql_escape_uri(doc_uri),
         prev_doc=sparql_escape_uri(prev_ver_doc_uri),
-        access_level=sparql_escape_uri(ACCESS_LEVEL_CABINET))
+        access_level_cabinet=sparql_escape_uri(ACCESS_LEVEL_CABINET),
+        access_level_government=sparql_escape_uri(ACCESS_LEVEL_GOVERNMENT),
+        access_level_public=sparql_escape_uri(ACCESS_LEVEL_PUBLIC),
+    )
