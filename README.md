@@ -29,16 +29,12 @@ _Note that both of above parameters must be set to activate client certificate a
     environment:
       SIGNINGHUB_API_URL: ""
       SIGNINGHUB_IFRAME_REDIRECT_URL: ""
-      SIGNINGHUB_CLIENT_ID: ""
-      SIGNINGHUB_CLIENT_SECRET: ""
       CERT_FILE_PATH: ""
       KEY_FILE_PATH: ""
-      SIGNINGHUB_MACHINE_ACCOUNT_USERNAME: ""
-      SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD: ""
     volumes:
-      -./data/files:/share
-      -./config/digital-signing/cert:/cert
-      -./config/digital-signing/authentication.py:/app/authentication_config.py
+      - ./data/files:/share
+      - ./config/digital-signing/cert:/cert:ro
+      - ./config/digital-signing/authentication.py:/app/authentication_config.py:ro
     restart: always
 ```
 
