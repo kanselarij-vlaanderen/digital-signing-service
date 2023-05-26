@@ -160,12 +160,10 @@ WHERE {
                 dossier:Dossier.bestaatUit $prev_doc .
         }
         BIND(
-          COALESCE(
-            IF(?prev_access_level = $access_level_public, $access_level_cabinet, 1/0),
-            IF(?prev_access_level = $access_level_government, $access_level_cabinet, 1/0),
-            ?prev_access_level
-          ) AS ?access_level
-        )
+            IF(?prev_access_level IN ($access_level_public, $access_level_government),
+            $access_level_cabinet,
+            ?prev_access_level)
+        AS ?access_level)
     }
 }
 """)
