@@ -69,6 +69,24 @@ def construct_get_signing_flow_notifiers(signflow_uri: str):
       signflow=sparql_escape_uri(signflow_uri)
     )
 
+def construct_get_signing_flow_creator(signflow_uri: str):
+    query_template = Template("""
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+    SELECT DISTINCT ?creator ?email
+    WHERE {
+        $signflow a sign:Handtekenaangelegenheid ;
+            dct:creator ?creator .
+        ?creator foaf:mbox ?email_uri .
+        BIND(REPLACE(STR(?email_uri), "^mailto:", "") AS ?email)
+    }
+    """)
+    return query_template.substitute(
+      signflow=sparql_escape_uri(signflow_uri)
+    )
+
 def construct_get_ongoing_signing_flows() -> str:
     return """
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>

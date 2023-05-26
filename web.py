@@ -1,11 +1,11 @@
 import requests
 
-from flask import g, json, request, make_response, redirect
+from flask import g, request, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from helpers import log, error, logger, update
 
-from .authentication import signinghub_session_required, signinghub_machine_session_required, ensure_signinghub_machine_user_session
+from .authentication import signinghub_session_required, open_new_signinghub_machine_user_session, MACHINE_ACCOUNTS
 from . import jsonapi
 from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
     signing_flow, assign_signers, start_signing_flow, mandatee
@@ -25,11 +25,20 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab(SYNC_CRON_PATTERN))
 scheduler.start()
 
-@app.route("/signinghub-profile")
-@signinghub_machine_session_required  # provides g.sh_session
+@app.route("/verify-credentials")
 def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
-    return g.sh_session.get_general_profile_information()
+    response_code = 200
+    for ovo_code in MACHINE_ACCOUNTS.keys():
+        try:
+            sh_session = open_new_signinghub_machine_user_session(ovo_code)
+            logger.info(f"Successful login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
+            # sh_session.logout() doesn't work. https://manuals.ascertia.com/SigningHub/8.2/Api/#tag/Authentication/operation/V4_Account_LogoutUser specifies a (required?) device token which we don't have
+        except Exception as e:
+            response_code = 500
+            logger.warn(f"Failed login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
+            logger.warn(e)
+    return make_response("", response_code)
 
 @app.route('/signing-flows/<signflow_id>/pieces')
 def pieces_get(signflow_id):
@@ -50,7 +59,7 @@ def pieces_get(signflow_id):
 
 @app.route('/signing-flows/<signflow_id>/upload-to-signinghub', methods=['POST'])
 @jsonapi.header_required
-@signinghub_machine_session_required  # provides g.sh_session
+@signinghub_session_required  # provides g.sh_session
 def prepare_post(signflow_id):
     signflow_uri = get_by_uuid(signflow_id)
     pieces = signing_flow.get_pieces(signflow_uri)
@@ -112,7 +121,7 @@ def signers_assign(signflow_uri):
 
 
 @app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url')
-@signinghub_machine_session_required  # provides g.sh_session
+@signinghub_session_required  # provides g.sh_session
 def signinghub_integration_url(signflow_id, piece_id):
     signflow_uri = get_by_uuid(signflow_id)
     piece_uri = get_by_uuid(piece_id)
@@ -125,7 +134,7 @@ def signinghub_integration_url(signflow_id, piece_id):
 
 
 @app.route('/signing-flows/<signflow_id>/start', methods=['POST'])
-@signinghub_machine_session_required
+@signinghub_session_required
 def start(signflow_id):
     signflow_uri = get_by_uuid(signflow_id)
 
@@ -154,7 +163,6 @@ def signinghub_callback():
 
 # Service endpoint for manually initiating sync for a given signing flow
 @app.route('/signing-flows/<signflow_id>/sync', methods=['POST'])
-@signinghub_machine_session_required  # provides g.sh_session
 def signinghub_sync(signflow_id):
     signflow_uri = get_by_uuid(signflow_id, None, agent_query)
     update_signing_flow(signflow_uri)

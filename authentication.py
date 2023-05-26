@@ -9,10 +9,12 @@ from .queries.session import construct_get_mu_session_query, \
     construct_insert_signinghub_session_query, \
     construct_attach_signinghub_session_to_mu_session_query, \
     construct_get_signinghub_machine_user_session_query, \
-    construct_mark_signinghub_session_as_machine_users_query
+    construct_mark_signinghub_session_as_machine_users_query, \
+    construct_get_org_for_email
 from .sudo_query import query as sudo_query, update as sudo_update
 from .lib.exceptions import NoQueryResultsException
 from .config import KALEIDOS_RESOURCE_BASE_URI
+from .authentication_config import MACHINE_ACCOUNTS
 
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
 CERT_FILE_PATH = os.environ.get("CERT_FILE_PATH")
@@ -27,10 +29,11 @@ SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT
 SIGNINGHUB_SESSION_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/signinghub-sessions/"
 
 def ensure_signinghub_session(mu_session_uri):
+    """For api interactions made through Kaleidos initiated by a user"""
     mu_session_query = construct_get_mu_session_query(mu_session_uri)
     mu_session_result = sudo_query(mu_session_query)['results']['bindings']
     if not mu_session_result:
-        raise NoQueryResultsException("Didn't find a mu-session associated with an account with email-address")
+        raise NoQueryResultsException("Didn't find a mu-session associated with an account with email-address and supported ovo-code")
     mu_session = mu_session_result[0]
     sh_session_query = construct_get_signinghub_session_query(mu_session_uri)
     sh_session_results = sudo_query(sh_session_query)['results']['bindings']
@@ -43,7 +46,7 @@ def ensure_signinghub_session(mu_session_uri):
         g.sh_session.access_token = sh_session_result["token"]["value"]
     else: # Open new SigningHub session
         log("No valid SigningHub session found. Opening a new one ...")
-        sh_session = open_new_signinghub_machine_user_session(mu_session["email"]["value"])
+        sh_session = open_new_signinghub_machine_user_session(mu_session["ovoCode"]["value"], mu_session["email"]["value"])
         sh_session_uri = SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
         sh_session_query = construct_insert_signinghub_session_query(sh_session, sh_session_uri)
         sudo_update(sh_session_query)
@@ -64,19 +67,21 @@ def signinghub_session_required(f):
             return error(ex.args[0])
     return decorated_function
 
-def open_new_signinghub_machine_user_session(scope=None):
+def open_new_signinghub_machine_user_session(ovo_code, scope=None):
     sh_session = SigningHubSession(SIGNINGHUB_API_URL)
     if CLIENT_CERT_AUTH_ENABLED:
         sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
-    sh_session.authenticate(SIGNINGHUB_API_CLIENT_ID,
-                            SIGNINGHUB_API_CLIENT_SECRET,
+    account_details = MACHINE_ACCOUNTS[ovo_code]
+    sh_session.authenticate(account_details["API_CLIENT_ID"],
+                            account_details["API_CLIENT_SECRET"],
                             "password", # grant type
-                            SIGNINGHUB_MACHINE_ACCOUNT_USERNAME,
-                            SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD,
+                            account_details["USERNAME"],
+                            account_details["PASSWORD"],
                             scope)
     return sh_session
 
 def ensure_signinghub_machine_user_session(scope=None):
+    """For interactions made by the service agent (initiated by cron job or similar)"""
     sh_session_query = construct_get_signinghub_machine_user_session_query(scope)
     sh_session_results = sudo_query(sh_session_query)['results']['bindings']
     if sh_session_results: # Restore SigningHub session
@@ -88,7 +93,8 @@ def ensure_signinghub_machine_user_session(scope=None):
         g.sh_session.access_token = sh_session_result["token"]["value"]
     else: # Open new SigningHub session
         log("No valid SigningHub session found. Opening a new one ...")
-        sh_session = open_new_signinghub_machine_user_session(scope)
+        ovo_code = sudo_query(construct_get_org_for_email(scope))['results']['bindings'][0]['ovoCode']['value']
+        sh_session = open_new_signinghub_machine_user_session(ovo_code, scope)
         sh_session_uri = SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
         sh_session_query = construct_insert_signinghub_session_query(sh_session, sh_session_uri, scope)
         sudo_update(sh_session_query)

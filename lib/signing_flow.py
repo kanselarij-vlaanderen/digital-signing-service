@@ -6,6 +6,7 @@ from . import query_result_helpers
 from ..queries.signing_flow import (
     construct_get_signing_flow_by_uri,
     construct_get_signing_flow_by_package_id,
+    construct_get_signing_flow_creator,
     construct_get_ongoing_signing_flows,
 )
 from .. import queries
@@ -88,6 +89,13 @@ def get_notified(signflow_uri: str, query_method: Callable = query):
     } for r in records]
 
     return records
+
+def get_creator(signflow_uri: str, query_method: Callable = query):
+    query_string = construct_get_signing_flow_creator(signflow_uri)
+    result = query_method(query_string)
+    records = query_result_helpers.to_recs(result)
+    record = query_result_helpers.ensure_1(records)
+    return record
 
 def get_ongoing_signing_flows(query_method: Callable = query):
     query_string = construct_get_ongoing_signing_flows()
