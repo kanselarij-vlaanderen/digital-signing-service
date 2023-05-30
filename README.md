@@ -18,6 +18,7 @@ Authentication at VO-network, through SSL client certificate authentication
 
 _Note that both of above parameters must be set to activate client certificate authentication. If omitted, no client cert. auth. will be attempted._
 
+- `SIGNINGHUB_APP_DOMAIN`: Signinghub web-app domain. Used for generating links to the web-app
 - `SYNC_CRON_PATTERN`: Cronjob pattern that will be used to periodically sync all ongoing sign flows (default: `*/2 * * * *`)
 
 

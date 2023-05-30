@@ -1,5 +1,6 @@
-import requests
+from urllib.parse import urljoin
 
+import requests
 from flask import g, request, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -13,7 +14,7 @@ from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
 from .queries.signing_flow_signers import construct_add_signer
 from .agent_query import query as agent_query
-from .config import SYNC_CRON_PATTERN
+from .config import SYNC_CRON_PATTERN, SIGNINGHUB_APP_DOMAIN
 
 def sync_all_ongoing_flows():
     records = signing_flow.get_ongoing_signing_flows(agent_query)
@@ -121,17 +122,13 @@ def signers_assign(signflow_uri):
 
 
 @app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url')
-@signinghub_session_required  # provides g.sh_session
 def signinghub_integration_url(signflow_id, piece_id):
     signflow_uri = get_by_uuid(signflow_id)
-    piece_uri = get_by_uuid(piece_id)
-    collapse_panels = request.args.get(
-        "collapse_panels", default="true", type=str) != "false"
-
-    integration_url = generate_integration_url.generate_integration_url(
-            g.sh_session, signflow_uri, piece_uri, collapse_panels)
-    return make_response({"url": integration_url}, 200)
-
+    signflow = signing_flow.get_signing_flow(signflow_uri)
+    if signflow['sh_package_id']:
+        url = urljoin(SIGNINGHUB_APP_DOMAIN, f"/Web#/Viewer/{signflow['sh_package_id']}/")
+        return make_response({"url": url}, 200)
+    return make_response("", 404)
 
 @app.route('/signing-flows/<signflow_id>/start', methods=['POST'])
 @signinghub_session_required
