@@ -53,7 +53,7 @@ def sync_signers_status(sig_flow, sh_workflow_details):
     logger.debug(f"Syncing signers status ...")
     for sh_workflow_user in sh_workflow_users:
         proc_stat = sh_workflow_user["process_status"]
-        logger.debug(f"Signer {kaleidos_signer['email']} has process status {proc_stat}.")
+        logger.debug(f"Signer {sh_workflow_user['user_email']} has process status {proc_stat}.")
         kaleidos_signer = next(filter(lambda s: s["email"] == sh_workflow_user["user_email"], kaleidos_signers), None)
         if kaleidos_signer["end_date"]:
             logger.info(f"Signer {kaleidos_signer['email']} already has an end date in our db. No syncing needed.")
