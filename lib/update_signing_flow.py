@@ -23,7 +23,7 @@ def update_signing_flow(signflow_uri: str):
     if sh_workflow_details["workflow"]["workflow_status"] == "DRAFT":
         # TODO
         pass
-    if sh_workflow_details["workflow"]["workflow_status"] == "IN_PROGRESS":
+    if sh_workflow_details["workflow"]["workflow_status"] == "SHARED":
         sync_signers_status(signflow_uri, sh_workflow_details)
         # TODO approvers
         pass
@@ -59,7 +59,7 @@ def sync_signers_status(sig_flow, sh_workflow_details):
         kaleidos_signer = next(filter(lambda s: s["email"] == sh_workflow_user["user_email"], kaleidos_signers), None)
         if kaleidos_signer:
             if not kaleidos_signer["end_date"]:
-                # elif proc_stat == "IN_PROGRESS": # SHARED
+                # elif proc_stat == "IN_PROGRESS":
                 if proc_stat == "SIGNED": # "REVIEWED",
                     logger.info(f"Signer {kaleidos_signer['email']} signed. Syncing ...")
                     signing_time = sh_workflow_user["processed_on"]
