@@ -32,7 +32,7 @@ def update_signing_flow(signflow_uri: str):
         # TODO: check if everyone signed/approved/reviewed/... (didnt reject)
         doc = download_sh_doc_to_kaleidos_doc(sh_workflow_details["package_id"],
                                         signing_flow["sh_document_id"],
-                                        "getekend document" # TODO: same name as exising doc
+                                        "getekend document" # temporary name. Gets overwritten when attaching to source doc
                                         )
 
         attach_doc_qs = construct_attach_document_to_unsigned_version(doc["uri"],
@@ -54,24 +54,24 @@ def sync_signers_status(sig_flow, sh_workflow_details):
     for sh_workflow_user in sh_workflow_users:
         proc_stat = sh_workflow_user["process_status"]
         logger.debug(f"Signer {sh_workflow_user['user_email']} has process status {proc_stat}.")
+        if proc_stat == "UN_PROCESSED":
+            continue # no need to hammer DB for further queries, since we won't be doing anything with the info.
         kaleidos_signer = next(filter(lambda s: s["email"] == sh_workflow_user["user_email"], kaleidos_signers), None)
-        if kaleidos_signer["end_date"]:
-            logger.info(f"Signer {kaleidos_signer['email']} already has an end date in our db. No syncing needed.")
-        if kaleidos_signer and not kaleidos_signer["end_date"]:
-            if proc_stat == "UN_PROCESSED":
-                pass
-            # elif proc_stat == "IN_PROGRESS":
-            elif proc_stat == "SIGNED": # "REVIEWED",
-                logger.info(f"Signer {kaleidos_signer['email']} signed. Syncing ...")
-                signing_time = sh_workflow_user["processed_on"]
-                query_string = construct_update_signing_activity_end_date(
-                    sig_flow,
-                    kaleidos_signer["uri"],
-                    datetime.fromisoformat(signing_time))
-                agent_update(query_string)
-            # elif proc_stat == "DECLINED":
+        if kaleidos_signer:
+            if not kaleidos_signer["end_date"]:
+                # elif proc_stat == "IN_PROGRESS": # SHARED
+                if proc_stat == "SIGNED": # "REVIEWED",
+                    logger.info(f"Signer {kaleidos_signer['email']} signed. Syncing ...")
+                    signing_time = sh_workflow_user["processed_on"]
+                    query_string = construct_update_signing_activity_end_date(
+                        sig_flow,
+                        kaleidos_signer["uri"],
+                        datetime.fromisoformat(signing_time))
+                    agent_update(query_string)
+                # elif proc_stat == "DECLINED":
+                else:
+                    logger.warn(f"Unknown process status {sh_workflow_user['process_status']}. Skipping ...")
             else:
-                logger.warn(f"Unknown process status {sh_workflow_user['process_status']}. Skipping ...")
-                pass
+                logger.info(f"Signer {kaleidos_signer['email']} already has an end date in our db. No syncing needed.")
         else:
             logger.info(f"Signer with e-mail address {kaleidos_signer['email']} not present in Kaleidos metadata: ignoring")
