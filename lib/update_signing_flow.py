@@ -64,12 +64,11 @@ def sync_signers_status(sig_flow, sh_workflow_details):
             elif proc_stat == "SIGNED": # "REVIEWED",
                 logger.info(f"Signer {kaleidos_signer['email']} signed. Syncing ...")
                 signing_time = sh_workflow_user["processed_on"]
-                if signing_time != kaleidos_signer["end_date"]:
-                    query_string = construct_update_signing_activity_end_date(
-                        sig_flow,
-                        kaleidos_signer["uri"],
-                        datetime.fromisoformat(kaleidos_signer["end_date"]))
-                    agent_query(query_string)
+                query_string = construct_update_signing_activity_end_date(
+                    sig_flow,
+                    kaleidos_signer["uri"],
+                    datetime.fromisoformat(signing_time))
+                agent_update(query_string)
             # elif proc_stat == "DECLINED":
             else:
                 logger.warn(f"Unknown process status {sh_workflow_user['process_status']}. Skipping ...")
