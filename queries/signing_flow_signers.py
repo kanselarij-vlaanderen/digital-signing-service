@@ -22,9 +22,10 @@ WHERE {
     ?signing_activity a sign:Handtekenactiviteit ;
         sign:ondertekenaar ?signer .
     ?signer a mandaat:Mandataris ;
-        mu:uuid ?signer_id .
-    ?personUser sign:isOndertekenaarVoor ?signer .
-    ?personUser foaf:mbox ?mail_uri .
+        mu:uuid ?signer_id ;
+        mandaat:isBestuurlijkeAliasVan ?personMandatee .
+    ?personUser sign:isOndertekenaarVoor ?personMandatee ;
+        foaf:mbox ?mail_uri .
     BIND(REPLACE(STR(?mail_uri), "mailto:", "") AS ?email)
     OPTIONAL {
         ?signing_activity dossier:Activiteit.startdatum ?start_date .
