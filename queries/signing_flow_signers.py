@@ -11,8 +11,9 @@ PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
-SELECT DISTINCT ?signing_activity ?start_date ?end_date ?signer ?signer_id
+SELECT DISTINCT ?signing_activity ?start_date ?end_date ?signer ?signer_id ?email
 WHERE {
     $signflow a sign:Handtekenaangelegenheid ;
         sign:doorlooptHandtekening ?sign_subcase .
@@ -22,6 +23,9 @@ WHERE {
         sign:ondertekenaar ?signer .
     ?signer a mandaat:Mandataris ;
         mu:uuid ?signer_id .
+    ?personUser sign:isOndertekenaarVoor ?signer .
+    ?personUser foaf:mbox ?mail_uri .
+    BIND(REPLACE(STR(?mail_uri), "mailto:", "") AS ?email)
     OPTIONAL {
         ?signing_activity dossier:Activiteit.startdatum ?start_date .
     }
