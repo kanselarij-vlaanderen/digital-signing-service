@@ -61,6 +61,7 @@ def get_signers(signflow_uri: str, query_method: Callable = query):
         "signing_activity": r["signing_activity"],
         "start_date": r["start_date"],
         "end_date": r["end_date"],
+        "email": r["email"],
     } for r in records]
 
     return records
