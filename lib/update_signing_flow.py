@@ -97,6 +97,8 @@ def sync_signers_status(sig_flow, sh_workflow_details):
     kaleidos_signers = get_signers(sig_flow, agent_query)
     logger.debug(f"Syncing signers status ...")
     for sh_workflow_user in sh_workflow_users:
+        if sh_workflow_user["role"] != "SIGNER":
+            continue
         proc_stat = sh_workflow_user["process_status"]
         logger.debug(f"Signer {sh_workflow_user['user_email']} has process status {proc_stat}.")
         if proc_stat == "UN_PROCESSED":
