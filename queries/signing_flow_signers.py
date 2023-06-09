@@ -72,12 +72,50 @@ WHERE {
         signflow=sparql_escape_uri(signflow_uri))
 
 
+def construct_update_signing_activity_start_date(signflow_uri: str, mandatee_uri, start_date, graph=APPLICATION_GRAPH) -> str:
+    # TODO: probably needs e-mail as input, since there is a chance that the mandatee retrieved by e-mail
+    # isn't the same one as the one already bound to the signing activity (minister vs MP, ...)
+    query_template = Template("""
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+
+DELETE {
+    GRAPH $graph {
+        ?signing_activity dossier:Activiteit.startdatum ?start_date .
+    }
+}
+INSERT {
+    GRAPH $graph {
+        ?signing_activity dossier:Activiteit.startdatum $start_date .
+    }
+}
+WHERE {
+    GRAPH $graph {
+        $signflow a sign:Handtekenaangelegenheid ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?sign_subcase a sign:HandtekenProcedurestap ;
+            ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
+        ?signing_activity a sign:Handtekenactiviteit ;
+            sign:ondertekenaar $signer .
+        OPTIONAL {
+            ?signing_activity dossier:Activiteit.startdatum ?start_date .
+        }
+    }
+}
+""")
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        signflow=sparql_escape_uri(signflow_uri),
+        signer=sparql_escape_uri(mandatee_uri),
+        start_date=sparql_escape_datetime(start_date)
+    )
+
+
 def construct_update_signing_activity_end_date(signflow_uri: str, mandatee_uri, end_date, graph=APPLICATION_GRAPH) -> str:
     # TODO: probably needs e-mail as input, since there is a chance that the mandatee retrieved by e-mail
     # isn't the same one as the one already bound to the signing activity (minister vs MP, ...)
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 
 DELETE {
