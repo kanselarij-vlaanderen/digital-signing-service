@@ -30,6 +30,9 @@ WHERE {
 
 
 def construct_update_approval_activity_start_date(signflow_uri: str, email, start_date, graph=APPLICATION_GRAPH) -> str:
+    if not email.startswith("mailto:"):
+        email = "mailto:" + email
+
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
@@ -67,6 +70,9 @@ WHERE {
 
 
 def construct_update_approval_activity_end_date(signflow_uri: str, email, end_date, graph=APPLICATION_GRAPH) -> str:
+    if not email.startswith("mailto:"):
+        email = "mailto:" + email
+
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
