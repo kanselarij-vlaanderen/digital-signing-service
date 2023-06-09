@@ -2,8 +2,9 @@ from datetime import datetime
 from flask import g
 from helpers import generate_uuid, logger
 from utils import pythonize_iso_timestamp
+from ..queries.signing_flow_approvers import construct_update_approval_activity_end_date, construct_update_approval_activity_start_date
 from ..authentication import ensure_signinghub_machine_user_session
-from .signing_flow import get_signing_flow, get_signers, get_pieces, get_creator
+from .signing_flow import get_approvers, get_signing_flow, get_signers, get_pieces, get_creator
 from .document import download_sh_doc_to_kaleidos_doc
 from ..queries.document import construct_attach_document_to_unsigned_version
 from ..queries.wrap_up_activity import construct_insert_wrap_up_activity
@@ -22,13 +23,14 @@ def update_signing_flow(signflow_uri: str):
     sh_workflow_details = g.sh_session.get_workflow_details(sh_package_id)
     logger.debug(f'Signing flow {signflow_uri}, workflow status {sh_workflow_details["workflow"]["workflow_status"]}')
     if sh_workflow_details["workflow"]["workflow_status"] == "DRAFT":
-        # TODO
+        # Flow has not been shared yet by user, we can extract no information from it at this point
         pass
     if sh_workflow_details["workflow"]["workflow_status"] == "SHARED":
+        sync_approvers_status(signflow_uri, sh_workflow_details)
         sync_signers_status(signflow_uri, sh_workflow_details)
-        # TODO approvers
         pass
     elif sh_workflow_details["workflow"]["workflow_status"] == "COMPLETED":
+        sync_approvers_status(signflow_uri, sh_workflow_details)
         sync_signers_status(signflow_uri, sh_workflow_details)
         # TODO: check if everyone signed/approved/reviewed/... (didnt reject)
         doc = download_sh_doc_to_kaleidos_doc(sh_workflow_details["package_id"],
@@ -47,6 +49,48 @@ def update_signing_flow(signflow_uri: str):
                                                        signflow_uri,
                                                        doc["uri"])
         agent_update(wrap_up_qs)
+
+
+def sync_approvers_status(sig_flow, sh_workflow_details):
+    sh_workflow_users = sh_workflow_details["users"]
+    kaleidos_approvers = get_approvers(sig_flow, agent_query)
+    logger.debug(f"Syncing approvers status ...")
+    for sh_workflow_user in sh_workflow_users:
+        if sh_workflow_user["role"] != "REVIEWER":
+            continue
+        proc_stat = sh_workflow_user["process_status"]
+        logger.debug(f"Approver {sh_workflow_user['user_email']} has process status {proc_stat}.")
+        if proc_stat == "UN_PROCESSED":
+            continue
+        kaleidos_approver = next(filter(lambda s: s["email"] == sh_workflow_user["user_email"], kaleidos_approvers), None)
+        if kaleidos_approver:
+            if not kaleidos_approver["end_date"]:
+                if proc_stat == "IN_PROGRESS":
+                    if not kaleidos_approver["start_date"]:
+                        # The flow has been shared, we can set the start time of the approval activity based on the modified_on field
+                        start_time = pythonize_iso_timestamp(sh_workflow_details["modified_on"])
+                        logger.info(f"Approver {kaleidos_approver['email']} ready to approve. Syncing start date {start_time} ...")
+                        query_string = construct_update_approval_activity_start_date(
+                            sig_flow,
+                            kaleidos_approver["email"],
+                            datetime.fromisoformat(start_time))
+                        agent_update(query_string)
+                elif proc_stat == "REVIEWED":
+                    approval_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
+                    logger.info(f"Approver {kaleidos_approver['email']} approved. Syncing end date {approval_time} ...")
+                    query_string = construct_update_approval_activity_end_date(
+                        sig_flow,
+                        kaleidos_approver["email"],
+                        datetime.fromisoformat(approval_time))
+                    agent_update(query_string)
+                # elif proc_stat == "DECLINED":
+                else:
+                    logger.warn(f"Approver {kaleidos_approver['email']} encountered unknown process status {sh_workflow_user['process_status']}. Skipping ...")
+            else:
+                logger.info(f"Approver {kaleidos_approver['email']} already has an end date in our db. No syncing needed.")
+        else:
+            logger.info(f"Approver with e-mail address {sh_workflow_user['user_email']} not present in Kaleidos metadata: ignoring")
+
 
 def sync_signers_status(sig_flow, sh_workflow_details):
     sh_workflow_users = sh_workflow_details["users"]
