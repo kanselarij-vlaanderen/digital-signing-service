@@ -74,4 +74,4 @@ def sync_signers_status(sig_flow, sh_workflow_details):
             else:
                 logger.info(f"Signer {kaleidos_signer['email']} already has an end date in our db. No syncing needed.")
         else:
-            logger.info(f"Signer with e-mail address {kaleidos_signer['email']} not present in Kaleidos metadata: ignoring")
+            logger.info(f"Signer with e-mail address {sh_workflow_user['user_email']} not present in Kaleidos metadata: ignoring")
