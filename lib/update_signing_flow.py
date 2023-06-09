@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import g
 from helpers import generate_uuid, logger
+from utils import pythonize_iso_timestamp
 from ..authentication import ensure_signinghub_machine_user_session
 from .signing_flow import get_signing_flow, get_signers, get_pieces, get_creator
 from .document import download_sh_doc_to_kaleidos_doc
@@ -62,7 +63,7 @@ def sync_signers_status(sig_flow, sh_workflow_details):
                 # elif proc_stat == "IN_PROGRESS":
                 if proc_stat == "SIGNED": # "REVIEWED",
                     logger.info(f"Signer {kaleidos_signer['email']} signed. Syncing ...")
-                    signing_time = sh_workflow_user["processed_on"]
+                    signing_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
                     query_string = construct_update_signing_activity_end_date(
                         sig_flow,
                         kaleidos_signer["uri"],
