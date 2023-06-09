@@ -97,8 +97,7 @@ WHERE {
         ?sign_subcase a sign:HandtekenProcedurestap ;
             ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
         ?signing_activity a sign:Handtekenactiviteit ;
-            sign:ondertekenaar ?signer .
-        $signer a mandaat:Mandataris .
+            sign:ondertekenaar $signer .
         OPTIONAL {
             ?signing_activity dossier:Activiteit.einddatum ?end_date .
         }
