@@ -3,12 +3,11 @@ from flask import g
 from helpers import generate_uuid
 from ..queries.file import construct_insert_file_query
 from ..agent_query import update as agent_update
-from ..config import KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
+from ..config import KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
 
 SH_SOURCE = "Kaleidos" # TODO https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1022
 
 FILE_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/bestand/"
-SIGNED_FILES_GRAPH = KANSELARIJ_GRAPH
 
 def download_sh_doc_to_mu_file(sh_package_id, sh_document_id):
     file_bytes = g.sh_session.download_document(sh_package_id, sh_document_id)
