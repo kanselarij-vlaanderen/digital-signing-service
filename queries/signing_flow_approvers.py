@@ -36,12 +36,12 @@ PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 
 DELETE {
     GRAPH $graph {
-        ?signing_activity dossier:Activiteit.einddatum ?end_date .
+        ?approval_activity dossier:Activiteit.einddatum ?end_date .
     }
 }
 INSERT {
     GRAPH $graph {
-        ?signing_activity dossier:Activiteit.einddatum $end_date .
+        ?approval_activity dossier:Activiteit.einddatum $end_date .
     }
 }
 WHERE {
@@ -49,9 +49,9 @@ WHERE {
         $signflow a sign:Handtekenaangelegenheid ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap ;
-            ^sign:goedkeuringVindtPlaatsTijdens ?signing_activity .
+            ^sign:goedkeuringVindtPlaatsTijdens ?approval_activity .
         ?approval_activity a sign:Goedkeuringsactiviteit ;
-            sign:goedkeurder ?approver .
+            sign:goedkeurder $approver .
         OPTIONAL {
             ?approval_activity dossier:Activiteit.einddatum ?end_date .
         }
