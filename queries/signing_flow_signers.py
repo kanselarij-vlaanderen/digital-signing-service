@@ -77,7 +77,6 @@ def construct_update_signing_activity_end_date(signflow_uri: str, mandatee_uri, 
     # isn't the same one as the one already bound to the signing activity (minister vs MP, ...)
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 
 DELETE {
