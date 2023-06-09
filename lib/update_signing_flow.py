@@ -7,7 +7,7 @@ from .signing_flow import get_signing_flow, get_signers, get_pieces, get_creator
 from .document import download_sh_doc_to_kaleidos_doc
 from ..queries.document import construct_attach_document_to_unsigned_version
 from ..queries.wrap_up_activity import construct_insert_wrap_up_activity
-from ..queries.signing_flow_signers import construct_update_signing_activity_end_date
+from ..queries.signing_flow_signers import construct_update_signing_activity_end_date, construct_update_signing_activity_start_date
 from ..agent_query import update as agent_update, query as agent_query
 from ..config import KALEIDOS_RESOURCE_BASE_URI
 
@@ -60,8 +60,16 @@ def sync_signers_status(sig_flow, sh_workflow_details):
         kaleidos_signer = next(filter(lambda s: s["email"] == sh_workflow_user["user_email"], kaleidos_signers), None)
         if kaleidos_signer:
             if not kaleidos_signer["end_date"]:
-                # elif proc_stat == "IN_PROGRESS":
-                if proc_stat == "SIGNED": # "REVIEWED",
+                if proc_stat == "IN_PROGRESS":
+                    if not kaleidos_signer["start_date"]:
+                        start_time = pythonize_iso_timestamp(sh_workflow_details["modified_on"])
+                        logger.info(f"Signer {kaleidos_signer['email']} ready to sign. Syncing start date {start_time} ...")
+                        query_string = construct_update_signing_activity_start_date(
+                            sig_flow,
+                            kaleidos_signer["uri"],
+                            datetime.fromisoformat(start_time))
+                        agent_update(query_string)
+                elif proc_stat == "SIGNED":
                     logger.info(f"Signer {kaleidos_signer['email']} signed. Syncing ...")
                     signing_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
                     query_string = construct_update_signing_activity_end_date(
