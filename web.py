@@ -22,9 +22,11 @@ def sync_all_ongoing_flows():
     for id in ids:
         requests.post(f"http://localhost/signing-flows/{id}/sync")
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab(SYNC_CRON_PATTERN))
-scheduler.start()
+from werkzeug.serving import is_running_from_reloader
+if is_running_from_reloader():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab(SYNC_CRON_PATTERN))
+    scheduler.start()
 
 @app.route("/verify-credentials")
 def sh_profile_info():
