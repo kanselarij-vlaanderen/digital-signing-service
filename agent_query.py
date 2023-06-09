@@ -22,7 +22,7 @@ sparqlUpdate.addCustomHttpHeader('MU-AUTH-ALLOWED-GROUPS', json.dumps(DIGITAL_SI
 def query(the_query):
     """Execute the given SPARQL query (select/ask/construct)on the triple store and returns the results
     in the given returnFormat (JSON by default)."""
-    log("execute query: \n" + the_query)
+    log(f"(agent query) execute query: \n" + the_query)
     sparqlQuery.setQuery(the_query)
     return sparqlQuery.query().convert()
 
@@ -32,5 +32,5 @@ def update(the_query):
     if the given query is no update query, nothing happens."""
     sparqlUpdate.setQuery(the_query)
     if sparqlUpdate.isSparqlUpdateRequest():
-        log("execute query: \n" + the_query)
+        log("(agent update) execute query: \n" + the_query)
         sparqlUpdate.query()
