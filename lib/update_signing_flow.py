@@ -2,13 +2,13 @@ from datetime import datetime
 from flask import g
 from helpers import generate_uuid, logger
 from utils import pythonize_iso_timestamp
-from ..queries.signing_flow_approvers import construct_update_approval_activity_end_date, construct_update_approval_activity_start_date
+from ..queries.signing_flow_approvers import construct_insert_approval_refusal_activity, construct_update_approval_activity_end_date, construct_update_approval_activity_start_date
 from ..authentication import ensure_signinghub_machine_user_session
 from .signing_flow import get_approvers, get_signing_flow, get_signers, get_pieces, get_creator
 from .document import download_sh_doc_to_kaleidos_doc
 from ..queries.document import construct_attach_document_to_unsigned_version
 from ..queries.wrap_up_activity import construct_insert_wrap_up_activity
-from ..queries.signing_flow_signers import construct_update_signing_activity_end_date, construct_update_signing_activity_start_date
+from ..queries.signing_flow_signers import construct_insert_signing_refusal_activity, construct_update_signing_activity_end_date, construct_update_signing_activity_start_date
 from ..agent_query import update as agent_update, query as agent_query
 from ..config import KALEIDOS_RESOURCE_BASE_URI
 
@@ -29,6 +29,9 @@ def update_signing_flow(signflow_uri: str):
         sync_approvers_status(signflow_uri, sh_workflow_details)
         sync_signers_status(signflow_uri, sh_workflow_details)
         pass
+    elif sh_workflow_details["workflow"]["workflow_status"] == "DECLINED":
+        sync_approvers_status(signflow_uri, sh_workflow_details)
+        sync_signers_status(signflow_uri, sh_workflow_details)
     elif sh_workflow_details["workflow"]["workflow_status"] == "COMPLETED":
         sync_approvers_status(signflow_uri, sh_workflow_details)
         sync_signers_status(signflow_uri, sh_workflow_details)
@@ -83,7 +86,14 @@ def sync_approvers_status(sig_flow, sh_workflow_details):
                         kaleidos_approver["email"],
                         datetime.fromisoformat(approval_time))
                     agent_update(query_string)
-                # elif proc_stat == "DECLINED":
+                elif proc_stat == "DECLINED":
+                    logger.info(f"Approver {kaleidos_approver['email']} refused. Syncing ...")
+                    refusal_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
+                    query_string = construct_insert_approval_refusal_activity(
+                        sig_flow,
+                        kaleidos_approver["email"],
+                        datetime.fromisoformat(refusal_time))
+                    agent_update(query_string)
                 else:
                     logger.warn(f"Approver {kaleidos_approver['email']} encountered unknown process status {sh_workflow_user['process_status']}. Skipping ...")
             else:
@@ -123,7 +133,14 @@ def sync_signers_status(sig_flow, sh_workflow_details):
                         kaleidos_signer["uri"],
                         datetime.fromisoformat(signing_time))
                     agent_update(query_string)
-                # elif proc_stat == "DECLINED":
+                elif proc_stat == "DECLINED":
+                    logger.info(f"Signer {kaleidos_signer['email']} refused. Syncing ...")
+                    refusal_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
+                    query_string = construct_insert_signing_refusal_activity(
+                        sig_flow,
+                        kaleidos_signer["uri"],
+                        datetime.fromisoformat(refusal_time))
+                    agent_update(query_string)
                 else:
                     logger.warn(f"Unknown process status {sh_workflow_user['process_status']}. Skipping ...")
             else:
