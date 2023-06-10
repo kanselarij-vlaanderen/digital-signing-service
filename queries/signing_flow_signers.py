@@ -48,7 +48,6 @@ def construct_add_signer(signflow_uri, mandatee_uri):
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
-PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
 INSERT {
     $signing_activity a sign:Handtekenactiviteit ;
