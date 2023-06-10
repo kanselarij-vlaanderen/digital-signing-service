@@ -1,7 +1,7 @@
 from string import Template
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..config import APPLICATION_GRAPH
+from ..config import APPLICATION_GRAPH, WEIGERACTIVITEIT_RESOURCE_BASE_URI
 
 HANDTEKENACTIVITEIT_RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/handtekenactiviteit/"
 
@@ -146,4 +146,43 @@ WHERE {
         signflow=sparql_escape_uri(signflow_uri),
         signer=sparql_escape_uri(mandatee_uri),
         end_date=sparql_escape_datetime(end_date)
+    )
+
+
+def construct_insert_signing_refusal_activity(signflow_uri: str, mandatee_uri, date) -> str:
+    uuid = generate_uuid()
+    uri = WEIGERACTIVITEIT_RESOURCE_BASE_URI + uuid
+
+    query_template = Template("""
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+
+INSERT {
+    $refusal_activity a sign:Weigeractiviteit ;
+        mu:uuid $refusal_activity_id ;
+        sign:weigeringVindtPlaatsTijdens ?sign_subcase ;
+        dossier:Activiteit.startdatum $date ;
+        dossier:Activiteit.einddatum $date .
+    ?signing_activity sign:isGeweigerdDoor $refusal_activity .
+}
+WHERE {
+    $signflow a sign:Handtekenaangelegenheid ;
+        sign:doorlooptHandtekening ?sign_subcase .
+    ?signing_activity a sign:Handtekenactiviteit ;
+        sign:handtekeningVindtPlaatsTijdens ?sign_subcase ;
+        sign:ondertekenaar $signer .
+    FILTER NOT EXISTS {
+        ?existing_refusal_activity a sign:Weigeractiviteit ;
+            sign:weigeringVindtPlaatsTijdens ?sign_subcase .
+        ?signing_activity sign:isGeweigerdDoor ?existing_refusal_activity .
+    }
+}
+""")
+    return query_template.substitute(
+        refusal_activity=sparql_escape_uri(uri),
+        refusal_activity_id=sparql_escape_string(uuid),
+        signer=sparql_escape_uri(mandatee_uri),
+        signflow=sparql_escape_uri(signflow_uri),
+        date=sparql_escape_datetime(date)
     )
