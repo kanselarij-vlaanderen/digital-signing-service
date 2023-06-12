@@ -1,6 +1,8 @@
+from datetime import datetime
 from string import Template
-from escape_helpers import sparql_escape_uri, sparql_escape_string
-from ..config import APPLICATION_GRAPH
+from helpers import generate_uuid
+from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
+from ..config import ANNULATIEACTIVITEIT_RESOURCE_BASE_URI
 
 def construct_get_signing_flow_by_uri(signflow_uri: str):
     query_template = Template("""
@@ -109,5 +111,42 @@ def construct_get_ongoing_signing_flows() -> str:
             ?refusal_activity a sign:Weigeractiviteit ;
                 sign:weigeringVindtPlaatsTijdens ?signing_subcase .
         }
+        FILTER NOT EXISTS {
+            ?cancellation_activity a sign:AnnulatieActiviteit ;
+                sign:annulatieVindtPlaatsTijdens ?signing_subcase .
+        }
     }
     """
+
+def construct_insert_cancellation_activity(sign_flow: str, date = None) -> str:
+    if date is None:
+        date = datetime.now()
+
+    uuid = generate_uuid()
+    uri = ANNULATIEACTIVITEIT_RESOURCE_BASE_URI + uuid
+
+    query_template = Template("""
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+    PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+
+    INSERT {
+        $cancellation_activity
+            a sign:AnnulatieActiviteit ;
+            mu:uuid $cancellation_activity_id ;
+            dossier:Activiteit.startdatum $date ;
+            dossier:Activiteit.einddatum $date ;
+            sign:annulatieVindtPlaatsTijdens ?signing_subcase .
+    }
+    WHERE {
+        $signflow a sign:Handtekenaangelegenheid ;
+            sign:doorlooptHandtekening ?signing_subcase .
+    }
+    """)
+    return query_template.substitute(
+        signflow=sparql_escape_uri(sign_flow),
+        cancellation_activity=sparql_escape_uri(uri),
+        cancellation_activity_id=sparql_escape_string(uuid),
+        date=sparql_escape_datetime(date),
+    )

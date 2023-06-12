@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import g
 from helpers import generate_uuid, logger
+from signinghub_api_client.exceptions import SigningHubException
 from utils import pythonize_iso_timestamp
 from ..queries.signing_flow_approvers import construct_insert_approval_refusal_activity, construct_update_approval_activity_end_date, construct_update_approval_activity_start_date
 from ..authentication import ensure_signinghub_machine_user_session
@@ -8,6 +9,7 @@ from .signing_flow import get_approvers, get_signing_flow, get_signers, get_piec
 from .document import download_sh_doc_to_kaleidos_doc
 from ..queries.document import construct_attach_document_to_unsigned_version
 from ..queries.wrap_up_activity import construct_insert_wrap_up_activity
+from ..queries.signing_flow import construct_insert_cancellation_activity
 from ..queries.signing_flow_signers import construct_insert_signing_refusal_activity, construct_update_signing_activity_end_date, construct_update_signing_activity_start_date
 from ..agent_query import update as agent_update, query as agent_query
 from ..config import KALEIDOS_RESOURCE_BASE_URI
@@ -20,38 +22,46 @@ def update_signing_flow(signflow_uri: str):
     creator = get_creator(signflow_uri, agent_query)
     ensure_signinghub_machine_user_session(creator["email"])
     sh_package_id = signing_flow["sh_package_id"]
-    sh_workflow_details = g.sh_session.get_workflow_details(sh_package_id)
-    logger.debug(f'Signing flow {signflow_uri}, workflow status {sh_workflow_details["workflow"]["workflow_status"]}')
-    if sh_workflow_details["workflow"]["workflow_status"] == "DRAFT":
-        # Flow has not been shared yet by user, we can extract no information from it at this point
-        pass
-    if sh_workflow_details["workflow"]["workflow_status"] == "SHARED":
-        sync_approvers_status(signflow_uri, sh_workflow_details)
-        sync_signers_status(signflow_uri, sh_workflow_details)
-        pass
-    elif sh_workflow_details["workflow"]["workflow_status"] == "DECLINED":
-        sync_approvers_status(signflow_uri, sh_workflow_details)
-        sync_signers_status(signflow_uri, sh_workflow_details)
-    elif sh_workflow_details["workflow"]["workflow_status"] == "COMPLETED":
-        sync_approvers_status(signflow_uri, sh_workflow_details)
-        sync_signers_status(signflow_uri, sh_workflow_details)
-        # TODO: check if everyone signed/approved/reviewed/... (didnt reject)
-        doc = download_sh_doc_to_kaleidos_doc(sh_workflow_details["package_id"],
-                                        signing_flow["sh_document_id"],
-                                        "getekend document" # temporary name. Gets overwritten when attaching to source doc
-                                        )
+    try:
+        sh_workflow_details = g.sh_session.get_workflow_details(sh_package_id)
+        logger.debug(f'Signing flow {signflow_uri}, workflow status {sh_workflow_details["workflow"]["workflow_status"]}')
+        if sh_workflow_details["workflow"]["workflow_status"] == "DRAFT":
+            # Flow has not been shared yet by user, we can extract no information from it at this point
+            pass
+        if sh_workflow_details["workflow"]["workflow_status"] == "SHARED":
+            sync_approvers_status(signflow_uri, sh_workflow_details)
+            sync_signers_status(signflow_uri, sh_workflow_details)
+            pass
+        elif sh_workflow_details["workflow"]["workflow_status"] == "DECLINED":
+            sync_approvers_status(signflow_uri, sh_workflow_details)
+            sync_signers_status(signflow_uri, sh_workflow_details)
+        elif sh_workflow_details["workflow"]["workflow_status"] == "COMPLETED":
+            sync_approvers_status(signflow_uri, sh_workflow_details)
+            sync_signers_status(signflow_uri, sh_workflow_details)
+            # TODO: check if everyone signed/approved/reviewed/... (didnt reject)
+            doc = download_sh_doc_to_kaleidos_doc(sh_workflow_details["package_id"],
+                                            signing_flow["sh_document_id"],
+                                            "getekend document" # temporary name. Gets overwritten when attaching to source doc
+                                            )
 
-        attach_doc_qs = construct_attach_document_to_unsigned_version(doc["uri"],
-                                                                      get_pieces(signflow_uri, agent_query)[0]["uri"])
-        agent_update(attach_doc_qs)
-        wrap_up_uuid = generate_uuid()
-        wrap_up_uri = WRAP_UP_ACTIVITY_BASE_URI + wrap_up_uuid
-        wrap_up_qs = construct_insert_wrap_up_activity(wrap_up_uri,
-                                                       wrap_up_uuid,
-                                                       datetime.now(), # TODO: parse the one from sign info instead
-                                                       signflow_uri,
-                                                       doc["uri"])
-        agent_update(wrap_up_qs)
+            attach_doc_qs = construct_attach_document_to_unsigned_version(doc["uri"],
+                                                                        get_pieces(signflow_uri, agent_query)[0]["uri"])
+            agent_update(attach_doc_qs)
+            wrap_up_uuid = generate_uuid()
+            wrap_up_uri = WRAP_UP_ACTIVITY_BASE_URI + wrap_up_uuid
+            wrap_up_qs = construct_insert_wrap_up_activity(wrap_up_uri,
+                                                        wrap_up_uuid,
+                                                        datetime.now(), # TODO: parse the one from sign info instead
+                                                        signflow_uri,
+                                                        doc["uri"])
+            agent_update(wrap_up_qs)
+    except SigningHubException as e:
+        if e.response.status_code == 404:
+            logger.debug("Fetching workflow details resulted in a 404 response, marking flow as cancelled...")
+            query_string = construct_insert_cancellation_activity(signflow_uri)
+            agent_update(query_string)
+        else:
+            raise e
 
 
 def sync_approvers_status(sig_flow, sh_workflow_details):
