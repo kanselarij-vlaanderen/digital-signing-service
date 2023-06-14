@@ -1,7 +1,7 @@
 from string import Template
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..config import APPLICATION_GRAPH
+from ..config import APPLICATION_GRAPH, WEIGERACTIVITEIT_RESOURCE_BASE_URI
 
 def construct(signflow_uri: str) -> str:
     query_template = Template("""
@@ -106,4 +106,46 @@ WHERE {
         signflow=sparql_escape_uri(signflow_uri),
         approver=sparql_escape_uri(email),
         end_date=sparql_escape_datetime(end_date)
+    )
+
+
+def construct_insert_approval_refusal_activity(signflow_uri: str, email, date) -> str:
+    uuid = generate_uuid()
+    uri = WEIGERACTIVITEIT_RESOURCE_BASE_URI + uuid
+
+    if not email.startswith("mailto:"):
+        email = "mailto:" + email
+
+    query_template = Template("""
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+
+INSERT {
+    $refusal_activity a sign:Weigeractiviteit ;
+        mu:uuid $refusal_activity_id ;
+        sign:weigeringVindtPlaatsTijdens ?sign_subcase ;
+        dossier:Activiteit.startdatum $date ;
+        dossier:Activiteit.einddatum $date .
+    ?approval_activity sign:goedkeuringIsGeweigerdDoor $refusal_activity .
+}
+WHERE {
+    $signflow a sign:Handtekenaangelegenheid ;
+        sign:doorlooptHandtekening ?sign_subcase .
+    ?approval_activity a sign:Goedkeuringsactiviteit ;
+        sign:goedkeuringVindtPlaatsTijdens ?sign_subcase ;
+        sign:goedkeurder $approver .
+    FILTER NOT EXISTS {
+        ?existing_refusal_activity a sign:Weigeractiviteit ;
+            sign:weigeringVindtPlaatsTijdens ?sign_subcase .
+        ?approval_activity sign:goedkeuringIsGeweigerdDoor ?existing_refusal_activity .
+    }
+}
+""")
+    return query_template.substitute(
+        refusal_activity=sparql_escape_uri(uri),
+        refusal_activity_id=sparql_escape_string(uuid),
+        approver=sparql_escape_uri(email),
+        signflow=sparql_escape_uri(signflow_uri),
+        date=sparql_escape_datetime(date)
     )

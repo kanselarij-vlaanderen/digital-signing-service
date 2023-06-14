@@ -105,5 +105,9 @@ def construct_get_ongoing_signing_flows() -> str:
                     sign:afrondingVindtPlaatsTijdens ?signing_subcase ;
                     prov:wasInformedBy ?signing_activity .
         }
+        FILTER NOT EXISTS {
+            ?refusal_activity a sign:Weigeractiviteit ;
+                sign:weigeringVindtPlaatsTijdens ?signing_subcase .
+        }
     }
     """
