@@ -5,6 +5,8 @@ from flask import g, request, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from helpers import log, error, logger, update
+from lib.query_result_helpers import ensure_1, to_recs
+from .queries.signing_flow import construct_get_signing_flows_by_uuids
 
 from .authentication import signinghub_session_required, open_new_signinghub_machine_user_session, MACHINE_ACCOUNTS
 from . import jsonapi
@@ -42,18 +44,18 @@ def sh_profile_info():
     return make_response("", response_code)
 
 
-@app.route('/signing-flows/<signflow_id>/upload-to-signinghub', methods=['POST'])
+@app.route('/signing-flows/upload-to-signinghub', methods=['POST'])
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
-def prepare_post(signflow_id):
-    signflow_uri = get_by_uuid(signflow_id)
-    pieces = signing_flow.get_pieces(signflow_uri)
-    if any(piece["sh_document_id"] for piece in pieces):
-        raise Exception("Signingflow has already been uploaded previously.")
+def prepare_post():
+    body = request.get_json(force=True)
 
-    piece_uris = [piece["uri"] for piece in pieces]
+    sign_flow_ids = [entry["id"] for entry in body["data"]]
 
-    prepare_signing_flow.prepare_signing_flow(g.sh_session, signflow_uri, piece_uris)
+    query = construct_get_signing_flows_by_uuids(sign_flow_ids)
+    sign_flows = to_recs(agent_query(query))
+
+    prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
