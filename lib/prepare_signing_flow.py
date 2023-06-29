@@ -1,92 +1,131 @@
+import functools
+import itertools
+from datetime import datetime
 from string import Template
-import typing
-from flask import g
+from typing import Dict, List
+
 from signinghub_api_client.client import SigningHubSession
-from helpers import generate_uuid, query, update, logger
+from helpers import generate_uuid, update, logger
 from escape_helpers import sparql_escape_uri, sparql_escape_string
-from . import exceptions, query_result_helpers, uri, signing_flow
+
+from . import uri, signing_flow
 from .mandatee import get_mandatee
 from .document import upload_piece_to_sh
 from ..config import APPLICATION_GRAPH
-from ..queries.signing_flow_pieces import construct_get_decision_report
+from .kaleidos_document_name import compare_piece_names, DOC_NAME_REGEX
+from ..utils import pythonize_iso_timestamp
 
-# TODO:
-# validation:
-# - document is not uploaded yet
-def prepare_signing_flow(signinghub_session: SigningHubSession,
-                     signflow_uri: str,
-                     piece_uris: typing.List[str]):
-    if len(piece_uris) == 0:
-        raise exceptions.InvalidArgumentException(f"No piece to add specified.")
-    if len(piece_uris) > 1:
-        raise exceptions.InvalidArgumentException(f"Signflow can only add 1 piece.")
-    piece_uri = piece_uris[0]
 
-    pieces = signing_flow.get_pieces(signflow_uri)
-    piece = query_result_helpers.ensure_1(pieces)
-    if piece["uri"] != piece_uri:
-        raise exceptions.InvalidStateException(f"Piece {piece_uri} is not associated to signflow {signflow_uri}.")
+def sort_sign_flows_by_piece(sign_flows: List[Dict]):
+    def compare_valid_sign_flows(sign_flow1, sign_flow2) -> int:
+        name1 = sign_flow1["piece_name"]
+        name2 = sign_flow2["piece_name"]
 
-    # Beslissingfiche
-    decision_report_query = construct_get_decision_report(signflow_uri)
-    decision_report_query_result = query_result_helpers.ensure_0_or_1(
-                                       query_result_helpers.to_recs(query(decision_report_query)))
-    signinghub_package_id = None
-    if decision_report_query_result:
-        _, signinghub_package_id, _ = upload_piece_to_sh(decision_report_query_result["decision_report"])
+        return compare_piece_names(name1, name2)
 
-    # Document
-    signinghub_document_uri, signinghub_package_id, _ = upload_piece_to_sh(piece_uri, signinghub_package_id)
+    def compare_invalid_sign_flows(sign_flow1, sign_flow2) -> int:
+        created1 = datetime.fromisoformat(pythonize_iso_timestamp(sign_flow1["piece_created"]))
+        created2 = datetime.fromisoformat(pythonize_iso_timestamp(sign_flow2["piece_created"]))
 
-    preparation_activity_id = generate_uuid()
-    preparation_activity_uri = uri.resource.preparation_activity(preparation_activity_id)
+        if created1 and created2:
+            return int(created2.timestamp()) - int(created1.timestamp())
+        else:
+            return 0
 
-    query_string = _update_template.substitute(
-        graph=sparql_escape_uri(APPLICATION_GRAPH),
-        signflow=sparql_escape_uri(signflow_uri),
-        preparation_activity=sparql_escape_uri(preparation_activity_uri),
-        preparation_activity_id=sparql_escape_string(preparation_activity_id),
-        sh_document=sparql_escape_uri(signinghub_document_uri),
-    )
-    update(query_string)
+    valid_names = []
+    invalid_names = []
+    for sign_flow in sign_flows:
+        piece_name = sign_flow["piece_name"]
+        match = DOC_NAME_REGEX.match(piece_name) if piece_name else None
+        if match:
+            valid_names.append(sign_flow)
+        else:
+            invalid_names.append(sign_flow)
 
-    g.sh_session.update_workflow_details(signinghub_package_id, {
-      "workflow_type": "CUSTOM",
-    })
+    return (sorted(valid_names, key=functools.cmp_to_key(compare_valid_sign_flows)) +
+            sorted(invalid_names, key=functools.cmp_to_key(compare_invalid_sign_flows)))
 
-    approvers = signing_flow.get_approvers(signflow_uri)
-    for approver in approvers:
-        logger.info(f"adding approver {approver['email']} to flow")
-        g.sh_session.add_users_to_workflow(signinghub_package_id, [{
-          "user_email": approver["email"],
-          "user_name": approver["email"],
-          "role": "REVIEWER",
-          "email_notification": True,
-          "signing_order": 1,
-       }])
 
-    notified = signing_flow.get_notified(signflow_uri)
-    for notify in notified:
-        logger.info(f"adding notified {notify['email']} to flow")
-        g.sh_session.add_users_to_workflow(signinghub_package_id, [{
-          "user_email": notify["email"],
-          "user_name": notify["email"],
-          "role": "CARBON_COPY",
-          "email_notification": True,
-          "signing_order": 1,
-       }])
+def group_by_decision_activity(sign_flows: List[Dict]):
+    # TODO: Cope with the fact that at some point we need to support
+    # optional decision activities
+    get_decision_activity = lambda d: d["decision_activity"]
+    return [list(g) for _, g in itertools.groupby(sign_flows, get_decision_activity)]
 
-    signers = signing_flow.get_signers(signflow_uri)
-    for signer in signers:
-        logger.info(f"adding signer {signer['uri']} to flow")
-        signer = get_mandatee(signer["uri"])
-        g.sh_session.add_users_to_workflow(signinghub_package_id, [{
-          "user_email": signer["email"],
-          "user_name": f"{signer['first_name']} {signer['family_name']}",
-          "role": "SIGNER",
-          "email_notification": True,
-          "signing_order": 2,
-       }])
+
+def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
+    """Prepares a signing flow in SigningHub based off multiple sign flows in Kaleidos."""
+    for grouped_sign_flows in group_by_decision_activity(sign_flows):
+        signinghub_package = sh_session.add_package({
+            "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
+        })
+        package_id = signinghub_package["package_id"]
+
+        sign_flow = grouped_sign_flows[0]["sign_flow"]
+        decision_report = grouped_sign_flows[0]["decision_report"]
+        if decision_report:
+            upload_piece_to_sh(decision_report, package_id)
+
+        sh_session.update_workflow_details(package_id, {"workflow_type": "CUSTOM"})
+
+        # All sign flows we're treating *should* have the same
+        # approvers/notification/signers, so it's okay to use the first
+        # sign flow to get them.
+        approvers = signing_flow.get_approvers(sign_flow)
+        for approver in approvers:
+            logger.info(f"adding approver {approver['email']} to flow")
+            sh_session.add_users_to_workflow(package_id, [{
+            "user_email": approver["email"],
+            "user_name": approver["email"],
+            "role": "REVIEWER",
+            "email_notification": True,
+            "signing_order": 1,
+        }])
+
+        notified = signing_flow.get_notified(sign_flow)
+        for notify in notified:
+            logger.info(f"adding notified {notify['email']} to flow")
+            sh_session.add_users_to_workflow(package_id, [{
+            "user_email": notify["email"],
+            "user_name": notify["email"],
+            "role": "CARBON_COPY",
+            "email_notification": True,
+            "signing_order": 1,
+        }])
+
+        signers = signing_flow.get_signers(sign_flow)
+        for signer in signers:
+            logger.info(f"adding signer {signer['uri']} to flow")
+            signer = get_mandatee(signer["uri"])
+            sh_session.add_users_to_workflow(package_id, [{
+            "user_email": signer["email"],
+            "user_name": f"{signer['first_name']} {signer['family_name']}",
+            "role": "SIGNER",
+            "email_notification": True,
+            "signing_order": 2,
+        }])
+
+        for sign_flow in sort_sign_flows_by_piece(grouped_sign_flows):
+            sign_flow_uri = sign_flow["sign_flow"]
+            piece_uri = sign_flow["piece"]
+
+            # Document
+            signinghub_document_uri, _, _ = upload_piece_to_sh(piece_uri, package_id)
+
+            preparation_activity_id = generate_uuid()
+            preparation_activity_uri = uri.resource.preparation_activity(preparation_activity_id)
+
+            query_string = _update_template.substitute(
+                graph=sparql_escape_uri(APPLICATION_GRAPH),
+                signflow=sparql_escape_uri(sign_flow_uri),
+                preparation_activity=sparql_escape_uri(preparation_activity_uri),
+                preparation_activity_id=sparql_escape_string(preparation_activity_id),
+                sh_document=sparql_escape_uri(signinghub_document_uri),
+            )
+            update(query_string)
+
+    return
+
 
 # optional sign activities to link in case some were already created before sending to SH
 _update_template = Template("""
@@ -103,12 +142,16 @@ INSERT {
         $preparation_activity sign:voorbereidingGenereert $sh_document .
         ?signing_activity prov:wasInformedBy $preparation_activity .
         ?approval_activity sign:isGoedgekeurdDoor $preparation_activity .
+        $preparation_activity sign:isGemarkeerdDoor ?marking_activity .
     }
 } WHERE {
     GRAPH $graph {
         $signflow a sign:Handtekenaangelegenheid ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap .
+        OPTIONAL {
+            ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase .
+        }
         OPTIONAL {
             ?signing_activity sign:handtekeningVindtPlaatsTijdens ?sign_subcase .
         }

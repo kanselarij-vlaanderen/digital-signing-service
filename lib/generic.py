@@ -4,7 +4,7 @@ from helpers import query
 from .query_result_helpers import to_recs, ensure_1
 from escape_helpers import sparql_escape_uri, sparql_escape_string
 
-def get_by_uuid(uuid: str, rdf_type=None, query_method: Callable = query):
+def get_by_uuid(uuid: str, rdf_type=None, query_method: Callable = query) -> str:
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 

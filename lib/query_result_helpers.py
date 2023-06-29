@@ -1,7 +1,8 @@
 import collections
+from typing import Any, DefaultDict, Dict, List, Optional
 from . import exceptions
 
-def to_recs(result):
+def to_recs(result: Dict) -> List[DefaultDict]:
     bindings = result["results"]["bindings"]
     return [
         collections.defaultdict(
@@ -10,16 +11,16 @@ def to_recs(result):
         ])
     for b in bindings]
 
-def to_answer(result):
+def to_answer(result: Dict):
     return result["boolean"]
 
-def ensure_0_or_1(collection):
+def ensure_0_or_1(collection: List[Any]) -> Optional[Any]:
     if len(collection) > 1:
         raise exceptions.InvalidStateException(f"expected: 1 - found: {len(collection)}")
     elif len(collection) == 1:
         return collection[0]
 
-def ensure_1(collection):
+def ensure_1(collection: List[Any]) -> Any:
     if len(collection) != 1:
         raise exceptions.InvalidStateException(f"expected: 1 - found: {len(collection)}")
     return collection[0]

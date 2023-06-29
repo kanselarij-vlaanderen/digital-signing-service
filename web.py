@@ -4,7 +4,9 @@ import requests
 from flask import g, request, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from helpers import log, error, logger, update
+from helpers import log, error, logger, query
+from lib.query_result_helpers import ensure_1, to_recs
+from .queries.signing_flow import construct_get_signing_flows_by_uuids
 
 from .authentication import signinghub_session_required, open_new_signinghub_machine_user_session, MACHINE_ACCOUNTS
 from . import jsonapi
@@ -41,82 +43,21 @@ def sh_profile_info():
             logger.warn(e)
     return make_response("", response_code)
 
-@app.route('/signing-flows/<signflow_id>/pieces')
-def pieces_get(signflow_id):
-    signflow_uri = get_by_uuid(signflow_id)
-    records = signing_flow.get_pieces(signflow_uri)
 
-    data = [{
-        "type": "pieces",
-        "id": r["id"],
-        "attributes": {
-            "uri": r["uri"]
-        }
-    } for r in records]
-    res = make_response({ "data": data }, 200)
-    res.headers["Content-Type"] = "application/vnd.api+json"
-    return res
-
-
-@app.route('/signing-flows/<signflow_id>/upload-to-signinghub', methods=['POST'])
+@app.route('/signing-flows/upload-to-signinghub', methods=['POST'])
 @jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
-def prepare_post(signflow_id):
-    signflow_uri = get_by_uuid(signflow_id)
-    pieces = signing_flow.get_pieces(signflow_uri)
-    if any(piece["sh_document_id"] for piece in pieces):
-        raise Exception("Signingflow has already been uploaded previously.")
+def prepare_post():
+    body = request.get_json(force=True)
 
-    piece_uris = [piece["uri"] for piece in pieces]
+    sign_flow_ids = [entry["id"] for entry in body["data"]]
 
-    prepare_signing_flow.prepare_signing_flow(g.sh_session, signflow_uri, piece_uris)
+    query_string = construct_get_signing_flows_by_uuids(sign_flow_ids)
+    sign_flows = to_recs(query(query_string))
+
+    prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
 
     res = make_response("", 204)
-    res.headers["Content-Type"] = "application/vnd.api+json"
-    return res
-
-
-# piece_id is a part of the URI for consistency with other URIs of this service
-# SigningHubs API does not link signers to pieces
-@app.route('/signing-flows/<signflow_id>/signers', methods=['GET', 'POST', 'DELETE'])
-def signers(signflow_id):
-    signflow_uri = get_by_uuid(signflow_id)
-    signflow = signing_flow.get_signing_flow(signflow_uri)
-    # if signflow["sh_package_id"]: # already on SH
-        # ensure_signinghub_user_session()
-    if request.method == 'GET':
-        return signers_get(signflow_uri)
-    elif request.method == 'POST':
-        return signers_assign(signflow_uri)
-
-def signers_get(signflow_uri):
-    records = signing_flow.get_signers(signflow_uri)
-
-    data = [{
-        "type": "mandatees",
-        "id": r["id"],
-        "attributes": {
-            "uri": r["uri"]
-        }
-    } for r in records]
-    res = make_response({"data": data}, 200)
-    res.headers["Content-Type"] = "application/vnd.api+json"
-    return res
-
-# @jsonapi.header_required
-def signers_assign(signflow_uri):
-    try:
-        body = request.get_json(force=True)
-        data = body["data"]
-        signers_identifications = [jsonapi.require_identification(r, "mandatees") for r in data]
-    except:
-        return error(f"Bad Request: invalid payload", 400)
-
-    signer_ids = [r["id"] for r in signers_identifications]
-    signer_uris = [get_by_uuid(id) for id in signer_ids]
-    for signer_uri in signer_uris:
-        update(construct_add_signer(signflow_uri, signer_uri))
-    res = make_response({}, 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
@@ -129,17 +70,6 @@ def signinghub_integration_url(signflow_id, piece_id):
         url = urljoin(SIGNINGHUB_APP_DOMAIN, f"/Web#/Viewer/{signflow['sh_package_id']}/")
         return make_response({"url": url}, 200)
     return make_response("", 404)
-
-@app.route('/signing-flows/<signflow_id>/start', methods=['POST'])
-@signinghub_session_required
-def start(signflow_id):
-    signflow_uri = get_by_uuid(signflow_id)
-
-    start_signing_flow.start_signing_flow(g.sh_session, signflow_uri)
-
-    res = make_response({}, 200)
-    res.headers["Content-Type"] = "application/vnd.api+json"
-    return res
 
 
 # HTTP method not specified in api documentation
@@ -158,6 +88,7 @@ def signinghub_callback():
         log("Someone tried to access forbidden package_id '{}' through SigningHub Iframe")
     return make_response("", 200)  # Because Flask expects a response
 
+
 # Service endpoint for manually initiating sync for a given signing flow
 @app.route('/signing-flows/<signflow_id>/sync', methods=['POST'])
 def signinghub_sync(signflow_id):
@@ -165,10 +96,12 @@ def signinghub_sync(signflow_id):
     update_signing_flow(signflow_uri)
     return make_response({}, 200)
 
+
 @app.errorhandler(exceptions.ResourceNotFoundException)
 def handle_resource_not_found(e):
     logger.exception(e.uri)
     return error(f"Not Found: {e.uri}", 404)
+
 
 @app.errorhandler(exceptions.InvalidStateException)
 def handle_invalid_state(e):

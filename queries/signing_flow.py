@@ -1,5 +1,6 @@
 from datetime import datetime
 from string import Template
+from typing import List
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
 from ..config import ANNULATIEACTIVITEIT_RESOURCE_BASE_URI
@@ -149,4 +150,42 @@ def construct_insert_cancellation_activity(sign_flow: str, date = None) -> str:
         cancellation_activity=sparql_escape_uri(uri),
         cancellation_activity_id=sparql_escape_string(uuid),
         date=sparql_escape_datetime(date),
+    )
+
+
+def construct_get_signing_flows_by_uuids(ids: List[str]) -> str:
+    query_template = Template("""
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+    PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+    PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
+    PREFIX dct: <http://purl.org/dc/terms/>
+
+    SELECT DISTINCT ?id ?sign_flow
+        ?piece ?piece_name ?piece_created
+        ?decision_activity ?decision_report
+    WHERE {
+        VALUES ?id { $ids }
+        ?sign_flow a sign:Handtekenaangelegenheid ;
+            mu:uuid ?id ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?sign_subcase a sign:HandtekenProcedurestap .
+        ?marking_activity a sign:Markeringsactiviteit ;
+            sign:markeringVindtPlaatsTijdens ?sign_subcase ;
+            sign:gemarkeerdStuk ?piece .
+        ?piece dct:title ?piece_name ;
+               dct:created ?piece_created .
+
+        OPTIONAL {
+            ?sign_flow sign:heeftBeslissing ?decision_activity .
+            ?decision_activity a besluitvorming:Beslissingsactiviteit .
+            OPTIONAL {
+                ?decision_report a dossier:Stuk ;
+                    besluitvorming:beschrijft ?decision_activity .
+            }
+        }
+    }
+    """)
+    return query_template.substitute(
+        ids=" ".join(list(map(sparql_escape_string, ids))),
     )
