@@ -37,6 +37,7 @@ def upload_piece_to_sh(piece_uri, signinghub_package_id=None):
     file_record = query_result_helpers.ensure_1(file_records)
     file_path = file_record["physicalFile"]
     file_name = fs_sanitize_filename(doc_record["name"] + "." + file_record["extension"])
+    file_name = file_name.strip()  # SH fails on uploads containing leading whitespace
 
     file_path = file_path.replace("share://", "/share/")
     with open(file_path, "rb") as f:
