@@ -159,8 +159,11 @@ def construct_get_signing_flows_by_uuids(ids: List[str]) -> str:
     PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
     PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
     PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
+    PREFIX dct: <http://purl.org/dc/terms/>
 
-    SELECT DISTINCT ?id ?sign_flow ?piece ?decision_activity ?decision_report
+    SELECT DISTINCT ?id ?sign_flow
+        ?piece ?piece_name ?piece_created
+        ?decision_activity ?decision_report
     WHERE {
         VALUES ?id { $ids }
         ?sign_flow a sign:Handtekenaangelegenheid ;
@@ -170,6 +173,8 @@ def construct_get_signing_flows_by_uuids(ids: List[str]) -> str:
         ?marking_activity a sign:Markeringsactiviteit ;
             sign:markeringVindtPlaatsTijdens ?sign_subcase ;
             sign:gemarkeerdStuk ?piece .
+        ?piece dct:title ?piece_name ;
+               dct:created ?piece_created .
 
         OPTIONAL {
             ?sign_flow sign:heeftBeslissing ?decision_activity .
