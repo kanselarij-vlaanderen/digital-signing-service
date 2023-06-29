@@ -4,7 +4,7 @@ import requests
 from flask import g, request, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from helpers import log, error, logger, update
+from helpers import log, error, logger, query
 from lib.query_result_helpers import ensure_1, to_recs
 from .queries.signing_flow import construct_get_signing_flows_by_uuids
 
@@ -52,8 +52,8 @@ def prepare_post():
 
     sign_flow_ids = [entry["id"] for entry in body["data"]]
 
-    query = construct_get_signing_flows_by_uuids(sign_flow_ids)
-    sign_flows = to_recs(agent_query(query))
+    query_string = construct_get_signing_flows_by_uuids(sign_flow_ids)
+    sign_flows = to_recs(query(query_string))
 
     prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
 
