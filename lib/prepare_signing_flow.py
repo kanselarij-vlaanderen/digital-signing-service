@@ -1,19 +1,57 @@
+import functools
 import itertools
+from datetime import datetime
 from string import Template
 from typing import Dict, List
+
 from signinghub_api_client.client import SigningHubSession
 from helpers import generate_uuid, update, logger
 from escape_helpers import sparql_escape_uri, sparql_escape_string
+
 from . import uri, signing_flow
 from .mandatee import get_mandatee
 from .document import upload_piece_to_sh
 from ..config import APPLICATION_GRAPH
+from .kaleidos_document_name import compare_piece_names, DOC_NAME_REGEX
+from ..utils import pythonize_iso_timestamp
+
+
+def sort_sign_flows_by_piece(sign_flows: List[Dict]):
+    def compare_valid_sign_flows(sign_flow1, sign_flow2) -> int:
+        name1 = sign_flow1["piece_name"]
+        name2 = sign_flow2["piece_name"]
+
+        return compare_piece_names(name1, name2)
+
+    def compare_invalid_sign_flows(sign_flow1, sign_flow2) -> int:
+        created1 = datetime.fromisoformat(pythonize_iso_timestamp(sign_flow1["piece_created"]))
+        created2 = datetime.fromisoformat(pythonize_iso_timestamp(sign_flow2["piece_created"]))
+
+        if created1 and created2:
+            return int(created2.timestamp()) - int(created1.timestamp())
+        else:
+            return 0
+
+    valid_names = []
+    invalid_names = []
+    for sign_flow in sign_flows:
+        piece_name = sign_flow["piece_name"]
+        match = DOC_NAME_REGEX.match(piece_name) if piece_name else None
+        if match:
+            valid_names.append(sign_flow)
+        else:
+            invalid_names.append(sign_flow)
+
+    return (sorted(valid_names, key=functools.cmp_to_key(compare_valid_sign_flows)) +
+            sorted(invalid_names, key=functools.cmp_to_key(compare_invalid_sign_flows)))
+
 
 def group_by_decision_activity(sign_flows: List[Dict]):
     # TODO: Cope with the fact that at some point we need to support
     # optional decision activities
     get_decision_activity = lambda d: d["decision_activity"]
     return [list(g) for _, g in itertools.groupby(sign_flows, get_decision_activity)]
+
 
 def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
     """Prepares a signing flow in SigningHub based off multiple sign flows in Kaleidos."""
@@ -67,7 +105,7 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
             "signing_order": 2,
         }])
 
-        for sign_flow in grouped_sign_flows:
+        for sign_flow in sort_sign_flows_by_piece(grouped_sign_flows):
             sign_flow_uri = sign_flow["sign_flow"]
             piece_uri = sign_flow["piece"]
 
