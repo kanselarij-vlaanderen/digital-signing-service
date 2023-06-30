@@ -69,7 +69,7 @@ def signinghub_integration_url(signflow_id, piece_id):
     if signflow['sh_package_id']:
         url = urljoin(SIGNINGHUB_APP_DOMAIN, f"/Web#/Viewer/{signflow['sh_package_id']}/")
         return make_response({"url": url}, 200)
-    return make_response("", 404)
+    return make_response("", 204)
 
 
 # HTTP method not specified in api documentation
