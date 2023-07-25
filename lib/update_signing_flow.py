@@ -3,7 +3,7 @@ from flask import g
 from helpers import generate_uuid, logger
 from signinghub_api_client.exceptions import SigningHubException
 from utils import pythonize_iso_timestamp
-from ..queries.signing_flow_approvers import construct_insert_approval_refusal_activity, construct_update_approval_activity_end_date, construct_update_approval_activity_start_date
+from ..queries.signing_flow_approvers import construct_insert_approval_refusal_activity, construct_insert_approval_activity, construct_update_approval_activity_end_date, construct_update_approval_activity_start_date
 from ..authentication import ensure_signinghub_machine_user_session
 from .signing_flow import get_approvers, get_signing_flow, get_signers, get_pieces, get_creator
 from .document import download_sh_doc_to_kaleidos_doc
@@ -109,7 +109,11 @@ def sync_approvers_status(sig_flow, sh_workflow_details):
             else:
                 logger.info(f"Approver {kaleidos_approver['email']} already has an end date in our db. No syncing needed.")
         else:
-            logger.info(f"Approver with e-mail address {sh_workflow_user['user_email']} not present in Kaleidos metadata: ignoring")
+            logger.info(f"Approver with e-mail address {sh_workflow_user['user_email']} not present in Kaleidos metadata: Adding.")
+            # insert approver with minimal info. Further details (dates, completion status, ...)
+            # will get picked up on a next pass in the SH -> Kaleidos sync direction.
+            query_string = construct_insert_approval_activity(sig_flow, sh_workflow_user['user_email'])
+            agent_update(query_string)
 
 
 def sync_signers_status(sig_flow, sh_workflow_details):

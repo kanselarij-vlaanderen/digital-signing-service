@@ -1,7 +1,7 @@
 from string import Template
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..config import APPLICATION_GRAPH, WEIGERACTIVITEIT_RESOURCE_BASE_URI
+from ..config import APPLICATION_GRAPH, GOEDKEURINGSACTIVITEIT_RESOURCE_BASE_URI, WEIGERACTIVITEIT_RESOURCE_BASE_URI
 
 def construct(signflow_uri: str) -> str:
     query_template = Template("""
@@ -108,6 +108,39 @@ WHERE {
         end_date=sparql_escape_datetime(end_date)
     )
 
+def construct_insert_approval_activity(signflow_uri: str, email) -> str:
+    uuid = generate_uuid()
+    uri = GOEDKEURINGSACTIVITEIT_RESOURCE_BASE_URI + uuid
+
+    if not email.startswith("mailto:"):
+        email = "mailto:" + email
+
+    query_template = Template("""
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+
+INSERT {
+    $approval_activity a sign:Goedkeuringsactiviteit ;
+        mu:uuid $approval_id ;
+        sign:goedkeuringVindtPlaatsTijdens ?sign_subcase ;
+        sign:goedkeurder $approver .
+}
+WHERE {
+    $signflow a sign:Handtekenaangelegenheid ;
+        sign:doorlooptHandtekening ?sign_subcase .
+    FILTER NOT EXISTS {
+        ?existing_approval_activity a sign:Goedkeuringsactiviteit ;
+            sign:goedkeuringVindtPlaatsTijdens ?sign_subcase ;
+            sign:goedkeurder $approver .
+    }
+}
+""")
+    return query_template.substitute(
+        approval_activity=sparql_escape_uri(uri),
+        approval_id=sparql_escape_string(uuid),
+        approver=sparql_escape_uri(email),
+        signflow=sparql_escape_uri(signflow_uri)
+    )
 
 def construct_insert_approval_refusal_activity(signflow_uri: str, email, date) -> str:
     uuid = generate_uuid()
