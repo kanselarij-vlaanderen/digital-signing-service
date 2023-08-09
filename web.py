@@ -1,22 +1,24 @@
 from urllib.parse import urljoin
 
 import requests
-from flask import g, request, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from helpers import log, error, logger, query
-from lib.query_result_helpers import ensure_1, to_recs
-from .queries.signing_flow import construct_get_signing_flows_by_uuids
+from flask import g, make_response, request
+from helpers import error, log, logger, query
 
-from .authentication import signinghub_session_required, open_new_signinghub_machine_user_session, MACHINE_ACCOUNTS
+from lib.query_result_helpers import to_recs
+
 from . import jsonapi
-from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
-    signing_flow, assign_signers, start_signing_flow, mandatee
+from .agent_query import query as agent_query
+from .authentication import (MACHINE_ACCOUNTS,
+                             open_new_signinghub_machine_user_session,
+                             signinghub_session_required)
+from .config import SIGNINGHUB_APP_DOMAIN, SYNC_CRON_PATTERN
+from .lib import assign_signers, exceptions, prepare_signing_flow, signing_flow
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
-from .queries.signing_flow_signers import construct_add_signer
-from .agent_query import query as agent_query
-from .config import SYNC_CRON_PATTERN, SIGNINGHUB_APP_DOMAIN
+from .queries.signing_flow import construct_get_signing_flows_by_uuids
+
 
 def sync_all_ongoing_flows():
     records = signing_flow.get_ongoing_signing_flows(agent_query)
