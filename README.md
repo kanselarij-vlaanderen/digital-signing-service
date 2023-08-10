@@ -36,10 +36,6 @@ _Note that both of above parameters must be set to activate client certificate a
     restart: always
 ```
 
-## REST API
-
-The available API-endpoints are documented in an [OpenAPI v3](http://spec.openapis.org/oas/v3.0.3) spec-file `openapi.yaml`.
-
 ## Used models
 
 Read the Kaleidos documentation regarding the [digital signing data model](https://github.com/kanselarij-vlaanderen/kaleidos-documentation/blob/master/data-model/signing-flow.md).
