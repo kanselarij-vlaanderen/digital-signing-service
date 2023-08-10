@@ -9,8 +9,6 @@ VO's SigningHub instance compartmentalizes users per organization (OVO-code) as 
 For more details on SigningHub API authentication, see ["managing third party integrations"](https://manuals.ascertia.com/SigningHubv7/Managethirdpartyintegrations.html) in their manual.
 
 - `SIGNINGHUB_API_URL`: Base-URL of the Signinghub-API
-- `SIGNINGHUB_IFRAME_REDIRECT_URL`: URL-path to redirect to when finishing Iframe interaction. Note that a default for this is configurable in SigningHub integration settings too, but for development purposes it's useful to be able to configure per environment.
-
 
 Authentication at VO-network, through SSL client certificate authentication
 - `CERT_FILE_PATH`: Path to client certificate file (`.pem`-format)
@@ -29,7 +27,6 @@ _Note that both of above parameters must be set to activate client certificate a
     image: kanselarij/digital-signing # Make sure to specify a tagged version here
     environment:
       SIGNINGHUB_API_URL: ""
-      SIGNINGHUB_IFRAME_REDIRECT_URL: ""
       CERT_FILE_PATH: ""
       KEY_FILE_PATH: ""
     volumes:
