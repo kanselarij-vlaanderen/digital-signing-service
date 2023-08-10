@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from string import Template
 
 from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
