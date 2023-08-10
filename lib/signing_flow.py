@@ -5,7 +5,6 @@ from helpers import query
 from . import query_result_helpers
 from ..queries.signing_flow import (
     construct_get_signing_flow_by_uri,
-    construct_get_signing_flow_by_package_id,
     construct_get_signing_flow_creator,
     construct_get_ongoing_signing_flows,
 )
