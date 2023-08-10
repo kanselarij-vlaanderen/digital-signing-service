@@ -4,7 +4,7 @@ import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from flask import g, make_response, request
-from helpers import error, log, logger, query
+from helpers import error, log, logger, query, validate_json_api_content_type
 
 from lib.query_result_helpers import to_recs
 
@@ -47,9 +47,9 @@ def sh_profile_info():
 
 
 @app.route('/signing-flows/upload-to-signinghub', methods=['POST'])
-@jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def prepare_post():
+    validate_json_api_content_type(request)
     body = request.get_json(force=True)
 
     sign_flow_ids = [entry["id"] for entry in body["data"]]
