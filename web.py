@@ -8,7 +8,6 @@ from helpers import error, log, logger, query, validate_json_api_content_type
 
 from lib.query_result_helpers import to_recs
 
-from . import jsonapi
 from .agent_query import query as agent_query
 from .authentication import (MACHINE_ACCOUNTS,
                              open_new_signinghub_machine_user_session,
