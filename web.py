@@ -14,7 +14,7 @@ from .authentication import (MACHINE_ACCOUNTS,
                              open_new_signinghub_machine_user_session,
                              signinghub_session_required)
 from .config import SIGNINGHUB_APP_DOMAIN, SYNC_CRON_PATTERN
-from .lib import assign_signers, exceptions, prepare_signing_flow, signing_flow
+from .lib import exceptions, prepare_signing_flow, signing_flow
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
 from .queries.signing_flow import construct_get_signing_flows_by_uuids
