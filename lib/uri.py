@@ -6,12 +6,6 @@ class __Resource:
     def __build (self, type: str, id: str):
         return THEMIS_RESOURCE_BASE_URI + type + "/" + id
 
-    def piece(self, id: str):
-        return self.__build("stuk", id)
-
-    def signflow(self, id: str):
-        return self.__build("handtekenaangelegenheid", id)
-
     def preparation_activity(self, id: str):
         return self.__build("handteken-voorbereidingsactiviteit", id)
 
