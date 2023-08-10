@@ -17,14 +17,3 @@ def header_required(f):
 class ResourceIdentification(typing.TypedDict):
     id: str
     type: str
-
-def require_identification(data: typing.Dict, required_resource_type_name: typing.Union[str, None] = None) -> ResourceIdentification:
-    if not isinstance(data["id"], str):
-        raise ValueError()
-    if not isinstance(data["type"], str):
-        raise ValueError()
-
-    if required_resource_type_name and data["type"] != required_resource_type_name:
-        raise ValueError()
-
-    return typing.cast(ResourceIdentification, data)
