@@ -9,8 +9,6 @@ from ..config import (ACCESS_LEVEL_CABINET, ACCESS_LEVEL_GOVERNMENT,
                       ACCESS_LEVEL_PUBLIC, APPLICATION_GRAPH,
                       KALEIDOS_RESOURCE_BASE_URI, TIMEZONE)
 
-DOCUMENT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
-
 def construct_get_file_for_document(document_uri, file_mimetype=None, graph=APPLICATION_GRAPH):
     if file_mimetype is not None:
         format_filter = "FILTER( CONTAINS( ?format, {} ) )".format(sparql_escape_string(file_mimetype))
