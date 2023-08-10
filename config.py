@@ -11,7 +11,6 @@ SIGNINGHUB_APP_DOMAIN = os.environ.get("SIGNINGHUB_APP_DOMAIN")
 
 # Constants
 APPLICATION_GRAPH = "http://mu.semte.ch/application"
-KANSELARIJ_GRAPH = "http://mu.semte.ch/graphs/organizations/kanselarij"
 ACCESS_LEVEL_CABINET = "http://themis.vlaanderen.be/id/concept/toegangsniveau/13ae94b0-6188-49df-8ecd-4c4a17511d6d"
 ACCESS_LEVEL_GOVERNMENT = "http://themis.vlaanderen.be/id/concept/toegangsniveau/634f438e-0d62-4ae4-923a-b63460f6bc46"
 ACCESS_LEVEL_PUBLIC = "http://themis.vlaanderen.be/id/concept/toegangsniveau/c3de9c70-391e-4031-a85e-4b03433d6266"

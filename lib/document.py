@@ -5,7 +5,7 @@ from escape_helpers import sparql_escape_uri, sparql_escape_string
 from ..queries.document import construct_insert_document
 from ..agent_query import update as agent_update
 from .file import download_sh_doc_to_mu_file, fs_sanitize_filename
-from ..config import APPLICATION_GRAPH, KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
+from ..config import APPLICATION_GRAPH, KALEIDOS_RESOURCE_BASE_URI
 from ..queries.document import construct_get_file_for_document, construct_get_document
 from ..queries.file import construct_get_file_query
 from . import exceptions, query_result_helpers, uri, signing_flow
