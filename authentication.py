@@ -65,8 +65,10 @@ def signinghub_session_required(f):
             ensure_signinghub_session(mu_session_id)
             return f(*args, **kwargs)
         except AuthenticationException as ex:
+            logger.exception("Authentication Error")
             return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.error_id))
         except NoQueryResultsException as ex:
+            logger.exception("No Query Results Error")
             return error(ex.args[0])
     return decorated_function
 
@@ -104,20 +106,3 @@ def ensure_signinghub_machine_user_session(scope=None):
         sh_session_sudo_query = construct_mark_signinghub_session_as_machine_users_query(sh_session_uri)
         sudo_update(sh_session_sudo_query)
         g.sh_session = sh_session
-
-def signinghub_machine_session_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        try:
-            ensure_signinghub_machine_user_session()
-            return f(*args, **kwargs)
-        except AuthenticationException as ex:
-            logger.exception("Authentication Error")
-            return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.error_id))
-        except NoQueryResultsException as ex:
-            logger.exception("No Query Results Error")
-            return error(ex.args[0])
-        except BaseException as ex:
-            logger.exception("Internal Server Error")
-            return error("Internal Server Error", 500)
-    return decorated_function
