@@ -1,7 +1,8 @@
-import os
 import json
-from SPARQLWrapper import SPARQLWrapper, JSON
+import os
+
 from helpers import log
+from SPARQLWrapper import JSON, SPARQLWrapper
 
 DIGITAL_SIGNING_AGENT_ALLOWED_GROUPS =   [ # Secretarie
     { "variables": [], "name": "public" },

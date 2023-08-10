@@ -1,9 +1,13 @@
 from datetime import datetime
 from string import Template
 from typing import List
+
+from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
+                            sparql_escape_uri)
 from helpers import generate_uuid
-from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
+
 from ..config import ANNULATIEACTIVITEIT_RESOURCE_BASE_URI
+
 
 def construct_get_signing_flow_by_uri(signflow_uri: str):
     query_template = Template("""

@@ -1,15 +1,13 @@
-from string import Template
 from datetime import datetime
+from string import Template
+
+from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
+                            sparql_escape_uri)
 from helpers import generate_uuid
-from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..config import (
-    APPLICATION_GRAPH,
-    KALEIDOS_RESOURCE_BASE_URI,
-    TIMEZONE,
-    ACCESS_LEVEL_CABINET,
-    ACCESS_LEVEL_GOVERNMENT,
-    ACCESS_LEVEL_PUBLIC,
-)
+
+from ..config import (ACCESS_LEVEL_CABINET, ACCESS_LEVEL_GOVERNMENT,
+                      ACCESS_LEVEL_PUBLIC, APPLICATION_GRAPH,
+                      KALEIDOS_RESOURCE_BASE_URI, TIMEZONE)
 
 DOCUMENT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 

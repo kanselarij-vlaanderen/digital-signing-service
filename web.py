@@ -74,23 +74,6 @@ def signinghub_integration_url(signflow_id, piece_id):
     return make_response("", 204)
 
 
-# HTTP method not specified in api documentation
-@app.route('/signinghub-callback', methods=['GET', 'POST'])
-def signinghub_callback():
-    data = request.get_json(force=True)
-    sh_package_id = data["package_id"]
-    action = data["action"]
-    if action == "none":
-        log("Someone looked at package_id '{}' through SigningHub Iframe")
-    # elif action == "shared":  # Start signflow.
-        # TODO
-    # elif action in ("signed", "declined", "reviewed"):
-        # TODO
-    elif action == "forbidden":
-        log("Someone tried to access forbidden package_id '{}' through SigningHub Iframe")
-    return make_response("", 200)  # Because Flask expects a response
-
-
 # Service endpoint for manually initiating sync for a given signing flow
 @app.route('/signing-flows/<signflow_id>/sync', methods=['POST'])
 def signinghub_sync(signflow_id):

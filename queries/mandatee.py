@@ -1,7 +1,11 @@
-from string import Template
 from datetime import datetime, timedelta
-from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
+from string import Template
+
+from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
+                            sparql_escape_uri)
+
 from ..config import APPLICATION_GRAPH
+
 
 def construct_get_mandatee_by_id(mandatee_id, graph=APPLICATION_GRAPH):
     query_template = Template("""

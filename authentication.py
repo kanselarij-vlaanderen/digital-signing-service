@@ -1,20 +1,23 @@
 import os
 from functools import wraps
+
 from flask import g, request
+from helpers import error, generate_uuid, log, logger
 from signinghub_api_client.client import SigningHubSession
 from signinghub_api_client.exceptions import AuthenticationException
-from helpers import log, logger, error, generate_uuid
-from .queries.session import construct_get_mu_session_query, \
-    construct_get_signinghub_session_query, \
-    construct_insert_signinghub_session_query, \
-    construct_attach_signinghub_session_to_mu_session_query, \
-    construct_get_signinghub_machine_user_session_query, \
-    construct_mark_signinghub_session_as_machine_users_query, \
-    construct_get_org_for_email
-from .sudo_query import query as sudo_query, update as sudo_update
-from .lib.exceptions import NoQueryResultsException
-from .config import KALEIDOS_RESOURCE_BASE_URI
+
 from .authentication_config import MACHINE_ACCOUNTS
+from .config import KALEIDOS_RESOURCE_BASE_URI
+from .lib.exceptions import NoQueryResultsException
+from .queries.session import (
+    construct_attach_signinghub_session_to_mu_session_query,
+    construct_get_mu_session_query, construct_get_org_for_email,
+    construct_get_signinghub_machine_user_session_query,
+    construct_get_signinghub_session_query,
+    construct_insert_signinghub_session_query,
+    construct_mark_signinghub_session_as_machine_users_query)
+from .sudo_query import query as sudo_query
+from .sudo_query import update as sudo_update
 
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
 CERT_FILE_PATH = os.environ.get("CERT_FILE_PATH")

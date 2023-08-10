@@ -1,8 +1,9 @@
 import typing
-
 from functools import wraps
+
 from flask import request
 from helpers import error
+
 
 def header_required(f):
     @wraps(f)
