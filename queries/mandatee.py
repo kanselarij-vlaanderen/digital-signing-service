@@ -7,23 +7,6 @@ from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
 from ..config import APPLICATION_GRAPH
 
 
-def construct_get_mandatee_by_id(mandatee_id, graph=APPLICATION_GRAPH):
-    query_template = Template("""
-PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
-PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-
-SELECT DISTINCT (?mandatee as ?uri)
-WHERE {
-    GRAPH $graph {
-        ?mandatee a mandaat:Mandataris ;
-            mu:uuid $uuid .
-    }
-}
-""")
-    return query_template.substitute(
-        graph=sparql_escape_uri(graph),
-        uuid=sparql_escape_string(mandatee_id))
-
 def construct_get_mandatee(mandatee_uri):
     # Note: Can only be ran through mu-auth, data is spread over multiple graphs
     query_template = Template("""

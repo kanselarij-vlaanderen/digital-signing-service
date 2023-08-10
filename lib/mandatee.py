@@ -1,7 +1,6 @@
 from helpers import query, log
 from typing import Callable
-from ..queries.mandatee import construct_get_mandatee, \
-    construct_get_mandatee_by_id
+from ..queries.mandatee import construct_get_mandatee
 from .exceptions import NoQueryResultsException
 from ..config import APPLICATION_GRAPH
 
