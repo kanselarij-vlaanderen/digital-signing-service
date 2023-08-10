@@ -19,23 +19,6 @@ def get_signing_flow(signflow_uri: str, query_method: Callable = query):
     record = query_result_helpers.ensure_1(records)
     return record
 
-def get_signflow_by_signinghub_id(sh_package_id: str):
-    query_command = construct_get_signing_flow_by_package_id(sh_package_id)
-    return __get_signflow_record(query_command)
-
-def __get_signflow_record(query_command: str):
-    result = query(query_command)
-    records = query_result_helpers.to_recs(result)
-    record = query_result_helpers.ensure_1(records)
-
-    record = {
-        "id": record["signflow_id"],
-        "uri": record["signflow"],
-        "sh_package_id": record["sh_package_id"],
-    }
-
-    return record
-
 def get_pieces(signflow_uri: str, query_method: Callable = query):
     query_command = queries.signing_flow_pieces.construct(signflow_uri)
     result = query_method(query_command)
