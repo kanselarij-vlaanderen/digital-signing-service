@@ -1,8 +1,11 @@
-from helpers import query, log
 from typing import Callable
+
+from helpers import log, query
+
+from ..config import APPLICATION_GRAPH
 from ..queries.mandatee import construct_get_mandatee
 from .exceptions import NoQueryResultsException
-from ..config import APPLICATION_GRAPH
+
 
 def get_mandatee(mandatee_uri, query_method: Callable = query):
     query_str = construct_get_mandatee(mandatee_uri)

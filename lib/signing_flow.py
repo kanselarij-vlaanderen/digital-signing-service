@@ -1,15 +1,16 @@
 # from ..queries.signing_flow import construct_by_mu_uuid
 from typing import Callable
-from .exceptions import NoQueryResultsException
+
 from helpers import query
-from . import query_result_helpers
-from ..queries.signing_flow import (
-    construct_get_signing_flow_by_uri,
-    construct_get_signing_flow_creator,
-    construct_get_ongoing_signing_flows,
-)
+
 from .. import queries
 from ..config import APPLICATION_GRAPH
+from ..queries.signing_flow import (construct_get_ongoing_signing_flows,
+                                    construct_get_signing_flow_by_uri,
+                                    construct_get_signing_flow_creator)
+from . import query_result_helpers
+from .exceptions import NoQueryResultsException
+
 
 def get_signing_flow(signflow_uri: str, query_method: Callable = query):
     query_string = construct_get_signing_flow_by_uri(signflow_uri)

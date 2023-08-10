@@ -1,6 +1,8 @@
 import collections
 from typing import Any, DefaultDict, Dict, List
+
 from . import exceptions
+
 
 def to_recs(result: Dict) -> List[DefaultDict]:
     bindings = result["results"]["bindings"]
