@@ -46,26 +46,6 @@ LIMIT 1
         document=sparql_escape_uri(document_uri),
         format_filter=format_filter)
 
-def construct_get_document_for_file(file_uri, graph=APPLICATION_GRAPH):
-    query_template = Template("""
-PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-
-SELECT (?document AS ?uri)
-WHERE {
-    GRAPH $graph {
-        ?document a dossier:Stuk ;
-            prov:value $file .
-        $file a nfo:FileDataObject .
-    }
-}
-LIMIT 1
-""")
-    return query_template.substitute(
-        graph=sparql_escape_uri(graph),
-        file=sparql_escape_uri(file_uri))
-
 def construct_get_document(document_uri):
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
