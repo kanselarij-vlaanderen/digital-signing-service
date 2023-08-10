@@ -12,8 +12,6 @@ from . import exceptions, query_result_helpers, uri, signing_flow
 
 SH_SOURCE = "Kaleidos"
 
-SIGNED_DOCS_GRAPH = KANSELARIJ_GRAPH
-
 DOC_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 
 def upload_piece_to_sh(piece_uri, signinghub_package_id=None):
