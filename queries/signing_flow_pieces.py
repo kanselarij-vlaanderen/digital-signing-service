@@ -41,29 +41,3 @@ WHERE {
         graph=sparql_escape_uri(APPLICATION_GRAPH),
         signflow=sparql_escape_uri(signflow_uri)
     )
-
-def construct_get_decision_report(signflow_uri: str):
-    query_template = Template("""
-PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
-PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
-PREFIX dct: <http://purl.org/dc/terms/>
-
-SELECT DISTINCT ?decision_report ?decision_report_id
-WHERE {
-    $signflow a sign:Handtekenaangelegenheid ;
-        sign:heeftBeslissing ?decisionActivity .
-    ?decisionActivity a besluitvorming:Beslissingsactiviteit .
-    ?decision_report a dossier:Stuk ;
-        dct:created ?created ;
-        mu:uuid ?decision_report_id ;
-        besluitvorming:beschrijft ?decisionActivity .
-}
-ORDER BY DESC(?created)
-LIMIT 1
-""")
-    return query_template.substitute(
-        graph=sparql_escape_uri(APPLICATION_GRAPH),
-        signflow=sparql_escape_uri(signflow_uri)
-    )
