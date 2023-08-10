@@ -35,31 +35,6 @@ def construct_get_signing_flow_by_uri(signflow_uri: str):
       signflow=sparql_escape_uri(signflow_uri)
     )
 
-def construct_get_signing_flow_by_package_id(sh_package_id: str):
-    query_template = Template("""
-    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
-    PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
-
-    SELECT DISTINCT (?signing_flow AS ?uri) ?sh_package_id ?sh_document_id
-    WHERE {
-        ?signing_flow a sign:Handtekenaangelegenheid ;
-            mu:uuid ?signflow_id ;
-            sign:doorlooptHandtekening ?sign_subcase .
-        ?sign_subcase a sign:HandtekenProcedurestap ;
-            ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
-        ?preparation_activity a sign:Voorbereidingsactiviteit ;
-            sign:voorbereidingGenereert ?sh_document .
-        ?sh_document a sh:Document ;
-            sh:packageId $sh_package_id ;
-            sh:documentId ?sh_document_id .
-        }
-    }
-    """)
-    return query_template.substitute(
-      sh_package_id=sparql_escape_string(sh_package_id)
-    )
-
 def construct_get_signing_flow_notifiers(signflow_uri: str):
     query_template = Template("""
     PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
