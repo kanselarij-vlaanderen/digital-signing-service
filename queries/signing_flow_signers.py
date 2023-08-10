@@ -6,8 +6,6 @@ from helpers import generate_uuid
 
 from ..config import APPLICATION_GRAPH, WEIGERACTIVITEIT_RESOURCE_BASE_URI
 
-HANDTEKENACTIVITEIT_RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/handtekenactiviteit/"
-
 def construct(signflow_uri: str) -> str:
     query_template = Template("""
 PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
