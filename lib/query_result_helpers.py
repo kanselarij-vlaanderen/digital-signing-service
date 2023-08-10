@@ -15,6 +15,3 @@ def ensure_1(collection: List[Any]) -> Any:
     if len(collection) != 1:
         raise exceptions.InvalidStateException(f"expected: 1 - found: {len(collection)}")
     return collection[0]
-
-def sparql_escape_list(list):
-    return ' '.join(list)
