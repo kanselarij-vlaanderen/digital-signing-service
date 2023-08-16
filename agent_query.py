@@ -6,7 +6,8 @@ from helpers import log
 DIGITAL_SIGNING_AGENT_ALLOWED_GROUPS =   [ # Secretarie
     { "variables": [], "name": "public" },
     { "variables": [], "name": "authenticated" },
-    { "variables": [], "name": "secretarie" },
+    { "variables": [], "name": "kanselarij-read" },
+    { "variables": [], "name": "kanselarij-write" },
     { "variables": [], "name": "sign-flow-read" },
     { "variables": [], "name": "sign-flow-write" },
     { "variables": [], "name": "clean" }
