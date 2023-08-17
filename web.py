@@ -8,6 +8,8 @@ from helpers import log, error, logger, query
 from lib.query_result_helpers import ensure_1, to_recs
 from .queries.signing_flow import construct_get_signing_flows_by_uuids
 
+from signinghub_api_client.exceptions import UnauthenticatedException
+
 from .authentication import signinghub_session_required, open_new_signinghub_machine_user_session, MACHINE_ACCOUNTS
 from . import jsonapi
 from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
@@ -125,3 +127,10 @@ def handle_resource_not_found(e):
 def handle_invalid_state(e):
     logger.exception(f"Invalid State: {e}")
     return error(f"Invalid State: {e}", 400)
+
+@app.errorhandler(UnauthenticatedException)
+def handle_unauthenticated(e):
+    logger.exception(f"UnauthenticatedException: {e}")
+    logger.exception(f"headers:")
+    logger.exception(str(e.response.request.headers))
+    return error(f"UnauthenticatedException: {e}", 400)
