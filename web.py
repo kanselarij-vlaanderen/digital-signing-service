@@ -18,6 +18,24 @@ from .queries.signing_flow_signers import construct_add_signer
 from .agent_query import query as agent_query
 from .config import SYNC_CRON_PATTERN, SIGNINGHUB_APP_DOMAIN
 
+import requests
+import logging
+
+# Enabling debugging at http.client level (requests->urllib3->http.client)
+# you will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
+# the only thing missing will be the response.body which is not logged.
+try: # for Python 3
+    from http.client import HTTPConnection
+except ImportError:
+    from httplib import HTTPConnection
+HTTPConnection.debuglevel = 1
+
+logging.basicConfig() # you need to initialize logging, otherwise you will not see anything from requests
+logging.getLogger().setLevel(logging.DEBUG)
+requests_log = logging.getLogger("urllib3")
+requests_log.setLevel(logging.DEBUG)
+requests_log.propagate = True
+
 def sync_all_ongoing_flows():
     records = signing_flow.get_ongoing_signing_flows(agent_query)
     ids = list(map(lambda r: r["sign_flow_id"], records))
