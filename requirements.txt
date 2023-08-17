@@ -1,4 +1,4 @@
 pytz
 apscheduler
 requests
-git+https://github.com/kanselarij-vlaanderen/signinghub-api-client.git@c70670cc616e8f99979c0d9507f6e2f95566e325
+git+https://github.com/kanselarij-vlaanderen/signinghub-api-client.git@10692f93cc91e3c2d6e9bd7f25d0da88e56be646
