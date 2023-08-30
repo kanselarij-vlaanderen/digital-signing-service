@@ -1,22 +1,23 @@
 from urllib.parse import urljoin
 
 import requests
-from flask import g, request, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from helpers import log, error, logger, query
-from lib.query_result_helpers import ensure_1, to_recs
-from .queries.signing_flow import construct_get_signing_flows_by_uuids
+from flask import g, make_response, request
+from helpers import error, log, logger, query, validate_json_api_content_type
 
-from .authentication import signinghub_session_required, open_new_signinghub_machine_user_session, MACHINE_ACCOUNTS
-from . import jsonapi
-from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
-    signing_flow, assign_signers, start_signing_flow, mandatee
+from lib.query_result_helpers import to_recs
+
+from .agent_query import query as agent_query
+from .authentication import (MACHINE_ACCOUNTS,
+                             open_new_signinghub_machine_user_session,
+                             signinghub_session_required)
+from .config import SIGNINGHUB_APP_DOMAIN, SYNC_CRON_PATTERN
+from .lib import exceptions, prepare_signing_flow, signing_flow
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
-from .queries.signing_flow_signers import construct_add_signer
-from .agent_query import query as agent_query
-from .config import SYNC_CRON_PATTERN, SIGNINGHUB_APP_DOMAIN
+from .queries.signing_flow import construct_get_signing_flows_by_uuids
+
 
 def sync_all_ongoing_flows():
     records = signing_flow.get_ongoing_signing_flows(agent_query)
@@ -45,9 +46,9 @@ def sh_profile_info():
 
 
 @app.route('/signing-flows/upload-to-signinghub', methods=['POST'])
-@jsonapi.header_required
 @signinghub_session_required  # provides g.sh_session
 def prepare_post():
+    validate_json_api_content_type(request)
     body = request.get_json(force=True)
 
     sign_flow_ids = [entry["id"] for entry in body["data"]]
@@ -70,23 +71,6 @@ def signinghub_integration_url(signflow_id, piece_id):
         url = urljoin(SIGNINGHUB_APP_DOMAIN, f"/Web#/Viewer/{signflow['sh_package_id']}/")
         return make_response({"url": url}, 200)
     return make_response("", 204)
-
-
-# HTTP method not specified in api documentation
-@app.route('/signinghub-callback', methods=['GET', 'POST'])
-def signinghub_callback():
-    data = request.get_json(force=True)
-    sh_package_id = data["package_id"]
-    action = data["action"]
-    if action == "none":
-        log("Someone looked at package_id '{}' through SigningHub Iframe")
-    # elif action == "shared":  # Start signflow.
-        # TODO
-    # elif action in ("signed", "declined", "reviewed"):
-        # TODO
-    elif action == "forbidden":
-        log("Someone tried to access forbidden package_id '{}' through SigningHub Iframe")
-    return make_response("", 200)  # Because Flask expects a response
 
 
 # Service endpoint for manually initiating sync for a given signing flow

@@ -1,18 +1,19 @@
 from string import Template
-from helpers import generate_uuid, query, update, logger
+
+from escape_helpers import sparql_escape_string, sparql_escape_uri
 from flask import g
-from escape_helpers import sparql_escape_uri, sparql_escape_string
-from ..queries.document import construct_insert_document
+from helpers import generate_uuid, logger, query, update
+
 from ..agent_query import update as agent_update
-from .file import download_sh_doc_to_mu_file, fs_sanitize_filename
-from ..config import APPLICATION_GRAPH, KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
-from ..queries.document import construct_get_file_for_document, construct_get_document
+from ..config import APPLICATION_GRAPH, KALEIDOS_RESOURCE_BASE_URI
+from ..queries.document import (construct_get_document,
+                                construct_get_file_for_document,
+                                construct_insert_document)
 from ..queries.file import construct_get_file_query
-from . import exceptions, query_result_helpers, uri, signing_flow
+from . import exceptions, query_result_helpers, signing_flow, uri
+from .file import download_sh_doc_to_mu_file, fs_sanitize_filename
 
 SH_SOURCE = "Kaleidos"
-
-SIGNED_DOCS_GRAPH = KANSELARIJ_GRAPH
 
 DOC_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 

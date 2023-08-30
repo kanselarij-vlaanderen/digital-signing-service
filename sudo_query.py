@@ -1,6 +1,7 @@
 import os
-from SPARQLWrapper import SPARQLWrapper, JSON
+
 from helpers import log
+from SPARQLWrapper import JSON, SPARQLWrapper
 
 sparqlQuery = SPARQLWrapper(os.environ.get('MU_SPARQL_ENDPOINT'), returnFormat=JSON)
 sparqlQuery.addCustomHttpHeader('mu-auth-sudo', 'true')

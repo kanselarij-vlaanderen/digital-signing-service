@@ -4,16 +4,16 @@ from datetime import datetime
 from string import Template
 from typing import Dict, List
 
+from escape_helpers import sparql_escape_string, sparql_escape_uri
+from helpers import generate_uuid, logger, update
 from signinghub_api_client.client import SigningHubSession
-from helpers import generate_uuid, update, logger
-from escape_helpers import sparql_escape_uri, sparql_escape_string
 
-from . import uri, signing_flow
-from .mandatee import get_mandatee
-from .document import upload_piece_to_sh
 from ..config import APPLICATION_GRAPH
-from .kaleidos_document_name import compare_piece_names, DOC_NAME_REGEX
 from ..utils import pythonize_iso_timestamp
+from . import signing_flow, uri
+from .document import upload_piece_to_sh
+from .kaleidos_document_name import DOC_NAME_REGEX, compare_piece_names
+from .mandatee import get_mandatee
 
 
 def sort_sign_flows_by_piece(sign_flows: List[Dict]):
