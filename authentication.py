@@ -60,11 +60,15 @@ def signinghub_session_required(f):
             ensure_signinghub_session(mu_session_id)
             return f(*args, **kwargs)
         except AuthenticationException as ex:
-            logger.exception("Authentication Error")
+            logger.exception("Authentication Error during SH login")
             return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.error_id))
         except NoQueryResultsException as ex:
-            logger.exception("No Query Results Error")
+            logger.exception("No Query Results Error during SH login")
             return error(ex.args[0])
+        except Exception as ex:
+            logger.exception("Unknown error during SH login")
+            raise ex
+
     return decorated_function
 
 def open_new_signinghub_machine_user_session(ovo_code, scope=None):
