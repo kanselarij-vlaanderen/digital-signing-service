@@ -63,21 +63,20 @@ def upload_piece_to_sh(piece_uri, signinghub_package_id=None):
     sh_document_muid = generate_uuid()
 
     update_template = Template("""
-    PREFIX prov: <http://www.w3.org/ns/prov#>
-    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
-    PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
-    INSERT DATA {
-        GRAPH $graph {
-            $sh_document a sh:Document ;
-                mu:uuid $sh_document_muid ;
-                sh:packageId $sh_package_id ;
-                sh:documentId $sh_document_id ;
-                prov:hadPrimarySource $piece .
-        }
+INSERT DATA {
+    GRAPH $graph {
+        $sh_document a sh:Document ;
+            mu:uuid $sh_document_muid ;
+            sh:packageId $sh_package_id ;
+            sh:documentId $sh_document_id ;
+            prov:hadPrimarySource $piece .
     }
-    """)
+}
+""")
 
     query_string = update_template.substitute(
         graph=sparql_escape_uri(APPLICATION_GRAPH),
