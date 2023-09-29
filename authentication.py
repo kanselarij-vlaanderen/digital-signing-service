@@ -67,7 +67,7 @@ def signinghub_session_required(f):
             return error(ex.args[0])
         except Exception as ex:
             logger.exception("Unknown error during SH login")
-            raise ex
+            return error(str(ex), status=500)
 
     return decorated_function
 
