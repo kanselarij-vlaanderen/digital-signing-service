@@ -4,9 +4,9 @@ import requests
 from flask import g, request, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from helpers import log, error, logger, query
+from helpers import log, error, logger, query, update
 from lib.query_result_helpers import ensure_1, to_recs
-from .queries.signing_flow import construct_get_signing_flows_by_uuids
+from .queries.signing_flow import construct_get_signing_flows_by_uuids, remove_signflows
 
 from .authentication import signinghub_session_required, open_new_signinghub_machine_user_session, MACHINE_ACCOUNTS
 from . import jsonapi
@@ -55,7 +55,11 @@ def prepare_post():
     query_string = construct_get_signing_flows_by_uuids(sign_flow_ids)
     sign_flows = to_recs(query(query_string))
 
-    prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
+    try:
+        prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
+    except Exception as exception:
+        update(remove_signflows(sign_flow_ids, True))
+        raise exception
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
