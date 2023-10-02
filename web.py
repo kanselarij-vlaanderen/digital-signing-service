@@ -6,7 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from helpers import log, error, logger, query, update
 from lib.query_result_helpers import ensure_1, to_recs
-from .queries.signing_flow import construct_get_signing_flows_by_uuids, remove_signflows
+from .queries.signing_flow import construct_get_signing_flows_by_uuids, remove_signflows, reset_signflows
 
 from .authentication import signinghub_session_required, open_new_signinghub_machine_user_session, MACHINE_ACCOUNTS
 from . import jsonapi
@@ -58,7 +58,7 @@ def prepare_post():
     try:
         prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
     except Exception as exception:
-        update(remove_signflows(sign_flow_ids, True))
+        update(reset_signflows(sign_flow_ids))
         raise exception
 
     res = make_response("", 204)
@@ -66,11 +66,17 @@ def prepare_post():
     return res
 
 
+@app.route('/signing-flows/reset-signflow/<signflow_id>')
+def signinghub_reset_signflow(signflow_id):
+    update(reset_signflows([signflow_id]))
+    return make_response("", 204)
+
+
 @app.route('/signing-flows/<signflow_id>', methods=['DELETE'])
 def signinghub_remove_signflow(signflow_id):
     update(remove_signflows([signflow_id]))
     return make_response("", 204)
-
+    
 
 @app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url')
 def signinghub_integration_url(signflow_id, piece_id):
