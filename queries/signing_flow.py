@@ -189,3 +189,86 @@ def construct_get_signing_flows_by_uuids(ids: List[str]) -> str:
     return query_template.substitute(
         ids=" ".join(list(map(sparql_escape_string, ids))),
     )
+
+def remove_signflows(signflow_ids, keep_marking_activity=False):
+    query_template = Template("""
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+    PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+    PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    
+    DELETE {
+        $delete_extra_triples
+        ?signed_piece ?signed_piece_pred ?signed_piece_obj .
+        ?signed_file ?signed_file_pred ?signed_file_obj .
+        ?preparation_activity ?preparation_activity_pred ?preparation_activity_obj .
+        ?signing_activities ?signing_activities_pred ?signing_activities_obj . 
+        ?approval_activities ?approval_activities_pred ?approval_activities_obj . 
+        ?refusal_activities ?refusal_activities_pred ?refusal_activities_obj . 
+        ?cancellation_activity ?cancellation_activity_pred ?cancellation_activity_obj . 
+        ?completion_activity ?completion_activity_pred ?completion_activity_obj . 
+    } WHERE {
+        VALUES ?id { $signflow_ids }
+
+        ?sign_flow 
+            a sign:Handtekenaangelegenheid ;
+            mu:uuid ?id ;
+            sign:doorlooptHandtekening ?sign_subcase ;
+            ?sign_flow_pred ?sign_flow_obj .
+        ?marking_activity 
+            sign:markeringVindtPlaatsTijdens ?sign_subcase ;
+            sign:gemarkeerdStuk ?piece ;
+            ?marking_activity_pred ?marking_activity_obj .
+        ?sign_subcase ?sign_subcase_pred ?sign_subcase_obj .
+        OPTIONAL { 
+            ?signed_piece 
+                sign:ongetekendStuk ?piece ;
+                ?signed_piece_pred ?signed_piece_obj .
+            ?signed_file 
+                ^prov:value ?signed_piece ; 
+                ?signed_file_pred ?signed_file_obj .
+        }
+        OPTIONAL {
+            ?preparation_activity 
+                sign:voorbereidingVindtPlaatsTijdens ?sign_subcase ;
+                ?preparation_activity_pred ?preparation_activity_obj .
+        }
+        OPTIONAL {
+            ?signing_activities 
+                sign:handtekeningVindtPlaatsTijdens ?sign_subcase ;
+                ?signing_activities_pred ?signing_activities_obj .
+        }
+        OPTIONAL {
+            ?approval_activities 
+                sign:goedkeuringVindtPlaatsTijdens ?sign_subcase ;
+                ?approval_activities_pred ?approval_activities_obj .
+        }
+        OPTIONAL {
+            ?refusal_activities 
+                sign:weigeringVindtPlaatsTijdens ?sign_subcase ;
+                ?refusal_activities_pred ?refusal_activities_obj .
+        }
+        OPTIONAL {
+            ?cancellation_activity 
+                sign:annulatieVindtPlaatsTijdens ?sign_subcase ;
+                ?cancellation_activity_pred ?cancellation_activity_obj .
+        }
+        OPTIONAL {
+            ?completion_activity 
+                sign:afrondingVindtPlaatsTijdens ?sign_subcase ;
+                ?completion_activity_pred ?completion_activity_obj .
+        }
+    }
+    """)
+    return query_template.substitute(
+        signflow_ids=" ".join(
+            list(map(sparql_escape_string, signflow_ids))
+        ),
+        delete_extra_triples="" if keep_marking_activity else """
+            ?sign_flow ?sign_flow_pred ?sign_flow_obj . 
+            ?sign_subcase ?sign_subcase_pred ?sign_subcase_obj . 
+            ?marking_activity ?marking_activity_pred ?marking_activity_obj .
+        """
+    )

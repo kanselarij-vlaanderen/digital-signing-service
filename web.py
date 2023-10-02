@@ -62,6 +62,12 @@ def prepare_post():
     return res
 
 
+@app.route('/signing-flows/<signflow_id>', methods=['DELETE'])
+def signinghub_remove_signflow(signflow_id):
+    update(remove_signflows([signflow_id]))
+    return make_response("", 204)
+
+
 @app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url')
 def signinghub_integration_url(signflow_id, piece_id):
     signflow_uri = get_by_uuid(signflow_id)
