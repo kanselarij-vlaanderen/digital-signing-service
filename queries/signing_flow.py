@@ -220,8 +220,8 @@ def reset_signflows(signflow_ids):
         ?sign_flow 
             a sign:Handtekenaangelegenheid ;
             mu:uuid ?id ;
-            adms:status ?status .
-            dct:creator ?creator .
+            adms:status ?status ;
+            dct:creator ?creator ;
             sign:doorlooptHandtekening ?sign_subcase .
         ?marking_activity 
             sign:markeringVindtPlaatsTijdens ?sign_subcase ;
