@@ -1,6 +1,7 @@
 from urllib.parse import urljoin
 
 import requests
+import time
 from flask import g, request, make_response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -66,15 +67,23 @@ def prepare_post():
     return res
 
 
-@app.route('/signing-flows/reset-signflow/<signflow_id>')
+@app.route('/signing-flows/reset-signflow/<signflow_id>', methods=['POST'])
 def signinghub_reset_signflow(signflow_id):
     update(reset_signflows([signflow_id]))
+    # Give cache time to update
+    # Ideally we want to return the changed values so the frontend
+    # can update without refetching the new data.
+    time.sleep(1)
     return make_response("", 204)
 
 
 @app.route('/signing-flows/<signflow_id>', methods=['DELETE'])
 def signinghub_remove_signflow(signflow_id):
     update(remove_signflows([signflow_id]))
+    # Give cache time to update
+    # Ideally we want to return the changed values so the frontend
+    # can update without refetching the new data.
+    time.sleep(1)
     return make_response("", 204)
     
 
