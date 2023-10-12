@@ -56,6 +56,11 @@ def prepare_post():
     query_string = construct_get_signing_flows_by_uuids(sign_flow_ids)
     sign_flows = to_recs(query(query_string))
 
+    # Remove decision_report when it's equal to piece
+    for sign_flow in sign_flows:
+        if sign_flow["piece"] == sign_flow["decision_report"]:
+            sign_flow["decision_report"] = None
+
     prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
 
     res = make_response("", 204)
