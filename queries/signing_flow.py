@@ -143,6 +143,7 @@ PREFIX dct: <http://purl.org/dc/terms/>
 SELECT DISTINCT ?id ?sign_flow
     ?piece ?piece_name ?piece_created
     ?decision_activity ?decision_report
+    ?meeting
 WHERE {
     VALUES ?id { $ids }
     ?sign_flow a sign:Handtekenaangelegenheid ;
@@ -163,6 +164,7 @@ WHERE {
                 besluitvorming:beschrijft ?decision_activity .
         }
     }
+    OPTIONAL { ?sign_flow sign:heeftVergadering ?meeting . }
 }
 """)
     return query_template.substitute(
