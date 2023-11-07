@@ -4,14 +4,13 @@ from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
 from ..config import (
     APPLICATION_GRAPH,
-    KALEIDOS_RESOURCE_BASE_URI,
     TIMEZONE,
     ACCESS_LEVEL_CABINET,
     ACCESS_LEVEL_GOVERNMENT,
     ACCESS_LEVEL_PUBLIC,
+    DOCUMENT_BASE_URI,
 )
 
-DOCUMENT_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 
 def construct_get_file_for_document(document_uri, file_mimetype=None, graph=APPLICATION_GRAPH):
     if file_mimetype is not None:
