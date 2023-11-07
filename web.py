@@ -14,6 +14,7 @@ from .lib import exceptions, prepare_signing_flow, generate_integration_url, \
     signing_flow, assign_signers, start_signing_flow, mandatee
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
+from .lib.mark_pieces_for_signing import get_signflows, mark_pieces_for_signing as mark_pieces_for_signing_impl
 from .queries.signing_flow_signers import construct_add_signer
 from .agent_query import query as agent_query
 from .config import SYNC_CRON_PATTERN, SIGNINGHUB_APP_DOMAIN
@@ -56,6 +57,20 @@ def prepare_post():
     sign_flows = to_recs(query(query_string))
 
     prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
+
+    res = make_response("", 204)
+    res.headers["Content-Type"] = "application/vnd.api+json"
+    return res
+
+
+@app.route('/signing-flows/mark-pieces-for-signing', methods=['POST'])
+@jsonapi.header_required
+def mark_pieces_for_signing():
+    body = request.get_json(force=True)
+
+    piece_ids = [entry["id"] for entry in body["data"]]
+
+    mark_pieces_for_signing_impl(piece_ids)
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
