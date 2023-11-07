@@ -120,7 +120,7 @@ def get_signflows(piece_ids: List[str]):
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 
-SELECT ?pieceId ?markingActivity ?signSubcase ?flow
+SELECT DISTINCT ?pieceId ?signflow
 WHERE {
     VALUES ?pieceId {
         $piece_ids
@@ -129,7 +129,7 @@ WHERE {
     OPTIONAL { 
         ?markingActivity sign:gemarkeerdStuk ?piece . 
         ?markingActivity sign:markeringVindtPlaatsTijdens ?signSubcase . 
-        ?flow sign:doorlooptHandtekening ?signSubcase . 
+        ?signflow sign:doorlooptHandtekening ?signSubcase . 
     }
 }
     """)
