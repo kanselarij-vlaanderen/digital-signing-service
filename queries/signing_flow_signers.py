@@ -1,9 +1,8 @@
 from string import Template
 from helpers import generate_uuid
 from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..config import APPLICATION_GRAPH, WEIGERACTIVITEIT_RESOURCE_BASE_URI
+from ..config import APPLICATION_GRAPH, WEIGERACTIVITEIT_RESOURCE_BASE_URI, HANDTEKENACTIVITEIT_RESOURCE_BASE_URI
 
-HANDTEKENACTIVITEIT_RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/handtekenactiviteit/"
 
 def construct(signflow_uri: str) -> str:
     query_template = Template("""
