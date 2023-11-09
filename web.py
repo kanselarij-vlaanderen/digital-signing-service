@@ -4,7 +4,7 @@ import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from flask import g, make_response, request
-from helpers import error, log, logger, query, validate_json_api_content_type
+from helpers import error, logger, query, validate_json_api_content_type
 
 from lib.query_result_helpers import to_recs
 
@@ -17,8 +17,6 @@ from .lib import exceptions, prepare_signing_flow, signing_flow
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
 from .lib.mark_pieces_for_signing import mark_pieces_for_signing as mark_pieces_for_signing_impl
-from .agent_query import query as agent_query
-from .config import SYNC_CRON_PATTERN, SIGNINGHUB_APP_DOMAIN
 from .queries.signing_flow import construct_get_signing_flows_by_uuids
 
 
