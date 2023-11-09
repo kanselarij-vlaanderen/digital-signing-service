@@ -70,7 +70,8 @@ def mark_pieces_for_signing():
 
     piece_ids = [entry["id"] for entry in body["data"]]
 
-    mark_pieces_for_signing_impl(piece_ids)
+    if len(piece_ids):
+        mark_pieces_for_signing_impl(piece_ids)
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
