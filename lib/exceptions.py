@@ -11,7 +11,3 @@ class ResourceNotFoundException(Exception):
 
 class InvalidStateException(Exception):
     """state does not allow the requested action."""
-
-
-class InvalidArgumentException(Exception):
-    """provided argument is not valid"""

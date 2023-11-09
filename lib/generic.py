@@ -1,8 +1,11 @@
 from string import Template
 from typing import Callable
+
+from escape_helpers import sparql_escape_string, sparql_escape_uri
 from helpers import query
-from .query_result_helpers import to_recs, ensure_1
-from escape_helpers import sparql_escape_uri, sparql_escape_string
+
+from .query_result_helpers import ensure_1, to_recs
+
 
 def get_by_uuid(uuid: str, rdf_type=None, query_method: Callable = query) -> str:
     query_template = Template("""

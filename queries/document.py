@@ -1,16 +1,13 @@
-from string import Template
 from datetime import datetime
-from helpers import generate_uuid
-from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..config import (
-    APPLICATION_GRAPH,
-    TIMEZONE,
-    ACCESS_LEVEL_CABINET,
-    ACCESS_LEVEL_GOVERNMENT,
-    ACCESS_LEVEL_PUBLIC,
-    DOCUMENT_BASE_URI,
-)
 
+from string import Template
+
+from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
+                            sparql_escape_uri)
+
+from ..config import (ACCESS_LEVEL_CABINET, ACCESS_LEVEL_GOVERNMENT,
+                      ACCESS_LEVEL_PUBLIC, APPLICATION_GRAPH,
+                      TIMEZONE)
 
 def construct_get_file_for_document(document_uri, file_mimetype=None, graph=APPLICATION_GRAPH):
     if file_mimetype is not None:
@@ -48,26 +45,6 @@ LIMIT 1
         graph=sparql_escape_uri(graph),
         document=sparql_escape_uri(document_uri),
         format_filter=format_filter)
-
-def construct_get_document_for_file(file_uri, graph=APPLICATION_GRAPH):
-    query_template = Template("""
-PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-
-SELECT (?document AS ?uri)
-WHERE {
-    GRAPH $graph {
-        ?document a dossier:Stuk ;
-            prov:value $file .
-        $file a nfo:FileDataObject .
-    }
-}
-LIMIT 1
-""")
-    return query_template.substitute(
-        graph=sparql_escape_uri(graph),
-        file=sparql_escape_uri(file_uri))
 
 def construct_get_document(document_uri):
     query_template = Template("""

@@ -1,6 +1,10 @@
 from string import Template
-from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_int, sparql_escape_datetime
+
+from escape_helpers import (sparql_escape_datetime, sparql_escape_int,
+                            sparql_escape_string, sparql_escape_uri)
+
 from ..config import APPLICATION_GRAPH
+
 
 def construct_insert_file_query(file, physical_file, graph=APPLICATION_GRAPH):
     """
@@ -79,21 +83,3 @@ WHERE {
     return query_template.substitute(
         graph=sparql_escape_uri(graph),
         file_uri=sparql_escape_uri(file_uri))
-
-def construct_get_file_by_id(file_id, graph=APPLICATION_GRAPH):
-    query_template = Template("""
-PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-
-SELECT (?file AS ?uri)
-WHERE {
-    GRAPH $graph {
-        ?file a nfo:FileDataObject ;
-            mu:uuid $uuid .
-    }
-}
-LIMIT 1
-""")
-    return query_template.substitute(
-        graph=sparql_escape_uri(graph),
-        uuid=sparql_escape_string(file_id))
