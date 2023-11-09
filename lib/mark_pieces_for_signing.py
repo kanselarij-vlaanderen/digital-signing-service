@@ -76,24 +76,17 @@ INSERT {
     ?piece mu:uuid ?pieceId .
     OPTIONAL { 
         ?piece besluitvorming:beschrijft ?decisionActivity . 
-        OPTIONAL {
-            ?treatment besluitvorming:heeftBeslissing ?decisionActivity .
-            ?treatment dct:subject ?agendaitem .
-            ?agenda dct:hasPart ?agendaitem .
-            ?agenda besluitvorming:isAgendaVoor ?meeting .
-        }
-        OPTIONAL {
-            ?decisionActivity ext:beslissingVindtPlaatsTijdens ?subcase .
-            ?decisionmakingFlow dossier:doorloopt ?subcase .
-            ?case dossier:Dossier.isNeerslagVan ?decisionmakingFlow . 
-            OPTIONAL { ?case dct:title ?caseTitle . }
-            OPTIONAL { ?case dct:alternative ?caseShortTitle . }
-        }
+        ?decisionActivity ext:beslissingVindtPlaatsTijdens ?subcase .
+        ?decisionmakingFlow dossier:doorloopt ?subcase .
+        ?case dossier:Dossier.isNeerslagVan ?decisionmakingFlow .
+        OPTIONAL { ?case dct:title ?caseTitle . }
+        OPTIONAL { ?case dct:alternative ?caseShortTitle . }
     }
+    OPTIONAL { ?piece besluitvorming:heeftVergadering ?meeting . }
 }
     """)
     query_string = query_template.substitute(
-        graph=sparql_escape_uri(APPLICATION_GRAPH),  # question: is this the right graph?
+        graph=sparql_escape_uri(APPLICATION_GRAPH),
         piece_id=sparql_escape_string(piece_id),
         signflow=sparql_escape_uri(signflow_uri),
         signflow_id=sparql_escape_string(signflow_id),
@@ -105,6 +98,7 @@ INSERT {
         now_datetime=sparql_escape_datetime(now),
         marked_status=sparql_escape_uri(MARKED_STATUS),
     )
+    logger.debug(query_string)
     update(query_string)
 
 
