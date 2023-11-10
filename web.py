@@ -68,6 +68,7 @@ def prepare_post():
         prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
     except Exception as exception:
         update(reset_signflows(sign_flow_ids))
+        time.sleep(1)
         raise exception
 
     res = make_response("", 204)
