@@ -70,7 +70,6 @@ def prepare_post():
 
 
 @app.route('/signing-flows/mark-pieces-for-signing', methods=['POST'])
-@jsonapi.header_required
 def mark_pieces_for_signing():
     body = request.get_json(force=True)
 
