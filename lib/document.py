@@ -1,18 +1,19 @@
 from string import Template
-from helpers import generate_uuid, query, update, logger
+
+from escape_helpers import sparql_escape_string, sparql_escape_uri
 from flask import g
-from escape_helpers import sparql_escape_uri, sparql_escape_string
-from ..queries.document import construct_insert_document
+from helpers import generate_uuid, logger, query, update
+
 from ..agent_query import update as agent_update
-from .file import download_sh_doc_to_mu_file, fs_sanitize_filename
-from ..config import APPLICATION_GRAPH, KANSELARIJ_GRAPH, KALEIDOS_RESOURCE_BASE_URI
-from ..queries.document import construct_get_file_for_document, construct_get_document
+from ..config import APPLICATION_GRAPH, KALEIDOS_RESOURCE_BASE_URI
+from ..queries.document import (construct_get_document,
+                                construct_get_file_for_document,
+                                construct_insert_document)
 from ..queries.file import construct_get_file_query
-from . import exceptions, query_result_helpers, uri, signing_flow
+from . import exceptions, query_result_helpers, signing_flow, uri
+from .file import download_sh_doc_to_mu_file, fs_sanitize_filename
 
 SH_SOURCE = "Kaleidos"
-
-SIGNED_DOCS_GRAPH = KANSELARIJ_GRAPH
 
 DOC_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 
@@ -62,21 +63,20 @@ def upload_piece_to_sh(piece_uri, signinghub_package_id=None):
     sh_document_muid = generate_uuid()
 
     update_template = Template("""
-    PREFIX prov: <http://www.w3.org/ns/prov#>
-    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
-    PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX sh: <http://mu.semte.ch/vocabularies/ext/signinghub/>
 
-    INSERT DATA {
-        GRAPH $graph {
-            $sh_document a sh:Document ;
-                mu:uuid $sh_document_muid ;
-                sh:packageId $sh_package_id ;
-                sh:documentId $sh_document_id ;
-                prov:hadPrimarySource $piece .
-        }
+INSERT DATA {
+    GRAPH $graph {
+        $sh_document a sh:Document ;
+            mu:uuid $sh_document_muid ;
+            sh:packageId $sh_package_id ;
+            sh:documentId $sh_document_id ;
+            prov:hadPrimarySource $piece .
     }
-    """)
+}
+""")
 
     query_string = update_template.substitute(
         graph=sparql_escape_uri(APPLICATION_GRAPH),

@@ -1,7 +1,11 @@
-from string import Template
 from datetime import datetime
-from escape_helpers import sparql_escape_uri, sparql_escape_string,sparql_escape_datetime
+from string import Template
+
+from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
+                            sparql_escape_uri)
+
 from ..config import APPLICATION_GRAPH
+
 
 def construct_insert_wrap_up_activity(wrap_up_uri: str,
                                       wrap_up_id: str,

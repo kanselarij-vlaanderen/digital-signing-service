@@ -1,7 +1,13 @@
 from string import Template
+
+from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
+                            sparql_escape_uri)
 from helpers import generate_uuid
-from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..config import APPLICATION_GRAPH, GOEDKEURINGSACTIVITEIT_RESOURCE_BASE_URI, WEIGERACTIVITEIT_RESOURCE_BASE_URI
+
+from ..config import (APPLICATION_GRAPH,
+                      GOEDKEURINGSACTIVITEIT_RESOURCE_BASE_URI,
+                      WEIGERACTIVITEIT_RESOURCE_BASE_URI)
+
 
 def construct(signflow_uri: str) -> str:
     query_template = Template("""

@@ -1,9 +1,10 @@
 from string import Template
-from helpers import generate_uuid
-from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..config import APPLICATION_GRAPH, WEIGERACTIVITEIT_RESOURCE_BASE_URI
 
-HANDTEKENACTIVITEIT_RESOURCE_BASE_URI = "http://themis.vlaanderen.be/id/handtekenactiviteit/"
+from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
+                            sparql_escape_uri)
+from helpers import generate_uuid
+
+from ..config import APPLICATION_GRAPH, WEIGERACTIVITEIT_RESOURCE_BASE_URI
 
 def construct(signflow_uri: str) -> str:
     query_template = Template("""
@@ -38,37 +39,6 @@ WHERE {
     return query_template.substitute(
         signflow=sparql_escape_uri(signflow_uri)
     )
-
-def construct_add_signer(signflow_uri, mandatee_uri):
-    uuid = generate_uuid()
-    uri = HANDTEKENACTIVITEIT_RESOURCE_BASE_URI + uuid
-    # Optional preparation activity. Depending on if the document has already been sent to
-    # signinghub, the preparation activity won't/will be there.
-    query_template = Template("""
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
-
-INSERT {
-    $signing_activity a sign:Handtekenactiviteit ;
-        mu:uuid $signing_activity_id ;
-        sign:handtekeningVindtPlaatsTijdens ?sign_subcase ;
-        prov:wasInformedBy ?preparation_activity ;
-        sign:ondertekenaar $signer .
-}
-WHERE {
-    $signflow a sign:Handtekenaangelegenheid ;
-        sign:doorlooptHandtekening ?sign_subcase .
-    OPTIONAL {
-        ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
-    }
-}
-""")
-    return query_template.substitute(
-        signing_activity=sparql_escape_uri(uri),
-        signing_activity_id=sparql_escape_string(uuid),
-        signer=sparql_escape_uri(mandatee_uri),
-        signflow=sparql_escape_uri(signflow_uri))
 
 
 def construct_update_signing_activity_start_date(signflow_uri: str, mandatee_uri, start_date, graph=APPLICATION_GRAPH) -> str:
