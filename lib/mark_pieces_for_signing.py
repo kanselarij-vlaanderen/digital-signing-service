@@ -11,8 +11,8 @@ from escape_helpers import (
 from lib.query_result_helpers import to_recs
 from ..config import (
     APPLICATION_GRAPH,
-    HANDTEKEN_PROCEDURESTAP_RESOURCE_BASE_URI, 
-    HANDTEKENACTIVITEIT_RESOURCE_BASE_URI, 
+    HANDTEKEN_PROCEDURESTAP_RESOURCE_BASE_URI,
+    HANDTEKENAANGELEGENHEID_RESOURCE_BASE_URI,
     MARKED_STATUS,
     SIGN_MARKING_ACTIVITY_RESOURCE_BASE_URI,
     TIMEZONE,
@@ -21,12 +21,13 @@ from ..config import (
 
 def mark_piece_for_signing(piece_id):
     signflow_id = generate_uuid()
-    signflow_uri = f"{HANDTEKENACTIVITEIT_RESOURCE_BASE_URI}{signflow_id}"
+    signflow_uri = f"{HANDTEKENAANGELEGENHEID_RESOURCE_BASE_URI}{signflow_id}"
     subcase_id = generate_uuid()
     subcase_uri = f"{HANDTEKEN_PROCEDURESTAP_RESOURCE_BASE_URI}{subcase_id}"
     marking_activity_id = generate_uuid()
     marking_activity_uri = f"{SIGN_MARKING_ACTIVITY_RESOURCE_BASE_URI}{marking_activity_id}"
     now = datetime.now(TIMEZONE)
+    date = datetime.now(TIMEZONE).date()
 
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
@@ -76,6 +77,7 @@ INSERT {
     ?piece mu:uuid ?pieceId .
     OPTIONAL { 
         ?piece besluitvorming:beschrijft ?decisionActivity . 
+        ?decisionActivity ^besluitvorming:heeftBeslissing/dct:subject/^dct:hasPart/besluitvorming:isAgendaVoor ?meeting .
         ?decisionActivity ext:beslissingVindtPlaatsTijdens ?subcase .
         ?decisionmakingFlow dossier:doorloopt ?subcase .
         ?case dossier:Dossier.isNeerslagVan ?decisionmakingFlow .
@@ -83,6 +85,8 @@ INSERT {
         OPTIONAL { ?case dct:alternative ?caseShortTitle . }
     }
     OPTIONAL { ?piece besluitvorming:heeftVergadering ?meeting . }
+
+    FILTER NOT EXISTS { ?markingActivity sign:gemarkeerdStuk ?piece .}
 }
     """)
     query_string = query_template.substitute(
@@ -94,7 +98,7 @@ INSERT {
         sign_subcase_id=sparql_escape_string(subcase_id),
         marking_activity=sparql_escape_uri(marking_activity_uri),
         marking_activity_id=sparql_escape_string(marking_activity_id),
-        now_date=sparql_escape_date(now),
+        now_date=sparql_escape_date(date),
         now_datetime=sparql_escape_datetime(now),
         marked_status=sparql_escape_uri(MARKED_STATUS),
     )
