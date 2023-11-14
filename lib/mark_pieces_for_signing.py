@@ -78,11 +78,13 @@ INSERT {
     OPTIONAL { 
         ?piece besluitvorming:beschrijft ?decisionActivity . 
         ?decisionActivity ^besluitvorming:heeftBeslissing/dct:subject/^dct:hasPart/besluitvorming:isAgendaVoor ?meeting .
-        ?decisionActivity ext:beslissingVindtPlaatsTijdens ?subcase .
-        ?decisionmakingFlow dossier:doorloopt ?subcase .
-        ?case dossier:Dossier.isNeerslagVan ?decisionmakingFlow .
-        OPTIONAL { ?case dct:title ?caseTitle . }
-        OPTIONAL { ?case dct:alternative ?caseShortTitle . }
+        OPTIONAL {
+            ?decisionActivity ext:beslissingVindtPlaatsTijdens ?subcase .
+            ?decisionmakingFlow dossier:doorloopt ?subcase .
+            ?case dossier:Dossier.isNeerslagVan ?decisionmakingFlow .
+            OPTIONAL { ?case dct:title ?caseTitle . }
+            OPTIONAL { ?case dct:alternative ?caseShortTitle . }
+        }
     }
     OPTIONAL { ?piece besluitvorming:heeftVergadering ?meeting . }
 
