@@ -6,7 +6,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from flask import g, make_response, request
 from helpers import error, logger, query, validate_json_api_content_type, update
-from lib.query_result_helpers import to_recs
 from .queries.signing_flow import construct_get_signing_flows_by_uuids, remove_signflows, reset_signflows
 
 from lib.query_result_helpers import to_recs
@@ -19,6 +18,7 @@ from .config import SIGNINGHUB_APP_DOMAIN, SYNC_CRON_PATTERN
 from .lib import exceptions, prepare_signing_flow, signing_flow
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
+from .lib.mark_pieces_for_signing import mark_pieces_for_signing as mark_pieces_for_signing_impl
 from .queries.signing_flow import construct_get_signing_flows_by_uuids
 
 
@@ -95,6 +95,20 @@ def signinghub_remove_signflow(signflow_id):
     time.sleep(1)
     return make_response("", 204)
     
+
+@app.route('/signing-flows/mark-pieces-for-signing', methods=['POST'])
+def mark_pieces_for_signing():
+    body = request.get_json(force=True)
+
+    piece_ids = [entry["id"] for entry in body["data"]]
+
+    if len(piece_ids):
+        mark_pieces_for_signing_impl(piece_ids)
+
+    res = make_response("", 204)
+    res.headers["Content-Type"] = "application/vnd.api+json"
+    return res
+
 
 @app.route('/signing-flows/<signflow_id>/pieces/<piece_id>/signinghub-url')
 def signinghub_integration_url(signflow_id, piece_id):
