@@ -185,21 +185,13 @@ def reset_signflows(signflow_ids):
     DELETE {
         ?sign_flow adms:status ?status .
         ?sign_flow dct:creator ?creator .
-        ?signed_piece ?signed_piece_pred ?signed_piece_obj .
-        ?signed_file ?signed_file_pred ?signed_file_obj .
-        ?preparation_activity ?preparation_activity_pred ?preparation_activity_obj .
-        ?signing_activities ?signing_activities_pred ?signing_activities_obj . 
-        ?approval_activities ?approval_activities_pred ?approval_activities_obj . 
-        ?refusal_activities ?refusal_activities_pred ?refusal_activities_obj . 
-        ?cancellation_activity ?cancellation_activity_pred ?cancellation_activity_obj . 
-        ?completion_activity ?completion_activity_pred ?completion_activity_obj . 
+        ?s ?p ?o .
     } INSERT {
         ?sign_flow adms:status <http://themis.vlaanderen.be/id/handtekenstatus/f6a60072-0537-11ee-bb35-ee395168dcf7> .
     } WHERE {
         VALUES ?id { $signflow_ids }
 
-        ?sign_flow 
-            a sign:Handtekenaangelegenheid ;
+        ?sign_flow a sign:Handtekenaangelegenheid ;
             mu:uuid ?id ;
             adms:status ?status ;
             dct:creator ?creator ;
@@ -207,43 +199,30 @@ def reset_signflows(signflow_ids):
         ?marking_activity 
             sign:markeringVindtPlaatsTijdens ?sign_subcase ;
             sign:gemarkeerdStuk ?piece .
-        OPTIONAL { 
-            ?signed_piece 
-                sign:ongetekendStuk ?piece ;
-                ?signed_piece_pred ?signed_piece_obj .
-            ?signed_file 
-                ^prov:value ?signed_piece ; 
-                ?signed_file_pred ?signed_file_obj .
-        }
-        OPTIONAL {
-            ?preparation_activity 
-                sign:voorbereidingVindtPlaatsTijdens ?sign_subcase ;
-                ?preparation_activity_pred ?preparation_activity_obj .
-        }
-        OPTIONAL {
-            ?signing_activities 
-                sign:handtekeningVindtPlaatsTijdens ?sign_subcase ;
-                ?signing_activities_pred ?signing_activities_obj .
-        }
-        OPTIONAL {
-            ?approval_activities 
-                sign:goedkeuringVindtPlaatsTijdens ?sign_subcase ;
-                ?approval_activities_pred ?approval_activities_obj .
-        }
-        OPTIONAL {
-            ?refusal_activities 
-                sign:weigeringVindtPlaatsTijdens ?sign_subcase ;
-                ?refusal_activities_pred ?refusal_activities_obj .
-        }
-        OPTIONAL {
-            ?cancellation_activity 
-                sign:annulatieVindtPlaatsTijdens ?sign_subcase ;
-                ?cancellation_activity_pred ?cancellation_activity_obj .
-        }
-        OPTIONAL {
-            ?completion_activity 
-                sign:afrondingVindtPlaatsTijdens ?sign_subcase ;
-                ?completion_activity_pred ?completion_activity_obj .
+        {
+            ?piece sign:getekendStukKopie ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?piece sign:getekendStukKopie ?signed_piece_copy .
+            ?signed_piece_copy prov:value ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?s sign:ongetekendStuk ?piece ; ?p ?o .
+        } UNION {
+            ?signed_piece sign:ongetekendStuk ?piece ; prov:value ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?s sign:voorbereidingVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?s sign:handtekeningVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?s sign:goedkeuringVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?s sign:weigeringVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?s sign:annulatieVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?s sign:afrondingVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
         }
     }
     """)
