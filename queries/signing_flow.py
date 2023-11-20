@@ -172,6 +172,39 @@ WHERE {
     )
 
 
+
+def get_physical_files_of_sign_flows(signflow_ids):
+    query_template = Template("""
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+
+    SELECT DISTINCT (?physical_file AS ?uri)
+    WHERE {
+        VALUES ?id { $signflow_ids }
+
+        ?sign_flow a sign:Handtekenaangelegenheid ;
+            mu:uuid ?id ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?marking_activity
+            sign:markeringVindtPlaatsTijdens ?sign_subcase ;
+            sign:gemarkeerdStuk ?piece .
+
+        {
+            ?piece sign:getekendStukKopie / prov:value / ^nie:dataSource ?physical_file .
+        } UNION {
+            ?piece ^sign:ongetekendStuk / prov:value / ^nie:dataSource ?physical_file .
+        }
+    }
+    """)
+    return query_template.substitute(
+        signflow_ids=" ".join(
+            list(map(sparql_escape_string, signflow_ids))
+        ),
+    )
+
+
 def reset_signflows(signflow_ids):
     query_template = Template("""
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>

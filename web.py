@@ -6,7 +6,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from flask import g, make_response, request
 from helpers import error, logger, query, validate_json_api_content_type, update
-from .queries.signing_flow import construct_get_signing_flows_by_uuids, remove_signflows, reset_signflows
 
 from lib.query_result_helpers import to_recs
 
@@ -19,7 +18,8 @@ from .lib import exceptions, prepare_signing_flow, signing_flow
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
 from .lib.mark_pieces_for_signing import mark_pieces_for_signing as mark_pieces_for_signing_impl
-from .queries.signing_flow import construct_get_signing_flows_by_uuids
+from .lib.file import delete_physical_file
+from .queries.signing_flow import construct_get_signing_flows_by_uuids, get_physical_files_of_sign_flows, remove_signflows, reset_signflows
 
 
 def sync_all_ongoing_flows():
@@ -67,6 +67,9 @@ def prepare_post():
     try:
         prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
     except Exception as exception:
+        physical_files = to_recs(query(get_physical_files_of_sign_flows(sign_flow_ids)))
+        for physical_file in physical_files:
+            delete_physical_file(physical_file["uri"])
         update(reset_signflows(sign_flow_ids))
         time.sleep(1)
         raise exception
@@ -88,6 +91,9 @@ def signinghub_reset_signflow(signflow_id):
 
 @app.route('/signing-flows/<signflow_id>', methods=['DELETE'])
 def signinghub_remove_signflow(signflow_id):
+    physical_files = to_recs(query(get_physical_files_of_sign_flows([signflow_id])))
+    for physical_file in physical_files:
+        delete_physical_file(physical_file["uri"])
     update(remove_signflows([signflow_id]))
     # Give cache time to update
     # Ideally we want to return the changed values so the frontend
