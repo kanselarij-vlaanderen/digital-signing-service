@@ -234,6 +234,10 @@ def reset_signflows(signflow_ids):
             ?piece sign:getekendStukKopie ?s .
             ?s ?p ?o .
         } UNION {
+            ?piece sign:getekendStukKopie ?o .
+            BIND(?piece AS ?s)
+            BIND(sign:getekendStukKopie AS ?p)
+        } UNION {
             ?piece sign:getekendStukKopie ?signed_piece_copy .
             ?signed_piece_copy prov:value ?s .
             ?s ?p ?o .
@@ -285,6 +289,11 @@ def remove_signflows(signflow_ids):
         } UNION {
             ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
             ?s sign:markeringVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase ; sign:gemarkeerdStuk ?s .
+            ?s sign:getekendStukKopie ?o .
+            BIND(sign:getekendStukKopie AS ?p)
         } UNION {
             ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
             ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase ; sign:gemarkeerdStuk ?piece .
