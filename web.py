@@ -71,7 +71,7 @@ def prepare_post():
         for physical_file in physical_files:
             delete_physical_file(physical_file["uri"])
         update(reset_signflows(sign_flow_ids))
-        time.sleep(1)
+        time.sleep(2)
         raise exception
 
     res = make_response("", 204)
@@ -98,7 +98,7 @@ def signinghub_remove_signflow(signflow_id):
     # Give cache time to update
     # Ideally we want to return the changed values so the frontend
     # can update without refetching the new data.
-    time.sleep(1)
+    time.sleep(2)
     return make_response("", 204)
     
 
