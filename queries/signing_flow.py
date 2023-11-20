@@ -210,6 +210,10 @@ def reset_signflows(signflow_ids):
             ?signed_piece sign:ongetekendStuk ?piece ; prov:value ?s .
             ?s ?p ?o .
         } UNION {
+            ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
+            ?preparation_activity sign:voorbereidingGenereert ?s .
+            ?s ?p ?o .
+        } UNION {
             ?s sign:voorbereidingVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
         } UNION {
             ?s sign:handtekeningVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
@@ -267,6 +271,11 @@ def remove_signflows(signflow_ids):
             ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
             ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase ; sign:gemarkeerdStuk ?piece .
             ?signed_piece sign:ongetekendStuk ?piece ; prov:value ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
+            ?preparation_activity sign:voorbereidingGenereert ?s .
             ?s ?p ?o .
         } UNION {
             ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
