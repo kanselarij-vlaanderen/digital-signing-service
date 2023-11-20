@@ -176,8 +176,6 @@ def reset_signflows(signflow_ids):
     query_template = Template("""
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
-    PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-    PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX adms: <http://www.w3.org/ns/adms#>
@@ -237,9 +235,6 @@ def remove_signflows(signflow_ids):
     query_template = Template("""
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
-    PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
-    PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
-    PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
 
     DELETE { ?s ?p ?o }
