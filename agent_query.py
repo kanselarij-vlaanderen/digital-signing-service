@@ -11,6 +11,7 @@ DIGITAL_SIGNING_AGENT_ALLOWED_GROUPS =   [ # Secretarie
     { "variables": [], "name": "kanselarij-write" },
     { "variables": [], "name": "sign-flow-read" },
     { "variables": [], "name": "sign-flow-write" },
+    { "variables": [], "name": "parliament-read" },
     { "variables": [], "name": "clean" }
 ]
 
