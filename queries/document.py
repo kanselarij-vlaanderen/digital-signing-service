@@ -141,7 +141,7 @@ DELETE {
 INSERT {
     GRAPH $graph {
         $doc sign:ongetekendStuk $prev_doc .
-        $doc dct:title ?prev_title .
+        $doc dct:title ?signed_title .
         ?case dossier:Dossier.bestaatUit $doc .
         $doc besluitvorming:vertrouwelijkheidsniveau ?access_level .
     }
@@ -152,6 +152,7 @@ WHERE {
         $prev_doc a dossier:Stuk ;
             dct:title ?prev_title ;
             besluitvorming:vertrouwelijkheidsniveau ?prev_access_level .
+        BIND(CONCAT(?prev_title, " (met certificaat)") AS ?signed_title)
         OPTIONAL {
             $doc dct:title ?old_title .
         }
