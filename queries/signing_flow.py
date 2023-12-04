@@ -14,17 +14,15 @@ def construct_get_signing_flow_by_uri(signflow_uri: str):
     SELECT DISTINCT (?signflow_id AS ?id) ?sh_package_id ?sh_document_id
     WHERE {
         $signflow a sign:Handtekenaangelegenheid ;
-            mu:uuid ?signflow_id .
-        OPTIONAL {
-            $signflow sign:doorlooptHandtekening ?sign_subcase .
-            ?sign_subcase a sign:HandtekenProcedurestap ;
-                ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
-            ?preparation_activity a sign:Voorbereidingsactiviteit ;
-                sign:voorbereidingGenereert ?sh_document .
-            ?sh_document a sh:Document ;
-                sh:packageId ?sh_package_id ;
-                sh:documentId ?sh_document_id .
-        }
+        mu:uuid ?signflow_id .
+        $signflow sign:doorlooptHandtekening ?sign_subcase .
+        ?sign_subcase a sign:HandtekenProcedurestap ;
+            ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
+        ?preparation_activity a sign:Voorbereidingsactiviteit ;
+            sign:voorbereidingGenereert ?sh_document .
+        ?sh_document a sh:Document ;
+            sh:packageId ?sh_package_id ;
+            sh:documentId ?sh_document_id .
     }
     """)
     return query_template.substitute(
