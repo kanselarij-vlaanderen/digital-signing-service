@@ -99,6 +99,7 @@ def construct_get_ongoing_signing_flows() -> str:
         ?sign_flow a sign:Handtekenaangelegenheid ;
             mu:uuid ?sign_flow_id ;
             sign:doorlooptHandtekening ?signing_subcase .
+        ?signing_subcase ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
         ?signing_subcase ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
         FILTER NOT EXISTS {
             ?wrap_up_activity
