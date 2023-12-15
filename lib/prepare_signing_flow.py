@@ -2,10 +2,10 @@ import functools
 from itertools import groupby
 from datetime import datetime
 from string import Template
-from typing import Dict, List
+from typing import Dict, List, Callable
 
 from escape_helpers import sparql_escape_string, sparql_escape_uri
-from helpers import generate_uuid, logger, update
+from helpers import generate_uuid, logger, query, update
 from signinghub_api_client.client import SigningHubSession
 
 from ..config import APPLICATION_GRAPH
@@ -73,7 +73,12 @@ def group_by_meeting_or_decision_activity(sign_flows: List[Dict]):
     return grouped_flows
 
 
-def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
+def prepare_signing_flow(
+    sh_session: SigningHubSession,
+    sign_flows: List[Dict],
+    query_method: Callable = query,
+    update_method: Callable = update,
+):
     """Prepares a signing flow in SigningHub based off multiple sign flows in Kaleidos."""
     for grouped_sign_flows in group_by_meeting_or_decision_activity(sign_flows):
         signinghub_package = sh_session.add_package({
@@ -84,14 +89,14 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
         sign_flow = grouped_sign_flows[0]["sign_flow"]
         decision_report = grouped_sign_flows[0]["decision_report"]
         if decision_report:
-            upload_piece_to_sh(decision_report, package_id)
+            upload_piece_to_sh(sh_session, decision_report, package_id)
 
         sh_session.update_workflow_details(package_id, {"workflow_type": "CUSTOM"})
 
         # All sign flows we're treating *should* have the same
         # approvers/notification/signers, so it's okay to use the first
         # sign flow to get them.
-        approvers = signing_flow.get_approvers(sign_flow)
+        approvers = signing_flow.get_approvers(sign_flow, query_method)
         for approver in approvers:
             logger.info(f"adding approver {approver['email']} to flow")
             sh_session.add_users_to_workflow(package_id, [{
@@ -102,7 +107,7 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
             "signing_order": 1,
         }])
 
-        notified = signing_flow.get_notified(sign_flow)
+        notified = signing_flow.get_notified(sign_flow, query_method)
         for notify in notified:
             logger.info(f"adding notified {notify['email']} to flow")
             sh_session.add_users_to_workflow(package_id, [{
@@ -113,7 +118,7 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
             "signing_order": 1,
         }])
 
-        signers = signing_flow.get_signers(sign_flow)
+        signers = signing_flow.get_signers(sign_flow, query_method)
         for signer in signers:
             logger.info(f"adding signer {signer['uri']} to flow")
             signer = get_mandatee(signer["uri"])
@@ -130,7 +135,7 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
             piece_uri = sign_flow["piece"]
 
             # Document
-            signinghub_document_uri, _, _ = upload_piece_to_sh(piece_uri, package_id)
+            signinghub_document_uri, _, _ = upload_piece_to_sh(sh_session, piece_uri, package_id)
 
             preparation_activity_id = generate_uuid()
             preparation_activity_uri = uri.resource.preparation_activity(preparation_activity_id)
@@ -142,7 +147,7 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
                 preparation_activity_id=sparql_escape_string(preparation_activity_id),
                 sh_document=sparql_escape_uri(signinghub_document_uri),
             )
-            update(query_string)
+            update_method(query_string)
 
     return
 
