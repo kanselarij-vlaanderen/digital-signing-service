@@ -77,7 +77,7 @@ PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX adms: <http://www.w3.org/ns/adms#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 
-SELECT ?uri ?status ?sign_flow_uris ?created ?modified ?error_message
+SELECT ?uri ?status ?sign_flow_uris ?mu_session_uri ?created ?modified ?error_message
 WHERE {
   GRAPH $graph {
     ?uri a ext:PrepareSignFlowJob ;

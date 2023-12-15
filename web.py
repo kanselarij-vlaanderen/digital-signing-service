@@ -74,12 +74,18 @@ def prepare_post():
     mu_session_id = request.headers["MU-SESSION-ID"]
 
     job = create_job(sign_flow_uris, mu_session_id)
-    del job["mu_session_uri"]
 
     thread = threading.Thread(target=lambda: execute_job(job))
     thread.start()
 
-    res = jsonify(job)
+    res = jsonify({
+            "id": job["id"],
+            "uri": job["uri"],
+            "sign_flow_uris": job["sign_flow_uris"],
+            "created": job["created"],
+            "modified": job["modified"],
+            "status": job["status"],
+    })
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
