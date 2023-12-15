@@ -2,9 +2,10 @@ from urllib.parse import urljoin
 
 import requests
 import time
+import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from flask import g, make_response, request
+from flask import make_response, request, jsonify
 from helpers import error, logger, query, validate_json_api_content_type, update
 
 from lib.query_result_helpers import to_recs
@@ -14,12 +15,14 @@ from .authentication import (MACHINE_ACCOUNTS,
                              open_new_signinghub_machine_user_session,
                              signinghub_session_required)
 from .config import SIGNINGHUB_APP_DOMAIN, SYNC_CRON_PATTERN
-from .lib import exceptions, prepare_signing_flow, signing_flow
+from .lib import exceptions, signing_flow
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
 from .lib.mark_pieces_for_signing import mark_pieces_for_signing as mark_pieces_for_signing_impl
 from .lib.file import delete_physical_file
-from .queries.signing_flow import construct_get_signing_flows_by_uuids, get_physical_files_of_sign_flows, remove_signflows, reset_signflows
+from .lib.job import create_job, execute_job, get_job
+from .queries.signing_flow import get_physical_files_of_sign_flows, remove_signflows, reset_signflows
+
 
 
 def sync_all_ongoing_flows():
@@ -48,33 +51,35 @@ def sh_profile_info():
     return make_response("", response_code)
 
 
+@app.route('/job/<job_id>')
+def job(job_id):
+    job = get_job(job_id)
+
+    if job:
+        del job["mu_session_uri"]
+        res = jsonify(job)
+        res.headers["Content-Type"] = "application/vnd.api+json"
+        return res
+    else:
+        return error(f"Job not found", 404)
+
+
 @app.route('/signing-flows/upload-to-signinghub', methods=['POST'])
 @signinghub_session_required  # provides g.sh_session
 def prepare_post():
     validate_json_api_content_type(request)
     body = request.get_json(force=True)
 
-    sign_flow_ids = [entry["id"] for entry in body["data"]]
+    sign_flow_uris = [entry["uri"] for entry in body["data"]]
+    mu_session_id = request.headers["MU-SESSION-ID"]
 
-    query_string = construct_get_signing_flows_by_uuids(sign_flow_ids)
-    sign_flows = to_recs(query(query_string))
+    job = create_job(sign_flow_uris, mu_session_id)
+    del job["mu_session_uri"]
 
-    # Remove decision_report when it's equal to piece
-    for sign_flow in sign_flows:
-        if sign_flow["piece"] == sign_flow["decision_report"]:
-            sign_flow["decision_report"] = None
+    thread = threading.Thread(target=lambda: execute_job(job))
+    thread.start()
 
-    try:
-        prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
-    except Exception as exception:
-        physical_files = to_recs(query(get_physical_files_of_sign_flows(sign_flow_ids)))
-        for physical_file in physical_files:
-            delete_physical_file(physical_file["uri"])
-        update(reset_signflows(sign_flow_ids))
-        time.sleep(2)
-        raise exception
-
-    res = make_response("", 204)
+    res = jsonify(job)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 

@@ -132,7 +132,7 @@ WHERE {
     )
 
 
-def construct_get_signing_flows_by_uuids(ids: List[str]) -> str:
+def construct_get_signing_flows_by_uris(uris: List[str]) -> str:
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
@@ -145,7 +145,7 @@ SELECT DISTINCT ?id ?sign_flow
     ?decision_activity ?decision_report
     ?meeting
 WHERE {
-    VALUES ?id { $ids }
+    VALUES ?sign_flow { $uris }
     ?sign_flow a sign:Handtekenaangelegenheid ;
         mu:uuid ?id ;
         sign:doorlooptHandtekening ?sign_subcase .
@@ -168,12 +168,12 @@ WHERE {
 }
 """)
     return query_template.substitute(
-        ids=" ".join(list(map(sparql_escape_string, ids))),
+        uris=" ".join(list(map(sparql_escape_uri, uris))),
     )
 
 
 
-def get_physical_files_of_sign_flows(signflow_ids):
+def get_physical_files_of_sign_flows(signflow_uris):
     query_template = Template("""
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
@@ -182,7 +182,7 @@ def get_physical_files_of_sign_flows(signflow_ids):
 
     SELECT DISTINCT (?physical_file AS ?uri)
     WHERE {
-        VALUES ?id { $signflow_ids }
+        VALUES ?sign_flow { $signflow_uris }
 
         ?sign_flow a sign:Handtekenaangelegenheid ;
             mu:uuid ?id ;
@@ -199,13 +199,13 @@ def get_physical_files_of_sign_flows(signflow_ids):
     }
     """)
     return query_template.substitute(
-        signflow_ids=" ".join(
-            list(map(sparql_escape_string, signflow_ids))
+        signflow_uris=" ".join(
+            list(map(sparql_escape_uri, signflow_uris))
         ),
     )
 
 
-def reset_signflows(signflow_ids):
+def reset_signflows(signflow_uris):
     query_template = Template("""
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
@@ -220,7 +220,7 @@ def reset_signflows(signflow_ids):
     } INSERT {
         ?sign_flow adms:status <http://themis.vlaanderen.be/id/handtekenstatus/f6a60072-0537-11ee-bb35-ee395168dcf7> .
     } WHERE {
-        VALUES ?id { $signflow_ids }
+        VALUES ?sign_flow { $signflow_uris }
 
         ?sign_flow a sign:Handtekenaangelegenheid ;
             mu:uuid ?id ;
@@ -266,8 +266,8 @@ def reset_signflows(signflow_ids):
     }
     """)
     return query_template.substitute(
-        signflow_ids=" ".join(
-            list(map(sparql_escape_string, signflow_ids))
+        signflow_uris=" ".join(
+            list(map(sparql_escape_uri, signflow_uris))
         ),
     )
 
