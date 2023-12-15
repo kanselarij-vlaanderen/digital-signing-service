@@ -14,7 +14,7 @@ def construct_get_signing_flow_by_uri(signflow_uri: str):
     SELECT DISTINCT (?signflow_id AS ?id) ?sh_package_id ?sh_document_id
     WHERE {
         $signflow a sign:Handtekenaangelegenheid ;
-        mu:uuid ?signflow_id .
+            mu:uuid ?signflow_id .
         $signflow sign:doorlooptHandtekening ?sign_subcase .
         ?sign_subcase a sign:HandtekenProcedurestap ;
             ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
