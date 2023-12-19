@@ -114,19 +114,20 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
             # Document
             signinghub_document_uri, _, signinghub_document_id = upload_piece_to_sh(piece_uri, package_id)
 
-            # Auto-place signature field
-            logger.info(f"auto-placing signature field for {piece_uri} {package_id} {signinghub_document_id}")
-            for mandatee in signer_mandatees:
-                logger.info(f"placing field for signer {mandatee}")
-                sh_session.auto_place_signature_field(package_id, signinghub_document_id, {
-                    "search_text": f"{mandatee['first_name']} {mandatee['family_name']}",
-                    "order": 1,
-                    "field_type": "SIGNATURE",
-                    "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
-                    "placement": "TOP",
-                    "max_length": 9999,
-                    "multiline": True
-                })
+            if sign_flow["decision_report"]:
+                # Auto-place signature field
+                logger.info(f"auto-placing signature field for {piece_uri} {package_id} {signinghub_document_id}")
+                for mandatee in signer_mandatees:
+                    logger.info(f"placing field for signer {mandatee}")
+                    sh_session.auto_place_signature_field(package_id, signinghub_document_id, {
+                        "search_text": f"{mandatee['first_name']} {mandatee['family_name']}",
+                        "order": 1,
+                        "field_type": "SIGNATURE",
+                        "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
+                        "placement": "TOP",
+                        "max_length": 9999,
+                        "multiline": True
+                    })
 
             preparation_activity_id = generate_uuid()
             preparation_activity_uri = uri.resource.preparation_activity(preparation_activity_id)
