@@ -14,6 +14,7 @@ from .document import upload_piece_to_sh
 from ..config import APPLICATION_GRAPH
 from .kaleidos_document_name import compare_piece_names, DOC_NAME_REGEX
 from ..utils import pythonize_iso_timestamp
+from ..constants import DECISION_REPORT_TYPE_URI
 
 
 def sort_sign_flows_by_piece(sign_flows: List[Dict]):
@@ -114,7 +115,7 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
             # Document
             signinghub_document_uri, _, signinghub_document_id = upload_piece_to_sh(piece_uri, package_id)
 
-            if sign_flow["decision_report"]:
+            if sign_flow["piece_type"] == DECISION_REPORT_TYPE_URI:
                 # Auto-place signature field
                 logger.info(f"auto-placing signature field for {piece_uri} {package_id} {signinghub_document_id}")
                 for mandatee in signer_mandatees:
