@@ -163,7 +163,7 @@ def construct_get_signing_flows_by_uuids(ids: List[str]) -> str:
 
     SELECT DISTINCT ?id ?sign_flow
         ?piece ?piece_name ?piece_created
-        ?decision_activity ?decision_report
+        ?decision_activity ?decision_report ?piece_type
     WHERE {
         VALUES ?id { $ids }
         ?sign_flow a sign:Handtekenaangelegenheid ;
@@ -174,7 +174,8 @@ def construct_get_signing_flows_by_uuids(ids: List[str]) -> str:
             sign:markeringVindtPlaatsTijdens ?sign_subcase ;
             sign:gemarkeerdStuk ?piece .
         ?piece dct:title ?piece_name ;
-               dct:created ?piece_created .
+               dct:created ?piece_created ;
+               ^dossier:Collectie.bestaatUit/dct:type ?piece_type .
 
         OPTIONAL {
             ?sign_flow sign:heeftBeslissing ?decision_activity .
