@@ -120,15 +120,18 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
                 logger.info(f"auto-placing signature field for {piece_uri} {package_id} {signinghub_document_id}")
                 for mandatee in signer_mandatees:
                     logger.info(f"placing field for signer {mandatee}")
-                    sh_session.auto_place_signature_field(package_id, signinghub_document_id, {
-                        "search_text": f"{mandatee['first_name']} {mandatee['family_name']}",
-                        "order": 1,
-                        "field_type": "SIGNATURE",
-                        "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
-                        "placement": "TOP",
-                        "max_length": 9999,
-                        "multiline": True
-                    })
+                    try:
+                        sh_session.auto_place_signature_field(package_id, signinghub_document_id, {
+                            "search_text": f"{mandatee['first_name']} {mandatee['family_name']}",
+                            "order": 1,
+                            "field_type": "SIGNATURE",
+                            "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
+                            "placement": "TOP",
+                            "max_length": 9999,
+                            "multiline": True
+                        })
+                    except:
+                        logger.warn("Something went wrong while auto-placing sign field")
 
             preparation_activity_id = generate_uuid()
             preparation_activity_uri = uri.resource.preparation_activity(preparation_activity_id)
