@@ -7,7 +7,10 @@ from ..config import TIMEZONE
 from ..authentication_config import MACHINE_ACCOUNTS
 
 SESSION_GRAPH = "http://mu.semte.ch/graphs/sessions"
-ACCOUNT_GRAPH = "http://mu.semte.ch/graphs/system/users" # http://mu.semte.ch/graphs/public for mock-login
+ACCOUNT_GRAPH = (
+    os.environ.get("ACCOUNT_GRAPH") or 
+    "http://mu.semte.ch/graphs/system/users"
+) # http://mu.semte.ch/graphs/public for mock-login
 SIGNINGHUB_TOKEN_BASE_URI = "http://kanselarij.vo.data.gift/id/signinghub-tokens/"
 
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
