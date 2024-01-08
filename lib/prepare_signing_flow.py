@@ -1,19 +1,19 @@
 import functools
-import itertools
+from itertools import groupby
 from datetime import datetime
 from string import Template
 from typing import Dict, List
 
+from escape_helpers import sparql_escape_string, sparql_escape_uri
+from helpers import generate_uuid, logger, update
 from signinghub_api_client.client import SigningHubSession
-from helpers import generate_uuid, update, logger
-from escape_helpers import sparql_escape_uri, sparql_escape_string
 
-from . import uri, signing_flow
-from .mandatee import get_mandatee
-from .document import upload_piece_to_sh
 from ..config import APPLICATION_GRAPH
-from .kaleidos_document_name import compare_piece_names, DOC_NAME_REGEX
 from ..utils import pythonize_iso_timestamp
+from . import signing_flow, uri
+from .document import upload_piece_to_sh
+from .kaleidos_document_name import DOC_NAME_REGEX, compare_piece_names
+from .mandatee import get_mandatee
 from ..constants import DECISION_REPORT_TYPE_URI
 
 
@@ -47,16 +47,36 @@ def sort_sign_flows_by_piece(sign_flows: List[Dict]):
             sorted(invalid_names, key=functools.cmp_to_key(compare_invalid_sign_flows)))
 
 
-def group_by_decision_activity(sign_flows: List[Dict]):
-    # TODO: Cope with the fact that at some point we need to support
-    # optional decision activities
-    get_decision_activity = lambda d: d["decision_activity"]
-    return [list(g) for _, g in itertools.groupby(sign_flows, get_decision_activity)]
+def group_by_meeting_or_decision_activity(sign_flows: List[Dict]):
+    get_meeting = lambda d: d.get("meeting", "")
+    get_decision_activity = lambda d: d.get("decision_activity", "")
+
+    grouped_flows = []
+
+    grouped_by_meeting = [
+        (meeting, list(group))
+        for meeting, group in groupby(sorted(sign_flows, key=get_meeting), get_meeting)
+    ]
+
+    for meeting, group in grouped_by_meeting:
+        if meeting != "":
+            grouped_flows.append(group)
+        else:
+            grouped_flows.extend(
+                [
+                    list(g)
+                    for _, g in groupby(
+                        sorted(group, key=get_decision_activity), get_decision_activity
+                    )
+                ]
+            )
+
+    return grouped_flows
 
 
 def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
     """Prepares a signing flow in SigningHub based off multiple sign flows in Kaleidos."""
-    for grouped_sign_flows in group_by_decision_activity(sign_flows):
+    for grouped_sign_flows in group_by_meeting_or_decision_activity(sign_flows):
         signinghub_package = sh_session.add_package({
             "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
         })

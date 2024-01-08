@@ -1,5 +1,6 @@
 import re
 
+
 def pythonize_iso_timestamp(timestamp):
     """ Convert ISO 8601 timestamp to python .fromisoformat()-compliant format """
     # 'Z'-timezone to '+00:00'-timezone
