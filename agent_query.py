@@ -1,7 +1,8 @@
-import os
 import json
-from SPARQLWrapper import SPARQLWrapper, JSON
+import os
+
 from helpers import log
+from SPARQLWrapper import JSON, SPARQLWrapper
 
 DIGITAL_SIGNING_AGENT_ALLOWED_GROUPS =   [ # Secretarie
     { "variables": [], "name": "public" },
@@ -10,6 +11,8 @@ DIGITAL_SIGNING_AGENT_ALLOWED_GROUPS =   [ # Secretarie
     { "variables": [], "name": "kanselarij-write" },
     { "variables": [], "name": "sign-flow-read" },
     { "variables": [], "name": "sign-flow-write" },
+    { "variables": [], "name": "parliament-flow-read" },
+    { "variables": [], "name": "parliament-flow-write" },
     { "variables": [], "name": "clean" }
 ]
 
