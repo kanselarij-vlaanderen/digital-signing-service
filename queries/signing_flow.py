@@ -6,7 +6,7 @@ from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
                             sparql_escape_uri)
 from helpers import generate_uuid
 
-from ..config import ANNULATIEACTIVITEIT_RESOURCE_BASE_URI
+from ..config import ANNULATIEACTIVITEIT_RESOURCE_BASE_URI, MARKED_STATUS
 
 
 def construct_get_signing_flow_by_uri(signflow_uri: str):
@@ -218,7 +218,7 @@ def reset_signflows(signflow_ids):
         ?sign_flow dct:creator ?creator .
         ?s ?p ?o .
     } INSERT {
-        ?sign_flow adms:status <http://themis.vlaanderen.be/id/handtekenstatus/f6a60072-0537-11ee-bb35-ee395168dcf7> .
+        ?sign_flow adms:status $status_marked .
     } WHERE {
         VALUES ?id { $signflow_ids }
 
@@ -267,8 +267,9 @@ def reset_signflows(signflow_ids):
     """)
     return query_template.substitute(
         signflow_ids=" ".join(
-            list(map(sparql_escape_string, signflow_ids))
+            list(map(sparql_escape_string, signflow_ids)),
         ),
+        status_marked=sparql_escape_uri(MARKED_STATUS),
     )
 
 
