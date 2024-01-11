@@ -83,3 +83,30 @@ WHERE {
     return query_template.substitute(
         graph=sparql_escape_uri(graph),
         file_uri=sparql_escape_uri(file_uri))
+
+def delete_physical_file_metadata(file_uri):
+    """
+    Construct a SPARQL query for deleting the metadata of a physical file.
+    :param file_uri: string containing physical file uri
+    :returns: string containing SPARQL query
+    """
+    query_template = Template("""
+PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+
+DELETE {
+    $file_uri ?p ?o .
+    ?logicalFile ^nie:dataSource $file_uri .
+} WHERE {
+    GRAPH $graph {
+        $file_uri a nfo:FileDataObject ;
+            ?p ?o .
+        OPTIONAL {
+            ?logicalFile a nfo:FileDataObject ;
+                ^nie:dataSource $file_uri .
+        }
+    }
+}
+""")
+    return query_template.substitute(
+        file_uri=sparql_escape_uri(file_uri))
