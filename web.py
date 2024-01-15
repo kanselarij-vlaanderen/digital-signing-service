@@ -1,9 +1,10 @@
 from urllib.parse import urljoin
+import traceback
 
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from flask import g, make_response, request
+from flask import g, make_response, request, jsonify
 from helpers import error, logger, query, validate_json_api_content_type
 
 from lib.query_result_helpers import to_recs
@@ -33,17 +34,31 @@ scheduler.start()
 @app.route("/verify-credentials")
 def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
-    response_code = 200
+    response_code = 204
+    errors = []
     for ovo_code in MACHINE_ACCOUNTS.keys():
         try:
-            sh_session = open_new_signinghub_machine_user_session(ovo_code)
+            open_new_signinghub_machine_user_session(ovo_code)
             logger.info(f"Successful login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
             # sh_session.logout() doesn't work. https://manuals.ascertia.com/SigningHub/8.2/Api/#tag/Authentication/operation/V4_Account_LogoutUser specifies a (required?) device token which we don't have
         except Exception as e:
             response_code = 500
-            logger.warn(f"Failed login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
-            logger.warn(e)
-    return make_response("", response_code)
+            logger.warn(f"Failed login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code].get('USERNAME')})")
+            logger.exception(e)
+            errors.append({
+                "title": "Failed login for machine user account",
+                "detail": traceback.format_exc(),
+                "status": 500,
+            })
+    if response_code == 204:
+        return make_response("", response_code)
+    else:
+        response = jsonify({
+            "errors": errors,
+        })
+        response.status_code = 500
+        response.headers["Content-Type"] = "application/vnd.api+json"
+        return response
 
 
 @app.route('/signing-flows/upload-to-signinghub', methods=['POST'])
