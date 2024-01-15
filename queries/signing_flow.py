@@ -6,7 +6,7 @@ from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
                             sparql_escape_uri)
 from helpers import generate_uuid
 
-from ..config import ANNULATIEACTIVITEIT_RESOURCE_BASE_URI
+from ..config import ANNULATIEACTIVITEIT_RESOURCE_BASE_URI, MARKED_STATUS
 
 
 def construct_get_signing_flow_by_uri(signflow_uri: str):
@@ -169,4 +169,180 @@ WHERE {
 """)
     return query_template.substitute(
         ids=" ".join(list(map(sparql_escape_string, ids))),
+    )
+
+
+
+def get_physical_files_of_sign_flows(signflow_ids):
+    query_template = Template("""
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+
+    SELECT DISTINCT (?physical_file AS ?uri)
+    WHERE {
+        VALUES ?id { $signflow_ids }
+
+        ?sign_flow a sign:Handtekenaangelegenheid ;
+            mu:uuid ?id ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?marking_activity
+            sign:markeringVindtPlaatsTijdens ?sign_subcase ;
+            sign:gemarkeerdStuk ?piece .
+
+        {
+            ?piece sign:getekendStukKopie / prov:value / ^nie:dataSource ?physical_file .
+        } UNION {
+            ?piece ^sign:ongetekendStuk / prov:value / ^nie:dataSource ?physical_file .
+        }
+    }
+    """)
+    return query_template.substitute(
+        signflow_ids=" ".join(
+            list(map(sparql_escape_string, signflow_ids))
+        ),
+    )
+
+
+def reset_signflows(signflow_ids):
+    query_template = Template("""
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+    PREFIX dct: <http://purl.org/dc/terms/>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX adms: <http://www.w3.org/ns/adms#>
+    
+    DELETE {
+        ?sign_flow adms:status ?status .
+        ?sign_flow dct:creator ?creator .
+        ?s ?p ?o .
+    } INSERT {
+        ?sign_flow adms:status $status_marked .
+    } WHERE {
+        VALUES ?id { $signflow_ids }
+
+        ?sign_flow a sign:Handtekenaangelegenheid ;
+            mu:uuid ?id ;
+            adms:status ?status ;
+            dct:creator ?creator ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?marking_activity 
+            sign:markeringVindtPlaatsTijdens ?sign_subcase ;
+            sign:gemarkeerdStuk ?piece .
+        {
+            ?piece sign:getekendStukKopie ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?piece sign:getekendStukKopie ?o .
+            BIND(?piece AS ?s)
+            BIND(sign:getekendStukKopie AS ?p)
+        } UNION {
+            ?piece sign:getekendStukKopie ?signed_piece_copy .
+            ?signed_piece_copy prov:value ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?s sign:ongetekendStuk ?piece ; ?p ?o .
+        } UNION {
+            ?signed_piece sign:ongetekendStuk ?piece ; prov:value ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
+            ?preparation_activity sign:voorbereidingGenereert ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?s sign:voorbereidingVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?s sign:handtekeningVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?s sign:goedkeuringVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?s sign:weigeringVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?s sign:annulatieVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?s sign:afrondingVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        }
+    }
+    """)
+    return query_template.substitute(
+        signflow_ids=" ".join(
+            list(map(sparql_escape_string, signflow_ids)),
+        ),
+        status_marked=sparql_escape_uri(MARKED_STATUS),
+    )
+
+
+def remove_signflows(signflow_ids):
+    query_template = Template("""
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+
+    DELETE { ?s ?p ?o }
+    WHERE {
+        VALUES ?id { $signflow_ids }
+        {
+            ?s a sign:Handtekenaangelegenheid ; mu:uuid ?id ; ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?s sign:markeringVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase ; sign:gemarkeerdStuk ?s .
+            ?s sign:getekendStukKopie ?o .
+            BIND(sign:getekendStukKopie AS ?p)
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase ; sign:gemarkeerdStuk ?piece .
+            ?piece sign:getekendStukKopie ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase ; sign:gemarkeerdStuk ?piece .
+            ?piece sign:getekendStukKopie ?signed_piece_copy .
+            ?signed_piece_copy prov:value ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase ; sign:gemarkeerdStuk ?piece .
+            ?s sign:ongetekendStuk ?piece ; ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?marking_activity sign:markeringVindtPlaatsTijdens ?sign_subcase ; sign:gemarkeerdStuk ?piece .
+            ?signed_piece sign:ongetekendStuk ?piece ; prov:value ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?preparation_activity sign:voorbereidingVindtPlaatsTijdens ?sign_subcase .
+            ?preparation_activity sign:voorbereidingGenereert ?s .
+            ?s ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?s sign:voorbereidingVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?s sign:handtekeningVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?s sign:goedkeuringVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?s sign:weigeringVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?s sign:annulatieVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        } UNION {
+            ?sign_flow a sign:Handtekenaangelegenheid ; mu:uuid ?id ; sign:doorlooptHandtekening ?sign_subcase .
+            ?s sign:afrondingVindtPlaatsTijdens ?sign_subcase ; ?p ?o .
+        }
+    }
+    """)
+    return query_template.substitute(
+        signflow_ids=" ".join(
+            list(map(sparql_escape_string, signflow_ids))
+        ),
     )

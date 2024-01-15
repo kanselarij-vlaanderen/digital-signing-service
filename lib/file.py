@@ -1,7 +1,9 @@
+import os
+
 from datetime import datetime
 
 from flask import g
-from helpers import generate_uuid
+from helpers import generate_uuid, logger
 
 from ..agent_query import update as agent_update
 from ..config import KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
@@ -35,8 +37,18 @@ def download_sh_doc_to_mu_file(sh_package_id, sh_document_id):
     agent_update(ins_f_query_string)
     return virtual_file
 
+
 def fs_sanitize_filename(filename, replace_char=""):
     # Covers the most common case.
     # In case more is needed, merge https://gitlab.com/jplusplus/sanitize-filename/-/merge_requests/1
     # and use that library instead
     return filename.replace("/", replace_char)
+
+
+def delete_physical_file(physical_file_uri):
+    path = physical_file_uri.replace("share://", "/share/")
+    if os.path.exists(path):
+        logger.info(f"Removing file: {path}")
+        os.remove(path)
+    else:
+        logger.debug(f"Tried removing file {path} but could not find it")
