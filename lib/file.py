@@ -1,9 +1,11 @@
 from datetime import datetime
+
 from flask import g
 from helpers import generate_uuid
-from ..queries.file import construct_insert_file_query
+
 from ..agent_query import update as agent_update
 from ..config import KALEIDOS_RESOURCE_BASE_URI, TIMEZONE
+from ..queries.file import construct_insert_file_query
 
 SH_SOURCE = "Kaleidos" # TODO https://manuals.ascertia.com/SigningHub-apiguide/default.aspx#pageid=1022
 

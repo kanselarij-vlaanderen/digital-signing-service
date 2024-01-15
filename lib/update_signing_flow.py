@@ -1,18 +1,30 @@
 from datetime import datetime
+
 from flask import g
 from helpers import generate_uuid, logger
 from signinghub_api_client.exceptions import SigningHubException
+
 from utils import pythonize_iso_timestamp
-from ..queries.signing_flow_approvers import construct_insert_approval_refusal_activity, construct_insert_approval_activity, construct_update_approval_activity_end_date, construct_update_approval_activity_start_date
+
+from ..agent_query import query as agent_query
+from ..agent_query import update as agent_update
 from ..authentication import ensure_signinghub_machine_user_session
-from .signing_flow import get_approvers, get_signing_flow, get_signers, get_pieces, get_creator
-from .document import download_sh_doc_to_kaleidos_doc
-from ..queries.document import construct_attach_document_to_unsigned_version
-from ..queries.wrap_up_activity import construct_insert_wrap_up_activity
-from ..queries.signing_flow import construct_insert_cancellation_activity
-from ..queries.signing_flow_signers import construct_insert_signing_refusal_activity, construct_update_signing_activity_end_date, construct_update_signing_activity_start_date
-from ..agent_query import update as agent_update, query as agent_query
 from ..config import KALEIDOS_RESOURCE_BASE_URI
+from ..queries.document import construct_attach_document_to_unsigned_version
+from ..queries.signing_flow import construct_insert_cancellation_activity
+from ..queries.signing_flow_approvers import (
+    construct_insert_approval_activity,
+    construct_insert_approval_refusal_activity,
+    construct_update_approval_activity_end_date,
+    construct_update_approval_activity_start_date)
+from ..queries.signing_flow_signers import (
+    construct_insert_signing_refusal_activity,
+    construct_update_signing_activity_end_date,
+    construct_update_signing_activity_start_date)
+from ..queries.wrap_up_activity import construct_insert_wrap_up_activity
+from .document import download_sh_doc_to_kaleidos_doc
+from .signing_flow import (get_approvers, get_creator, get_pieces, get_signers,
+                           get_signing_flow)
 
 WRAP_UP_ACTIVITY_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/afrondingsactiviteit/"
 

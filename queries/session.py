@@ -1,10 +1,13 @@
 import os
-from string import Template
 from datetime import datetime
+from string import Template
+
+from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
+                            sparql_escape_uri)
 from helpers import generate_uuid
-from escape_helpers import sparql_escape_uri, sparql_escape_string, sparql_escape_datetime
-from ..config import TIMEZONE
+
 from ..authentication_config import MACHINE_ACCOUNTS
+from ..config import TIMEZONE
 
 SESSION_GRAPH = "http://mu.semte.ch/graphs/sessions"
 ACCOUNT_GRAPH = (

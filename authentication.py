@@ -1,30 +1,28 @@
 import os
 from functools import wraps
+
 from flask import g, request
+from helpers import error, generate_uuid, log, logger
 from signinghub_api_client.client import SigningHubSession
 from signinghub_api_client.exceptions import AuthenticationException
-from helpers import log, logger, error, generate_uuid
-from .queries.session import construct_get_mu_session_query, \
-    construct_get_signinghub_session_query, \
-    construct_insert_signinghub_session_query, \
-    construct_attach_signinghub_session_to_mu_session_query, \
-    construct_get_signinghub_machine_user_session_query, \
-    construct_mark_signinghub_session_as_machine_users_query, \
-    construct_get_org_for_email
-from .sudo_query import query as sudo_query, update as sudo_update
-from .lib.exceptions import NoQueryResultsException
-from .config import KALEIDOS_RESOURCE_BASE_URI
+
 from .authentication_config import MACHINE_ACCOUNTS
+from .config import KALEIDOS_RESOURCE_BASE_URI
+from .lib.exceptions import NoQueryResultsException
+from .queries.session import (
+    construct_attach_signinghub_session_to_mu_session_query,
+    construct_get_mu_session_query, construct_get_org_for_email,
+    construct_get_signinghub_machine_user_session_query,
+    construct_get_signinghub_session_query,
+    construct_insert_signinghub_session_query,
+    construct_mark_signinghub_session_as_machine_users_query)
+from .sudo_query import query as sudo_query
+from .sudo_query import update as sudo_update
 
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
 CERT_FILE_PATH = os.environ.get("CERT_FILE_PATH")
 KEY_FILE_PATH = os.environ.get("KEY_FILE_PATH")
 CLIENT_CERT_AUTH_ENABLED = CERT_FILE_PATH and KEY_FILE_PATH
-
-SIGNINGHUB_API_CLIENT_ID = os.environ.get("SIGNINGHUB_CLIENT_ID")
-SIGNINGHUB_API_CLIENT_SECRET = os.environ.get("SIGNINGHUB_CLIENT_SECRET") # API key
-SIGNINGHUB_MACHINE_ACCOUNT_USERNAME = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_USERNAME")
-SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD = os.environ.get("SIGNINGHUB_MACHINE_ACCOUNT_PASSWORD")
 
 SIGNINGHUB_SESSION_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/signinghub-sessions/"
 
@@ -62,9 +60,15 @@ def signinghub_session_required(f):
             ensure_signinghub_session(mu_session_id)
             return f(*args, **kwargs)
         except AuthenticationException as ex:
+            logger.exception("Authentication Error during SH login")
             return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.error_id))
         except NoQueryResultsException as ex:
+            logger.exception("No Query Results Error during SH login")
             return error(ex.args[0])
+        except Exception as ex:
+            logger.exception("Unknown error during SH login")
+            return error(str(ex), status=500)
+
     return decorated_function
 
 def open_new_signinghub_machine_user_session(ovo_code, scope=None):
@@ -101,20 +105,3 @@ def ensure_signinghub_machine_user_session(scope=None):
         sh_session_sudo_query = construct_mark_signinghub_session_as_machine_users_query(sh_session_uri)
         sudo_update(sh_session_sudo_query)
         g.sh_session = sh_session
-
-def signinghub_machine_session_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        try:
-            ensure_signinghub_machine_user_session()
-            return f(*args, **kwargs)
-        except AuthenticationException as ex:
-            logger.exception("Authentication Error")
-            return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.error_id))
-        except NoQueryResultsException as ex:
-            logger.exception("No Query Results Error")
-            return error(ex.args[0])
-        except BaseException as ex:
-            logger.exception("Internal Server Error")
-            return error("Internal Server Error", 500)
-    return decorated_function
