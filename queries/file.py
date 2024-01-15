@@ -92,20 +92,12 @@ def delete_physical_file_metadata(file_uri):
     """
     query_template = Template("""
 PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
-PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
 
 DELETE {
     $file_uri ?p ?o .
-    ?logicalFile ^nie:dataSource $file_uri .
 } WHERE {
-    GRAPH $graph {
-        $file_uri a nfo:FileDataObject ;
-            ?p ?o .
-        OPTIONAL {
-            ?logicalFile a nfo:FileDataObject ;
-                ^nie:dataSource $file_uri .
-        }
-    }
+    $file_uri a nfo:FileDataObject ;
+        ?p ?o .
 }
 """)
     return query_template.substitute(
