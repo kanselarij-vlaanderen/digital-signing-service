@@ -2,10 +2,11 @@ from urllib.parse import urljoin
 import traceback
 
 import requests
+import time
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from flask import g, make_response, request, jsonify
-from helpers import error, logger, query, validate_json_api_content_type
+from helpers import error, logger, query, validate_json_api_content_type, update
 
 from lib.query_result_helpers import to_recs
 
@@ -18,7 +19,9 @@ from .lib import exceptions, prepare_signing_flow, signing_flow
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
 from .lib.mark_pieces_for_signing import mark_pieces_for_signing as mark_pieces_for_signing_impl
-from .queries.signing_flow import construct_get_signing_flows_by_uuids
+from .lib.file import delete_physical_file
+from .queries.signing_flow import construct_get_signing_flows_by_uuids, get_physical_files_of_sign_flows, remove_signflows, reset_signflows
+from .queries.file import delete_physical_file_metadata
 
 
 def sync_all_ongoing_flows():
@@ -77,12 +80,34 @@ def prepare_post():
         if sign_flow["piece"] == sign_flow["decision_report"]:
             sign_flow["decision_report"] = None
 
-    prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
+    try:
+        prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
+    except Exception as exception:
+        physical_files = to_recs(query(get_physical_files_of_sign_flows(sign_flow_ids)))
+        for physical_file in physical_files:
+            delete_physical_file(physical_file["uri"])
+            update(delete_physical_file_metadata(physical_file["uri"]))
+        update(reset_signflows(sign_flow_ids))
+        time.sleep(2)
+        raise exception
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
+@app.route('/signing-flows/<signflow_id>', methods=['DELETE'])
+def signinghub_remove_signflow(signflow_id):
+    physical_files = to_recs(query(get_physical_files_of_sign_flows([signflow_id])))
+    for physical_file in physical_files:
+        delete_physical_file(physical_file["uri"])
+        update(delete_physical_file_metadata(physical_file["uri"]))
+    update(remove_signflows([signflow_id]))
+    # Give cache time to update
+    # Ideally we want to return the changed values so the frontend
+    # can update without refetching the new data.
+    time.sleep(2)
+    return make_response("", 204)
+    
 
 @app.route('/signing-flows/mark-pieces-for-signing', methods=['POST'])
 def mark_pieces_for_signing():
