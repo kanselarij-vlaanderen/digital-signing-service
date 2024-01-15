@@ -1,13 +1,13 @@
 from datetime import datetime
+
 from string import Template
 
 from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
                             sparql_escape_uri)
-from helpers import generate_uuid
 
 from ..config import (ACCESS_LEVEL_CABINET, ACCESS_LEVEL_GOVERNMENT,
                       ACCESS_LEVEL_PUBLIC, APPLICATION_GRAPH,
-                      KALEIDOS_RESOURCE_BASE_URI, TIMEZONE)
+                      TIMEZONE)
 
 def construct_get_file_for_document(document_uri, file_mimetype=None, graph=APPLICATION_GRAPH):
     if file_mimetype is not None:
@@ -117,7 +117,7 @@ DELETE {
 INSERT {
     GRAPH $graph {
         $doc sign:ongetekendStuk $prev_doc .
-        $doc dct:title ?prev_title .
+        $doc dct:title ?signed_title .
         ?case dossier:Dossier.bestaatUit $doc .
         $doc besluitvorming:vertrouwelijkheidsniveau ?access_level .
     }
@@ -128,6 +128,7 @@ WHERE {
         $prev_doc a dossier:Stuk ;
             dct:title ?prev_title ;
             besluitvorming:vertrouwelijkheidsniveau ?prev_access_level .
+        BIND(CONCAT(?prev_title, " (met certificaat)") AS ?signed_title)
         OPTIONAL {
             $doc dct:title ?old_title .
         }

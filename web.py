@@ -17,6 +17,7 @@ from .config import SIGNINGHUB_APP_DOMAIN, SYNC_CRON_PATTERN
 from .lib import exceptions, prepare_signing_flow, signing_flow
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
+from .lib.mark_pieces_for_signing import mark_pieces_for_signing as mark_pieces_for_signing_impl
 from .queries.signing_flow import construct_get_signing_flows_by_uuids
 
 
@@ -77,6 +78,20 @@ def prepare_post():
             sign_flow["decision_report"] = None
 
     prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
+
+    res = make_response("", 204)
+    res.headers["Content-Type"] = "application/vnd.api+json"
+    return res
+
+
+@app.route('/signing-flows/mark-pieces-for-signing', methods=['POST'])
+def mark_pieces_for_signing():
+    body = request.get_json(force=True)
+
+    piece_ids = [entry["id"] for entry in body["data"]]
+
+    if len(piece_ids):
+        mark_pieces_for_signing_impl(piece_ids)
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
