@@ -64,7 +64,7 @@ def signinghub_session_required(f):
             return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.error_id))
         except NoQueryResultsException as ex:
             logger.exception("No Query Results Error during SH login")
-            return error(ex.args[0])
+            return error(ex.args[0], status=500)
         except Exception as ex:
             logger.exception("Unknown error during SH login")
             return error(str(ex), status=500)
