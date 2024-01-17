@@ -51,13 +51,13 @@ def prepare_post_impl(sign_flow_ids):
             return error(str(ex), status=500)
         
 def reset_signflows_impl(sign_flow_ids):
+    logger.info('resetting sign flows')
     physical_files = to_recs(query(get_physical_files_of_sign_flows(sign_flow_ids)))
     for physical_file in physical_files:
-        logger.info('cleaning physical files')
         delete_physical_file(physical_file["uri"])
         update(delete_physical_file_metadata(physical_file["uri"]))
     update(reset_signflows(sign_flow_ids))
-    time.sleep(2)
+    time.sleep(2) # time for cache clear
 
 @app.route("/verify-credentials")
 def sh_profile_info():
@@ -91,23 +91,16 @@ def sh_profile_info():
 
 @app.route('/signing-flows/upload-to-signinghub', methods=['POST'])
 def prepare_post():
-    logger.info(f'trying to post')
     validate_json_api_content_type(request)
     body = request.get_json(force=True)
 
     sign_flow_ids = [entry["id"] for entry in body["data"]]
-    # try:
-    logger.info(f'trying to prepare_post_impl')
+
     session_error = prepare_post_impl(sign_flow_ids) # requires a session
-    if session_error is not None:
-        logger.info('preparing failed, resetting sign flows')
+    if session_error is not None and type(session_error) is type(error('class to compare')):
+        logger.info('preparing post failed')
         reset_signflows_impl(sign_flow_ids)
         return session_error
-    # except Exception as exception:
-    #         logger.info(f'preparing raised exception')
-    #         reset_signflows_impl(sign_flow_ids)
-    #         logger.info(f"{exception}")
-
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"
