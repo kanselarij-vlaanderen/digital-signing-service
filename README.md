@@ -19,6 +19,10 @@ _Note that both of above parameters must be set to activate client certificate a
 - `SIGNINGHUB_APP_DOMAIN`: Signinghub web-app domain. Used for generating links to the web-app
 - `SYNC_CRON_PATTERN`: Cronjob pattern that will be used to periodically sync all ongoing sign flows (default: `*/2 * * * *`)
 
+Autoplacing signatures
+- `ADD_SIGNATURE_FIELD_ENABLED`: place a signature field on the signers name for decision reports (default: `false`)
+- `SIGNATURE_FIELD_WIDTH`: width for the autoplace field (default 100)
+- `SIGNATURE_FIELD_HEIGHT`: height for the autoplace field (default 40)
 
 #### docker-compose snippet
 
@@ -29,6 +33,11 @@ _Note that both of above parameters must be set to activate client certificate a
       SIGNINGHUB_API_URL: ""
       CERT_FILE_PATH: ""
       KEY_FILE_PATH: ""
+      ACCOUNT_GRAPH: "http://mu.semte.ch/graphs/system/users"
+      SYNC_CRON_PATTERN: "*/2 * * * *"
+      ADD_SIGNATURE_FIELD_ENABLED: true
+      SIGNATURE_FIELD_WIDTH: 100
+      SIGNATURE_FIELD_HEIGHT: 40
     volumes:
       - ./data/files:/share
       - ./config/digital-signing/cert:/cert:ro
