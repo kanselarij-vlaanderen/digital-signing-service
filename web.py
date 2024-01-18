@@ -34,6 +34,31 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab(SYNC_CRON_PATTERN))
 scheduler.start()
 
+@signinghub_session_required  # provides g.sh_session
+def prepare_post_impl(sign_flow_ids):
+        try:
+            query_string = construct_get_signing_flows_by_uuids(sign_flow_ids)
+            sign_flows = to_recs(query(query_string))
+
+            # Remove decision_report when it's equal to piece
+            for sign_flow in sign_flows:
+                if sign_flow["piece"] == sign_flow["decision_report"]:
+                    sign_flow["decision_report"] = None
+
+            prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
+        except Exception as ex:
+            logger.exception("Could not prepare sign flows")
+            return error(str(ex), status=500)
+        
+def reset_signflows_impl(sign_flow_ids):
+    logger.info('resetting sign flows')
+    physical_files = to_recs(query(get_physical_files_of_sign_flows(sign_flow_ids)))
+    for physical_file in physical_files:
+        delete_physical_file(physical_file["uri"])
+        update(delete_physical_file_metadata(physical_file["uri"]))
+    update(reset_signflows(sign_flow_ids))
+    time.sleep(2) # time for cache clear
+
 @app.route("/verify-credentials")
 def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
@@ -65,31 +90,17 @@ def sh_profile_info():
 
 
 @app.route('/signing-flows/upload-to-signinghub', methods=['POST'])
-@signinghub_session_required  # provides g.sh_session
 def prepare_post():
     validate_json_api_content_type(request)
     body = request.get_json(force=True)
 
     sign_flow_ids = [entry["id"] for entry in body["data"]]
 
-    query_string = construct_get_signing_flows_by_uuids(sign_flow_ids)
-    sign_flows = to_recs(query(query_string))
-
-    # Remove decision_report when it's equal to piece
-    for sign_flow in sign_flows:
-        if sign_flow["piece"] == sign_flow["decision_report"]:
-            sign_flow["decision_report"] = None
-
-    try:
-        prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
-    except Exception as exception:
-        physical_files = to_recs(query(get_physical_files_of_sign_flows(sign_flow_ids)))
-        for physical_file in physical_files:
-            delete_physical_file(physical_file["uri"])
-            update(delete_physical_file_metadata(physical_file["uri"]))
-        update(reset_signflows(sign_flow_ids))
-        time.sleep(2)
-        raise exception
+    session_error = prepare_post_impl(sign_flow_ids) # requires a session
+    if session_error is not None and type(session_error) is type(error('class to compare')):
+        logger.info('preparing post failed')
+        reset_signflows_impl(sign_flow_ids)
+        return session_error
 
     res = make_response("", 204)
     res.headers["Content-Type"] = "application/vnd.api+json"

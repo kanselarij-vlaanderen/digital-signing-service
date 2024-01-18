@@ -8,6 +8,9 @@ SIGNINGHUB_RESOURCE_BASE_URI = os.environ.get("SIGNINGHUB_API_URL", KALEIDOS_RES
 TIMEZONE = timezone('Europe/Brussels')
 SYNC_CRON_PATTERN = os.environ.get("SYNC_CRON_PATTERN", "*/2 * * * *")
 SIGNINGHUB_APP_DOMAIN = os.environ.get("SIGNINGHUB_APP_DOMAIN")
+ADD_SIGNATURE_FIELD_ENABLED = os.environ.get("ADD_SIGNATURE_FIELD_ENABLED", "False").lower() in ("true", "1", "t")
+SIGNATURE_FIELD_WIDTH = os.environ.get("SIGNATURE_FIELD_WIDTH",  100)
+SIGNATURE_FIELD_HEIGHT = os.environ.get("SIGNATURE_FIELD_HEIGHT", 40)
 
 # Constants
 APPLICATION_GRAPH = "http://mu.semte.ch/application"

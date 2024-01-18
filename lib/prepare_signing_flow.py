@@ -8,12 +8,13 @@ from escape_helpers import sparql_escape_string, sparql_escape_uri
 from helpers import generate_uuid, logger, update
 from signinghub_api_client.client import SigningHubSession
 
-from ..config import APPLICATION_GRAPH
+from ..config import APPLICATION_GRAPH, ADD_SIGNATURE_FIELD_ENABLED, SIGNATURE_FIELD_WIDTH, SIGNATURE_FIELD_HEIGHT
 from ..utils import pythonize_iso_timestamp
 from . import signing_flow, uri
 from .document import upload_piece_to_sh
 from .kaleidos_document_name import DOC_NAME_REGEX, compare_piece_names
 from .mandatee import get_mandatee
+from ..constants import DECISION_REPORT_TYPE_URI
 
 
 def sort_sign_flows_by_piece(sign_flows: List[Dict]):
@@ -114,9 +115,11 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
         }])
 
         signers = signing_flow.get_signers(sign_flow)
+        signer_mandatees = []
         for signer in signers:
             logger.info(f"adding signer {signer['uri']} to flow")
             signer = get_mandatee(signer["uri"])
+            signer_mandatees.append(signer)
             sh_session.add_users_to_workflow(package_id, [{
             "user_email": signer["email"],
             "user_name": f"{signer['first_name']} {signer['family_name']}",
@@ -130,7 +133,28 @@ def prepare_signing_flow(sh_session: SigningHubSession, sign_flows: List[Dict]):
             piece_uri = sign_flow["piece"]
 
             # Document
-            signinghub_document_uri, _, _ = upload_piece_to_sh(piece_uri, package_id)
+            signinghub_document_uri, _, signinghub_document_id = upload_piece_to_sh(piece_uri, package_id)
+
+            # Auto-place signature field
+            if ADD_SIGNATURE_FIELD_ENABLED:
+                if sign_flow["piece_type"] == DECISION_REPORT_TYPE_URI:
+                    logger.info(f"auto-placing signature field for {piece_uri} {package_id} {signinghub_document_id}")
+                    for mandatee in signer_mandatees:
+                        logger.info(f"placing field for signer {mandatee}")
+                        try:
+                            sh_session.auto_place_signature_field(package_id, signinghub_document_id, {
+                                "search_text": f"{mandatee['first_name']} {mandatee['family_name']}",
+                                "order": 1,
+                                "field_type": "SIGNATURE",
+                                "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
+                                "placement": "TOP",
+                                "max_length": 9999,
+                                "dimensions": { "width": SIGNATURE_FIELD_WIDTH, "height": SIGNATURE_FIELD_HEIGHT },
+                                "multiline": True
+                            })
+                        except Exception as e:
+                            logger.warn("Something went wrong while auto-placing sign field")
+                            logger.exception(e)
 
             preparation_activity_id = generate_uuid()
             preparation_activity_uri = uri.resource.preparation_activity(preparation_activity_id)

@@ -140,7 +140,7 @@ PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
 PREFIX dct: <http://purl.org/dc/terms/>
 
 SELECT DISTINCT ?id ?sign_flow
-    ?piece ?piece_name ?piece_created
+    ?piece ?piece_name ?piece_created ?piece_type
     ?decision_activity ?decision_report
     ?meeting
 WHERE {
@@ -153,7 +153,8 @@ WHERE {
         sign:markeringVindtPlaatsTijdens ?sign_subcase ;
         sign:gemarkeerdStuk ?piece .
     ?piece dct:title ?piece_name ;
-           dct:created ?piece_created .
+        dct:created ?piece_created ;
+        ^dossier:Collectie.bestaatUit/dct:type ?piece_type .
 
     OPTIONAL {
         ?sign_flow sign:heeftBeslissing ?decision_activity .
