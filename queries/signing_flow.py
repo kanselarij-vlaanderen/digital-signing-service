@@ -6,7 +6,7 @@ from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
                             sparql_escape_uri)
 from helpers import generate_uuid
 
-from ..config import ANNULATIEACTIVITEIT_RESOURCE_BASE_URI
+from ..config import ANNULATIEACTIVITEIT_RESOURCE_BASE_URI, MARKED_STATUS
 
 
 def construct_get_signing_flow_by_uri(signflow_uri: str):
@@ -19,21 +19,20 @@ SELECT DISTINCT (?signflow_id AS ?id) ?sh_package_id ?sh_document_id
 WHERE {
     $signflow a sign:Handtekenaangelegenheid ;
         mu:uuid ?signflow_id .
-    OPTIONAL {
-        $signflow sign:doorlooptHandtekening ?sign_subcase .
-        ?sign_subcase a sign:HandtekenProcedurestap ;
-            ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
-        ?preparation_activity a sign:Voorbereidingsactiviteit ;
-            sign:voorbereidingGenereert ?sh_document .
-        ?sh_document a sh:Document ;
-            sh:packageId ?sh_package_id ;
-            sh:documentId ?sh_document_id .
-    }
+    $signflow sign:doorlooptHandtekening ?sign_subcase .
+    ?sign_subcase a sign:HandtekenProcedurestap ;
+        ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
+    ?preparation_activity a sign:Voorbereidingsactiviteit ;
+        sign:voorbereidingGenereert ?sh_document .
+    ?sh_document a sh:Document ;
+        sh:packageId ?sh_package_id ;
+        sh:documentId ?sh_document_id .
 }
 """)
     return query_template.substitute(
       signflow=sparql_escape_uri(signflow_uri)
     )
+
 
 def construct_get_signing_flow_notifiers(signflow_uri: str):
     query_template = Template("""
@@ -80,12 +79,12 @@ WHERE {
     ?sign_flow a sign:Handtekenaangelegenheid ;
         mu:uuid ?sign_flow_id ;
         sign:doorlooptHandtekening ?signing_subcase .
+    ?signing_subcase ^sign:voorbereidingVindtPlaatsTijdens ?preparation_activity .
     ?signing_subcase ^sign:handtekeningVindtPlaatsTijdens ?signing_activity .
     FILTER NOT EXISTS {
-        ?wrap_up_activity
-            a sign:Afrondingsactiviteit ;
-                sign:afrondingVindtPlaatsTijdens ?signing_subcase ;
-                prov:wasInformedBy ?signing_activity .
+        ?wrap_up_activity a sign:Afrondingsactiviteit ;
+            sign:afrondingVindtPlaatsTijdens ?signing_subcase ;
+            prov:wasInformedBy ?signing_activity .
     }
     FILTER NOT EXISTS {
         ?refusal_activity a sign:Weigeractiviteit ;
@@ -141,7 +140,7 @@ PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
 PREFIX dct: <http://purl.org/dc/terms/>
 
 SELECT DISTINCT ?id ?sign_flow
-    ?piece ?piece_name ?piece_created
+    ?piece ?piece_name ?piece_created ?piece_type
     ?decision_activity ?decision_report
     ?meeting
 WHERE {
@@ -154,7 +153,8 @@ WHERE {
         sign:markeringVindtPlaatsTijdens ?sign_subcase ;
         sign:gemarkeerdStuk ?piece .
     ?piece dct:title ?piece_name ;
-           dct:created ?piece_created .
+        dct:created ?piece_created ;
+        ^dossier:Collectie.bestaatUit/dct:type ?piece_type .
 
     OPTIONAL {
         ?sign_flow sign:heeftBeslissing ?decision_activity .
@@ -205,6 +205,38 @@ def get_physical_files_of_sign_flows(signflow_uris):
     )
 
 
+def get_physical_files_of_sign_flows_by_id(signflow_ids):
+    query_template = Template("""
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+
+    SELECT DISTINCT (?physical_file AS ?uri)
+    WHERE {
+        VALUES ?id { $signflow_ids }
+
+        ?sign_flow a sign:Handtekenaangelegenheid ;
+            mu:uuid ?id ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?marking_activity
+            sign:markeringVindtPlaatsTijdens ?sign_subcase ;
+            sign:gemarkeerdStuk ?piece .
+
+        {
+            ?piece sign:getekendStukKopie / prov:value / ^nie:dataSource ?physical_file .
+        } UNION {
+            ?piece ^sign:ongetekendStuk / prov:value / ^nie:dataSource ?physical_file .
+        }
+    }
+    """)
+    return query_template.substitute(
+        signflow_idss=" ".join(
+            list(map(sparql_escape_uri, signflow_ids))
+        ),
+    )
+
+
 def reset_signflows(signflow_uris):
     query_template = Template("""
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
@@ -218,7 +250,7 @@ def reset_signflows(signflow_uris):
         ?sign_flow dct:creator ?creator .
         ?s ?p ?o .
     } INSERT {
-        ?sign_flow adms:status <http://themis.vlaanderen.be/id/handtekenstatus/f6a60072-0537-11ee-bb35-ee395168dcf7> .
+        ?sign_flow adms:status $status_marked .
     } WHERE {
         VALUES ?sign_flow { $signflow_uris }
 
@@ -267,8 +299,9 @@ def reset_signflows(signflow_uris):
     """)
     return query_template.substitute(
         signflow_uris=" ".join(
-            list(map(sparql_escape_uri, signflow_uris))
+            list(map(sparql_escape_uri, signflow_uris)),
         ),
+        status_marked=sparql_escape_uri(MARKED_STATUS),
     )
 
 

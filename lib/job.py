@@ -19,6 +19,7 @@ from ..queries.signing_flow import (
     get_physical_files_of_sign_flows,
     reset_signflows,
 )
+from ..queries.file import delete_physical_file_metadata
 
 
 def create_job(sign_flow_uris, mu_session_uri):
@@ -211,5 +212,6 @@ def execute_prepare_sign_flow_job(job):
         )
         for physical_file in physical_files:
             delete_physical_file(physical_file["uri"])
+            agent_update(delete_physical_file_metadata(physical_file["uri"]))
         agent_update(reset_signflows(sign_flow_uris))
         raise exception

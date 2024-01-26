@@ -1,4 +1,5 @@
 from urllib.parse import urljoin
+import traceback
 
 import requests
 import time
@@ -12,8 +13,7 @@ from lib.query_result_helpers import to_recs
 
 from .agent_query import query as agent_query
 from .authentication import (MACHINE_ACCOUNTS,
-                             open_new_signinghub_machine_user_session,
-                             signinghub_session_required)
+                             open_new_signinghub_machine_user_session)
 from .config import SIGNINGHUB_APP_DOMAIN, SYNC_CRON_PATTERN
 from .lib import exceptions, signing_flow
 from .lib.generic import get_by_uuid
@@ -21,8 +21,8 @@ from .lib.update_signing_flow import update_signing_flow
 from .lib.mark_pieces_for_signing import mark_pieces_for_signing as mark_pieces_for_signing_impl
 from .lib.file import delete_physical_file
 from .lib.job import create_job, execute_job, get_job
-from .queries.signing_flow import get_physical_files_of_sign_flows, remove_signflows, reset_signflows
-
+from .queries.signing_flow import get_physical_files_of_sign_flows_by_id, remove_signflows
+from .queries.file import delete_physical_file_metadata
 
 
 def sync_all_ongoing_flows():
@@ -38,17 +38,31 @@ scheduler.start()
 @app.route("/verify-credentials")
 def sh_profile_info():
     """Maintenance endpoint for debugging SigningHub authentication"""
-    response_code = 200
+    response_code = 204
+    errors = []
     for ovo_code in MACHINE_ACCOUNTS.keys():
         try:
-            sh_session = open_new_signinghub_machine_user_session(ovo_code)
+            open_new_signinghub_machine_user_session(ovo_code)
             logger.info(f"Successful login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
             # sh_session.logout() doesn't work. https://manuals.ascertia.com/SigningHub/8.2/Api/#tag/Authentication/operation/V4_Account_LogoutUser specifies a (required?) device token which we don't have
         except Exception as e:
             response_code = 500
-            logger.warn(f"Failed login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
-            logger.warn(e)
-    return make_response("", response_code)
+            logger.warn(f"Failed login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code].get('USERNAME')})")
+            logger.exception(e)
+            errors.append({
+                "title": "Failed login for machine user account",
+                "detail": traceback.format_exc(),
+                "status": 500,
+            })
+    if response_code == 204:
+        return make_response("", response_code)
+    else:
+        response = jsonify({
+            "errors": errors,
+        })
+        response.status_code = 500
+        response.headers["Content-Type"] = "application/vnd.api+json"
+        return response
 
 
 @app.route('/job/<job_id>')
@@ -65,7 +79,6 @@ def job(job_id):
 
 
 @app.route('/signing-flows/upload-to-signinghub', methods=['POST'])
-@signinghub_session_required  # provides g.sh_session
 def prepare_post():
     validate_json_api_content_type(request)
     body = request.get_json(force=True)
@@ -89,22 +102,12 @@ def prepare_post():
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
-
-@app.route('/signing-flows/reset-signflow/<signflow_id>', methods=['POST'])
-def signinghub_reset_signflow(signflow_id):
-    update(reset_signflows([signflow_id]))
-    # Give cache time to update
-    # Ideally we want to return the changed values so the frontend
-    # can update without refetching the new data.
-    time.sleep(1)
-    return make_response("", 204)
-
-
 @app.route('/signing-flows/<signflow_id>', methods=['DELETE'])
 def signinghub_remove_signflow(signflow_id):
-    physical_files = to_recs(query(get_physical_files_of_sign_flows([signflow_id])))
+    physical_files = to_recs(query(get_physical_files_of_sign_flows_by_id([signflow_id])))
     for physical_file in physical_files:
         delete_physical_file(physical_file["uri"])
+        update(delete_physical_file_metadata(physical_file["uri"]))
     update(remove_signflows([signflow_id]))
     # Give cache time to update
     # Ideally we want to return the changed values so the frontend
