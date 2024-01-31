@@ -231,7 +231,7 @@ def get_physical_files_of_sign_flows_by_id(signflow_ids):
     }
     """)
     return query_template.substitute(
-        signflow_idss=" ".join(
+        signflow_ids=" ".join(
             list(map(sparql_escape_uri, signflow_ids))
         ),
     )
@@ -244,7 +244,7 @@ def reset_signflows(signflow_uris):
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX adms: <http://www.w3.org/ns/adms#>
-    
+
     DELETE {
         ?sign_flow adms:status ?status .
         ?sign_flow dct:creator ?creator .
@@ -259,7 +259,7 @@ def reset_signflows(signflow_uris):
             adms:status ?status ;
             dct:creator ?creator ;
             sign:doorlooptHandtekening ?sign_subcase .
-        ?marking_activity 
+        ?marking_activity
             sign:markeringVindtPlaatsTijdens ?sign_subcase ;
             sign:gemarkeerdStuk ?piece .
         {
