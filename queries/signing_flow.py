@@ -153,8 +153,8 @@ WHERE {
         sign:markeringVindtPlaatsTijdens ?sign_subcase ;
         sign:gemarkeerdStuk ?piece .
     ?piece dct:title ?piece_name ;
-        dct:created ?piece_created ;
-        ^dossier:Collectie.bestaatUit/dct:type ?piece_type .
+        dct:created ?piece_created .
+    OPTIONAL { ?piece ^dossier:Collectie.bestaatUit/dct:type ?piece_type . }
 
     OPTIONAL {
         ?sign_flow sign:heeftBeslissing ?decision_activity .
