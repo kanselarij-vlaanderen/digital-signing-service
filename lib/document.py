@@ -1,25 +1,24 @@
 from string import Template
 
 from escape_helpers import sparql_escape_string, sparql_escape_uri
-from flask import g
-from helpers import generate_uuid, logger, query, update
+from helpers import generate_uuid
 
-from ..agent_query import update as agent_update
+from ..agent_query import query as agent_query, update as agent_update
 from ..config import APPLICATION_GRAPH, KALEIDOS_RESOURCE_BASE_URI
 from ..queries.document import (construct_get_document,
                                 construct_get_file_for_document,
                                 construct_insert_document)
 from ..queries.file import construct_get_file_query
-from . import exceptions, query_result_helpers, signing_flow, uri
+from . import query_result_helpers, uri
 from .file import download_sh_doc_to_mu_file, fs_sanitize_filename
 
 SH_SOURCE = "Kaleidos"
 
 DOC_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 
-def upload_piece_to_sh(piece_uri, signinghub_package_id=None):
+def upload_piece_to_sh(sh_session, piece_uri, signinghub_package_id=None):
     get_doc_query_string = construct_get_document(piece_uri)
-    doc_result = query(get_doc_query_string)
+    doc_result = agent_query(get_doc_query_string)
     doc_records = query_result_helpers.to_recs(doc_result)
     doc_record = query_result_helpers.ensure_1(doc_records)
 
@@ -27,13 +26,13 @@ def upload_piece_to_sh(piece_uri, signinghub_package_id=None):
         piece_uri,
         "application/pdf"
     )
-    file_result = query(get_file_query_string)
+    file_result = agent_query(get_file_query_string)
     file_records = query_result_helpers.to_recs(file_result)
     file_record = query_result_helpers.ensure_1(file_records)
     get_file_query_string = construct_get_file_query(
         file_record["uri"],
     )
-    file_result = query(get_file_query_string)
+    file_result = agent_query(get_file_query_string)
     file_records = query_result_helpers.to_recs(file_result)
     file_record = query_result_helpers.ensure_1(file_records)
     file_path = file_record["physicalFile"]
@@ -45,13 +44,13 @@ def upload_piece_to_sh(piece_uri, signinghub_package_id=None):
         file_content = f.read()
 
     if signinghub_package_id is None:
-        signinghub_package = g.sh_session.add_package({
+        signinghub_package = sh_session.add_package({
             # package_name: "New Package", # Defaults to "Undefined"
             "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
         })
         signinghub_package_id = signinghub_package["package_id"]
 
-    signinghub_document = g.sh_session.upload_document(
+    signinghub_document = sh_session.upload_document(
         signinghub_package_id,
         file_content,
         file_name,
@@ -86,7 +85,7 @@ INSERT DATA {
         sh_document_id=sparql_escape_string(str(signinghub_document_id)),
         sh_package_id=sparql_escape_string(str(signinghub_package_id)),
     )
-    update(query_string)
+    agent_update(query_string)
 
     return signinghub_document_uri, signinghub_package_id, signinghub_document_id
 

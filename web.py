@@ -3,24 +3,25 @@ import traceback
 
 import requests
 import time
+import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from flask import g, make_response, request, jsonify
+from flask import make_response, request, jsonify
 from helpers import error, logger, query, validate_json_api_content_type, update
 
 from lib.query_result_helpers import to_recs
 
 from .agent_query import query as agent_query
 from .authentication import (MACHINE_ACCOUNTS,
-                             open_new_signinghub_machine_user_session,
-                             signinghub_session_required)
+                             open_new_signinghub_machine_user_session)
 from .config import SIGNINGHUB_APP_DOMAIN, SYNC_CRON_PATTERN
-from .lib import exceptions, prepare_signing_flow, signing_flow
+from .lib import exceptions, signing_flow
 from .lib.generic import get_by_uuid
 from .lib.update_signing_flow import update_signing_flow
 from .lib.mark_pieces_for_signing import mark_pieces_for_signing as mark_pieces_for_signing_impl
 from .lib.file import delete_physical_file
-from .queries.signing_flow import construct_get_signing_flows_by_uuids, get_physical_files_of_sign_flows, remove_signflows, reset_signflows
+from .lib.job import create_job, execute_job, get_job
+from .queries.signing_flow import get_physical_files_of_sign_flows_by_id, remove_signflows
 from .queries.file import delete_physical_file_metadata
 
 
@@ -33,31 +34,6 @@ def sync_all_ongoing_flows():
 scheduler = BackgroundScheduler()
 scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab(SYNC_CRON_PATTERN))
 scheduler.start()
-
-@signinghub_session_required  # provides g.sh_session
-def prepare_post_impl(sign_flow_ids):
-        try:
-            query_string = construct_get_signing_flows_by_uuids(sign_flow_ids)
-            sign_flows = to_recs(query(query_string))
-
-            # Remove decision_report when it's equal to piece
-            for sign_flow in sign_flows:
-                if sign_flow["piece"] == sign_flow["decision_report"]:
-                    sign_flow["decision_report"] = None
-
-            prepare_signing_flow.prepare_signing_flow(g.sh_session, sign_flows)
-        except Exception as ex:
-            logger.exception("Could not prepare sign flows")
-            return error(str(ex), status=500)
-        
-def reset_signflows_impl(sign_flow_ids):
-    logger.info('resetting sign flows')
-    physical_files = to_recs(query(get_physical_files_of_sign_flows(sign_flow_ids)))
-    for physical_file in physical_files:
-        delete_physical_file(physical_file["uri"])
-        update(delete_physical_file_metadata(physical_file["uri"]))
-    update(reset_signflows(sign_flow_ids))
-    time.sleep(2) # time for cache clear
 
 @app.route("/verify-credentials")
 def sh_profile_info():
@@ -89,26 +65,46 @@ def sh_profile_info():
         return response
 
 
+@app.route('/job/<job_id>')
+def job(job_id):
+    job = get_job(job_id)
+
+    if job:
+        del job["mu_session_uri"]
+        res = jsonify(job)
+        res.headers["Content-Type"] = "application/vnd.api+json"
+        return res
+    else:
+        return error(f"Job not found", 404)
+
+
 @app.route('/signing-flows/upload-to-signinghub', methods=['POST'])
 def prepare_post():
     validate_json_api_content_type(request)
     body = request.get_json(force=True)
 
-    sign_flow_ids = [entry["id"] for entry in body["data"]]
+    sign_flow_uris = [entry["uri"] for entry in body["data"]]
+    mu_session_id = request.headers["MU-SESSION-ID"]
 
-    session_error = prepare_post_impl(sign_flow_ids) # requires a session
-    if session_error is not None and type(session_error) is type(error('class to compare')):
-        logger.info('preparing post failed')
-        reset_signflows_impl(sign_flow_ids)
-        return session_error
+    job = create_job(sign_flow_uris, mu_session_id)
 
-    res = make_response("", 204)
+    thread = threading.Thread(target=lambda: execute_job(job))
+    thread.start()
+
+    res = jsonify({
+            "id": job["id"],
+            "uri": job["uri"],
+            "sign_flow_uris": job["sign_flow_uris"],
+            "created": job["created"],
+            "modified": job["modified"],
+            "status": job["status"],
+    })
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res
 
 @app.route('/signing-flows/<signflow_id>', methods=['DELETE'])
 def signinghub_remove_signflow(signflow_id):
-    physical_files = to_recs(query(get_physical_files_of_sign_flows([signflow_id])))
+    physical_files = to_recs(query(get_physical_files_of_sign_flows_by_id([signflow_id])))
     for physical_file in physical_files:
         delete_physical_file(physical_file["uri"])
         update(delete_physical_file_metadata(physical_file["uri"]))

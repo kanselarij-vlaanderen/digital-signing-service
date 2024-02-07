@@ -131,7 +131,7 @@ WHERE {
     )
 
 
-def construct_get_signing_flows_by_uuids(ids: List[str]) -> str:
+def construct_get_signing_flows_by_uris(uris: List[str]) -> str:
     query_template = Template("""
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
@@ -144,7 +144,7 @@ SELECT DISTINCT ?id ?sign_flow
     ?decision_activity ?decision_report
     ?meeting
 WHERE {
-    VALUES ?id { $ids }
+    VALUES ?sign_flow { $uris }
     ?sign_flow a sign:Handtekenaangelegenheid ;
         mu:uuid ?id ;
         sign:doorlooptHandtekening ?sign_subcase .
@@ -153,8 +153,8 @@ WHERE {
         sign:markeringVindtPlaatsTijdens ?sign_subcase ;
         sign:gemarkeerdStuk ?piece .
     ?piece dct:title ?piece_name ;
-        dct:created ?piece_created ;
-        ^dossier:Collectie.bestaatUit/dct:type ?piece_type .
+        dct:created ?piece_created .
+    OPTIONAL { ?piece ^dossier:Collectie.bestaatUit/dct:type ?piece_type . }
 
     OPTIONAL {
         ?sign_flow sign:heeftBeslissing ?decision_activity .
@@ -168,12 +168,44 @@ WHERE {
 }
 """)
     return query_template.substitute(
-        ids=" ".join(list(map(sparql_escape_string, ids))),
+        uris=" ".join(list(map(sparql_escape_uri, uris))),
     )
 
 
 
-def get_physical_files_of_sign_flows(signflow_ids):
+def get_physical_files_of_sign_flows(signflow_uris):
+    query_template = Template("""
+    PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+    PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+
+    SELECT DISTINCT (?physical_file AS ?uri)
+    WHERE {
+        VALUES ?sign_flow { $signflow_uris }
+
+        ?sign_flow a sign:Handtekenaangelegenheid ;
+            mu:uuid ?id ;
+            sign:doorlooptHandtekening ?sign_subcase .
+        ?marking_activity
+            sign:markeringVindtPlaatsTijdens ?sign_subcase ;
+            sign:gemarkeerdStuk ?piece .
+
+        {
+            ?piece sign:getekendStukKopie / prov:value / ^nie:dataSource ?physical_file .
+        } UNION {
+            ?piece ^sign:ongetekendStuk / prov:value / ^nie:dataSource ?physical_file .
+        }
+    }
+    """)
+    return query_template.substitute(
+        signflow_uris=" ".join(
+            list(map(sparql_escape_uri, signflow_uris))
+        ),
+    )
+
+
+def get_physical_files_of_sign_flows_by_id(signflow_ids):
     query_template = Template("""
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
@@ -200,19 +232,19 @@ def get_physical_files_of_sign_flows(signflow_ids):
     """)
     return query_template.substitute(
         signflow_ids=" ".join(
-            list(map(sparql_escape_string, signflow_ids))
+            list(map(sparql_escape_uri, signflow_ids))
         ),
     )
 
 
-def reset_signflows(signflow_ids):
+def reset_signflows(signflow_uris):
     query_template = Template("""
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
     PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
     PREFIX dct: <http://purl.org/dc/terms/>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX adms: <http://www.w3.org/ns/adms#>
-    
+
     DELETE {
         ?sign_flow adms:status ?status .
         ?sign_flow dct:creator ?creator .
@@ -220,14 +252,14 @@ def reset_signflows(signflow_ids):
     } INSERT {
         ?sign_flow adms:status $status_marked .
     } WHERE {
-        VALUES ?id { $signflow_ids }
+        VALUES ?sign_flow { $signflow_uris }
 
         ?sign_flow a sign:Handtekenaangelegenheid ;
             mu:uuid ?id ;
             adms:status ?status ;
             dct:creator ?creator ;
             sign:doorlooptHandtekening ?sign_subcase .
-        ?marking_activity 
+        ?marking_activity
             sign:markeringVindtPlaatsTijdens ?sign_subcase ;
             sign:gemarkeerdStuk ?piece .
         {
@@ -266,8 +298,8 @@ def reset_signflows(signflow_ids):
     }
     """)
     return query_template.substitute(
-        signflow_ids=" ".join(
-            list(map(sparql_escape_string, signflow_ids)),
+        signflow_uris=" ".join(
+            list(map(sparql_escape_uri, signflow_uris)),
         ),
         status_marked=sparql_escape_uri(MARKED_STATUS),
     )
