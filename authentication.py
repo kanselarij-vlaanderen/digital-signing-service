@@ -83,10 +83,8 @@ def open_new_signinghub_machine_user_session(ovo_code, scope=None):
     account_details = MACHINE_ACCOUNTS[ovo_code]
     sh_session.authenticate(account_details["API_CLIENT_ID"],
                             account_details["API_CLIENT_SECRET"],
-                            "password", # grant type
-                            account_details["USERNAME"],
-                            account_details["PASSWORD"],
-                            scope)
+                            grant_type="client_credentials",
+                            scope=scope)
     return sh_session
 
 def ensure_signinghub_machine_user_session(scope=None):
