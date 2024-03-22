@@ -1,4 +1,6 @@
 from string import Template
+from pypdf import PdfReader, PdfWriter
+from io import BytesIO
 
 from escape_helpers import sparql_escape_string, sparql_escape_uri
 from helpers import generate_uuid
@@ -7,16 +9,19 @@ from ..agent_query import query as agent_query, update as agent_update
 from ..config import APPLICATION_GRAPH, KALEIDOS_RESOURCE_BASE_URI
 from ..queries.document import (construct_get_document,
                                 construct_get_file_for_document,
-                                construct_insert_document)
+                                construct_insert_document,
+                                construct_get_decreet_of_bekrachtiging)
 from ..queries.file import construct_get_file_query
 from . import query_result_helpers, uri
 from .file import download_sh_doc_to_mu_file, fs_sanitize_filename
+from ..constants import BEKRACHTIGING_TYPE_URI
 
 SH_SOURCE = "Kaleidos"
 
 DOC_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/stuk/"
 
-def upload_piece_to_sh(sh_session, piece_uri, signinghub_package_id=None):
+
+def get_file_path_of_piece(piece_uri):
     get_doc_query_string = construct_get_document(piece_uri)
     doc_result = agent_query(get_doc_query_string)
     doc_records = query_result_helpers.to_recs(doc_result)
@@ -40,23 +45,10 @@ def upload_piece_to_sh(sh_session, piece_uri, signinghub_package_id=None):
     file_name = file_name.strip()  # SH fails on uploads containing leading whitespace
 
     file_path = file_path.replace("share://", "/share/")
-    with open(file_path, "rb") as f:
-        file_content = f.read()
+    return {"path": file_path, "name": file_name}
 
-    if signinghub_package_id is None:
-        signinghub_package = sh_session.add_package({
-            # package_name: "New Package", # Defaults to "Undefined"
-            "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
-        })
-        signinghub_package_id = signinghub_package["package_id"]
 
-    signinghub_document = sh_session.upload_document(
-        signinghub_package_id,
-        file_content,
-        file_name,
-        SH_SOURCE,
-        convert_document=False)
-    signinghub_document_id = signinghub_document["documentid"]
+def persist_signinghub_document_to_triplestore(signinghub_document_id, signinghub_package_id, piece_uri):
     signinghub_document_uri = uri.resource.signinghub_document(signinghub_package_id, signinghub_document_id)
 
     sh_document_muid = generate_uuid()
@@ -86,8 +78,59 @@ INSERT DATA {
         sh_package_id=sparql_escape_string(str(signinghub_package_id)),
     )
     agent_update(query_string)
+    return signinghub_document_uri
 
-    return signinghub_document_uri, signinghub_package_id, signinghub_document_id
+
+def upload_piece_to_sh(sh_session, piece_uri, sh_package_id=None, piece_type=None):
+    file = get_file_path_of_piece(piece_uri)
+    file_name = file["name"]
+    file_path = file["path"]
+
+    if sh_package_id is None:
+        sh_package = sh_session.add_package({
+            # package_name: "New Package", # Defaults to "Undefined"
+            "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
+        })
+        sh_package_id = sh_package["package_id"]
+
+    # When signing a "bekrachtiging", we want to attach the decreet
+    # (if it exists) to the bekrachtiging PDF. We don't want to store
+    # this new PDF + attachment, we only want to send it to SigningHub
+    if piece_type == BEKRACHTIGING_TYPE_URI:
+        decreet = get_decreet_of_bekrachtiging(piece_uri)
+        if decreet:
+            bekrachtiging_file = get_file_path_of_piece(piece_uri)
+            reader = PdfReader(bekrachtiging_file["path"])
+            writer = PdfWriter()
+            for page in reader.pages:
+                writer.add_page(page)
+
+            decreet_file = get_file_path_of_piece(decreet["uri"])
+            with open(decreet_file["path"], "rb") as f:
+                writer.add_attachment(f"{decreet['title']}.pdf", f.read())
+
+            with BytesIO() as bytes_stream:
+                writer.write(bytes_stream)
+                bytes_stream.seek(0)
+                file_content = bytes_stream.read()
+    else:
+        with open(file_path, "rb") as f:
+            file_content = f.read()
+
+    sh_document = sh_session.upload_document(
+        sh_package_id,
+        file_content,
+        file_name,
+        SH_SOURCE,
+        convert_document=False)
+    sh_document_id = sh_document["documentid"]
+
+    sh_document_uri = persist_signinghub_document_to_triplestore(sh_document_id,
+                                                                 sh_package_id,
+                                                                 piece_uri)
+
+    return sh_document_uri, sh_package_id, sh_document_id
+
 
 def download_sh_doc_to_kaleidos_doc(sh_package_id, sh_document_id, document_name):
     virtual_file = download_sh_doc_to_mu_file(sh_package_id, sh_document_id)
@@ -102,3 +145,13 @@ def download_sh_doc_to_kaleidos_doc(sh_package_id, sh_document_id, document_name
                                                      virtual_file["uri"])
     agent_update(ins_doc_query_string)
     return doc
+
+
+def get_decreet_of_bekrachtiging(piece_uri):
+    get_doc_query_string = construct_get_decreet_of_bekrachtiging(piece_uri)
+    doc_result = agent_query(get_doc_query_string)
+    doc_records = query_result_helpers.to_recs(doc_result)
+    if len(doc_records) == 1:
+        return doc_records[0]
+    else:
+        return None
