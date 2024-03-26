@@ -8,7 +8,9 @@ from escape_helpers import sparql_escape_string, sparql_escape_uri
 from helpers import generate_uuid, logger, query, update
 from signinghub_api_client.client import SigningHubSession
 
-from ..config import APPLICATION_GRAPH, ADD_SIGNATURE_FIELD_ENABLED, SIGNATURE_FIELD_WIDTH, SIGNATURE_FIELD_HEIGHT
+from ..config import (APPLICATION_GRAPH,
+                      ADD_SIGNATURE_FIELD_ENABLED,
+                      SIGNATURE_FIELD_WIDTH, SIGNATURE_FIELD_HEIGHT)
 from ..utils import pythonize_iso_timestamp
 from . import signing_flow, uri
 from .document import upload_piece_to_sh
@@ -138,7 +140,10 @@ def prepare_signing_flow(
             piece_uri = sign_flow["piece"]
 
             # Document
-            signinghub_document_uri, _, signinghub_document_id = upload_piece_to_sh(sh_session, piece_uri, package_id)
+            signinghub_document_uri, _, signinghub_document_id = upload_piece_to_sh(sh_session,
+                                                                                    piece_uri,
+                                                                                    package_id,
+                                                                                    sign_flow["piece_type"])
 
             # Auto-place signature field
             if ADD_SIGNATURE_FIELD_ENABLED:

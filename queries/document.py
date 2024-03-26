@@ -5,9 +5,12 @@ from string import Template
 from escape_helpers import (sparql_escape_datetime, sparql_escape_string,
                             sparql_escape_uri)
 
-from ..config import (ACCESS_LEVEL_CABINET, ACCESS_LEVEL_GOVERNMENT,
-                      ACCESS_LEVEL_PUBLIC, APPLICATION_GRAPH,
+from ..config import (ACCESS_LEVEL_CABINET,
+                      ACCESS_LEVEL_GOVERNMENT,
+                      ACCESS_LEVEL_PUBLIC,
+                      APPLICATION_GRAPH,
                       TIMEZONE)
+from constants import DECREET_TYPE_URI
 
 def construct_get_file_for_document(document_uri, file_mimetype=None, graph=APPLICATION_GRAPH):
     if file_mimetype is not None:
@@ -45,6 +48,40 @@ LIMIT 1
         graph=sparql_escape_uri(graph),
         document=sparql_escape_uri(document_uri),
         format_filter=format_filter)
+
+
+def construct_get_decreet_of_bekrachtiging(bekrachtiging_uri, graph=APPLICATION_GRAPH):
+    query_template = Template("""
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
+PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX dossier: <https://data.vlaanderen.be/ns/dossier#>
+PREFIX pav: <http://purl.org/pav/>
+
+SELECT DISTINCT (?piece AS ?uri) ?title
+WHERE {
+    GRAPH $graph {
+        ?agendaitem besluitvorming:geagendeerdStuk $bekrachtiging .
+        FILTER NOT EXISTS { [] prov:wasRevisionOf ?agendaitem }
+        ?agendaitem besluitvorming:geagendeerdStuk ?decreet .
+        ?documentContainer dossier:Collectie.bestaatUit ?decreet ;
+            dct:type $decreet_type .
+        FILTER NOT EXISTS { [] pav:previousVersion ?decreet }
+        ?decreet dct:title ?title .
+         OPTIONAL {
+           ?signedDecreet sign:ongetekendStuk ?decreet .
+         }
+         BIND(COALESCE(?signedDecreet, ?decreet) AS ?piece)
+    }
+}
+    """)
+    return query_template.substitute(
+        graph=sparql_escape_uri(graph),
+        bekrachtiging=sparql_escape_uri(bekrachtiging_uri),
+        decreet_type=sparql_escape_uri(DECREET_TYPE_URI),
+    )
+
 
 def construct_get_document(document_uri):
     query_template = Template("""
