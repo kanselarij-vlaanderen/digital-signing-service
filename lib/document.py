@@ -113,6 +113,9 @@ def upload_piece_to_sh(sh_session, piece_uri, sh_package_id=None, piece_type=Non
                 writer.write(bytes_stream)
                 bytes_stream.seek(0)
                 file_content = bytes_stream.read()
+        else:
+            with open(file_path, "rb") as f:
+                file_content = f.read()
     else:
         with open(file_path, "rb") as f:
             file_content = f.read()
