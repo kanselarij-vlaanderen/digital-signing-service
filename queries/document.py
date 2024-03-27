@@ -52,6 +52,7 @@ LIMIT 1
 
 def construct_get_decreet_of_bekrachtiging(bekrachtiging_uri, graph=APPLICATION_GRAPH):
     query_template = Template("""
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 PREFIX sign: <http://mu.semte.ch/vocabularies/ext/handtekenen/>
 PREFIX besluitvorming: <https://data.vlaanderen.be/ns/besluitvorming#>
 PREFIX dct: <http://purl.org/dc/terms/>
@@ -62,7 +63,9 @@ PREFIX pav: <http://purl.org/pav/>
 SELECT DISTINCT (?piece AS ?uri) ?title
 WHERE {
     GRAPH $graph {
-        ?agendaitem besluitvorming:geagendeerdStuk $bekrachtiging .
+        ?subcase ext:heeftBekrachtiging $bekrachtiging .
+        ?agendaActivity besluitvorming:vindtPlaatsTijdens ?subcase ;
+          besluitvorming:genereertAgendapunt ?agendaitem .
         FILTER NOT EXISTS { [] prov:wasRevisionOf ?agendaitem }
         ?agendaitem besluitvorming:geagendeerdStuk ?decreet .
         ?documentContainer dossier:Collectie.bestaatUit ?decreet ;
