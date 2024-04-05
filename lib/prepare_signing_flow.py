@@ -16,7 +16,7 @@ from . import signing_flow, uri
 from .document import upload_piece_to_sh
 from .kaleidos_document_name import DOC_NAME_REGEX, compare_piece_names
 from .mandatee import get_mandatee
-from ..constants import DECISION_REPORT_TYPE_URI
+from ..constants import DECISION_REPORT_TYPE_URI, BEKRACHTIGING_TYPE_URI
 
 
 def sort_sign_flows_by_piece(sign_flows: List[Dict]):
@@ -147,24 +147,17 @@ def prepare_signing_flow(
 
             # Auto-place signature field
             if ADD_SIGNATURE_FIELD_ENABLED:
-                if sign_flow["piece_type"] == DECISION_REPORT_TYPE_URI:
-                    logger.info(f"auto-placing signature field for {piece_uri} {package_id} {signinghub_document_id}")
-                    for mandatee in signer_mandatees:
-                        logger.info(f"placing field for signer {mandatee}")
-                        try:
-                            sh_session.auto_place_signature_field(package_id, signinghub_document_id, {
-                                "search_text": f"{mandatee['first_name']} {mandatee['family_name']}",
-                                "order": 1,
-                                "field_type": "SIGNATURE",
-                                "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
-                                "placement": "TOP",
-                                "max_length": 9999,
-                                "dimensions": { "width": SIGNATURE_FIELD_WIDTH, "height": SIGNATURE_FIELD_HEIGHT },
-                                "multiline": True
-                            })
-                        except Exception as e:
-                            logger.warn("Something went wrong while auto-placing sign field")
-                            logger.exception(e)
+                if sign_flow["piece_type"] in [
+                    DECISION_REPORT_TYPE_URI, 
+                    BEKRACHTIGING_TYPE_URI
+                ]:
+                    auto_place_signature(
+                        piece_uri, 
+                        package_id, 
+                        signinghub_document_id, 
+                        signer_mandatees,
+                        sh_session
+                    )
 
             preparation_activity_id = generate_uuid()
             preparation_activity_uri = uri.resource.preparation_activity(preparation_activity_id)
@@ -179,6 +172,46 @@ def prepare_signing_flow(
             update_method(query_string)
 
     return
+
+
+def auto_place_signature(
+    piece_uri, 
+    package_id, 
+    signinghub_document_id, 
+    signer_mandatees,
+    sh_session
+):
+    logger.info((
+        f"auto-placing signature field for "
+        f"{piece_uri} {package_id} {signinghub_document_id}"
+    ))
+    for mandatee in signer_mandatees:
+        logger.info(f"placing field for signer {mandatee}")
+        sh_data = {
+            "search_text": (
+                f"{mandatee['first_name']} "
+                f"{mandatee['family_name']}"
+            ),
+            "order": 1,
+            "field_type": "SIGNATURE",
+            "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
+            "placement": "TOP",
+            "max_length": 9999,
+            "dimensions": { 
+                "width": SIGNATURE_FIELD_WIDTH, 
+                "height": SIGNATURE_FIELD_HEIGHT 
+            },
+            "multiline": True
+        }
+        try:
+            sh_session.auto_place_signature_field(
+                package_id, 
+                signinghub_document_id, 
+                sh_data
+            )
+        except Exception as e:
+            logger.warn("Something went wrong while auto-placing sign field")
+            logger.exception(e)
 
 
 # optional sign activities to link in case some were already created before sending to SH
