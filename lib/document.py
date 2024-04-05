@@ -1,5 +1,5 @@
 from string import Template
-from pypdf import PdfReader, PdfWriter
+from pikepdf import Pdf, AttachedFileSpec
 from io import BytesIO
 
 from escape_helpers import sparql_escape_string, sparql_escape_uri
@@ -99,20 +99,16 @@ def upload_piece_to_sh(sh_session, piece_uri, sh_package_id=None, piece_type=Non
     if piece_type == BEKRACHTIGING_TYPE_URI:
         decreet = get_decreet_of_bekrachtiging(piece_uri)
         if decreet:
-            bekrachtiging_file = get_file_path_of_piece(piece_uri)
-            reader = PdfReader(bekrachtiging_file["path"])
-            writer = PdfWriter()
-            for page in reader.pages:
-                writer.add_page(page)
-
             decreet_file = get_file_path_of_piece(decreet["uri"])
-            with open(decreet_file["path"], "rb") as f:
-                writer.add_attachment(f"{decreet['title']}.pdf", f.read())
+            with Pdf.open(file["path"]) as pdf:
+                filespec = AttachedFileSpec.from_filepath(pdf, decreet_file["path"])
+                filespec.filename = f"{decreet['title']}.pdf"
+                pdf.attachments[f"{decreet['title']}.pdf"] = filespec
 
-            with BytesIO() as bytes_stream:
-                writer.write(bytes_stream)
-                bytes_stream.seek(0)
-                file_content = bytes_stream.read()
+                with BytesIO() as bytes_stream:
+                    pdf.save(bytes_stream)
+                    bytes_stream.seek(0)
+                    file_content = bytes_stream.read()
         else:
             with open(file_path, "rb") as f:
                 file_content = f.read()
