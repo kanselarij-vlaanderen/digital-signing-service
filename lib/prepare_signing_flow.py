@@ -185,14 +185,14 @@ def auto_place_signature(
         f"auto-placing signature field for "
         f"{piece_uri} {package_id} {signinghub_document_id}"
     ))
-    for mandatee in signer_mandatees:
+    for index, mandatee in enumerate(signer_mandatees):
         logger.info(f"placing field for signer {mandatee}")
         sh_data = {
             "search_text": (
                 f"{mandatee['first_name']} "
                 f"{mandatee['family_name']}"
             ),
-            "order": 1,
+            "order": index + 1,
             "field_type": "SIGNATURE",
             "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
             "placement": "TOP",
