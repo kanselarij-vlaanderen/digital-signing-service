@@ -134,6 +134,7 @@ def prepare_signing_flow(
                 "email_notification": True,
                 "signing_order": 2,
             }])
+        auto_place_order = len(approvers) + len(notified) + 1
 
         for sign_flow in sort_sign_flows_by_piece(grouped_sign_flows):
             sign_flow_uri = sign_flow["sign_flow"]
@@ -156,6 +157,7 @@ def prepare_signing_flow(
                         package_id, 
                         signinghub_document_id, 
                         signer_mandatees,
+                        auto_place_order,
                         sh_session
                     )
 
@@ -179,6 +181,7 @@ def auto_place_signature(
     package_id, 
     signinghub_document_id, 
     signer_mandatees,
+    auto_place_order,
     sh_session
 ):
     logger.info((
@@ -192,7 +195,7 @@ def auto_place_signature(
                 f"{mandatee['first_name']} "
                 f"{mandatee['family_name']}"
             ),
-            "order": index + 1,
+            "order": index + auto_place_order,
             "field_type": "SIGNATURE",
             "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
             "placement": "TOP",
