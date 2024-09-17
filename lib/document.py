@@ -12,7 +12,7 @@ from ..queries.document import (construct_get_document,
                                 construct_insert_document,
                                 construct_get_decreet_of_bekrachtiging)
 from ..queries.file import construct_get_file_query
-from . import query_result_helpers, uri
+from . import query_result_helpers, uri, exceptions
 from .file import download_sh_doc_to_mu_file, fs_sanitize_filename
 from ..constants import BEKRACHTIGING_TYPE_URI
 
@@ -25,7 +25,12 @@ def get_file_path_of_piece(piece_uri):
     get_doc_query_string = construct_get_document(piece_uri)
     doc_result = agent_query(get_doc_query_string)
     doc_records = query_result_helpers.to_recs(doc_result)
-    doc_record = query_result_helpers.ensure_1(doc_records)
+    try:
+      doc_record = query_result_helpers.ensure_1(doc_records)
+    except exceptions.InvalidStateException as e:
+      raise exceptions.InvalidStateException(
+        f"Piece with uri <{piece_uri}> has zero or multiple titles and cannot be processed correctly. Error message: {e}"
+      )
 
     get_file_query_string = construct_get_file_for_document(
         piece_uri,
@@ -33,13 +38,24 @@ def get_file_path_of_piece(piece_uri):
     )
     file_result = agent_query(get_file_query_string)
     file_records = query_result_helpers.to_recs(file_result)
-    file_record = query_result_helpers.ensure_1(file_records)
+    try:
+      file_record = query_result_helpers.ensure_1(file_records)
+    except exceptions.InvalidStateException as e:
+      raise exceptions.InvalidStateException(
+        f"Piece with uri <{piece_uri}> has zero or multiple files and cannot be processed correctly. Erorr message: {e}"
+      )
+
     get_file_query_string = construct_get_file_query(
         file_record["uri"],
     )
     file_result = agent_query(get_file_query_string)
     file_records = query_result_helpers.to_recs(file_result)
-    file_record = query_result_helpers.ensure_1(file_records)
+    try:
+      file_record = query_result_helpers.ensure_1(file_records)
+    except exceptions.InvalidStateException as e:
+      raise exceptions.InvalidStateException(
+        f"File with uri <{file_record['uri']}> has inccorect attributes in the database and cannot be processed correctly."
+      )
     file_path = file_record["physicalFile"]
     file_name = fs_sanitize_filename(doc_record["name"] + "." + file_record["extension"])
     file_name = file_name.strip()  # SH fails on uploads containing leading whitespace
