@@ -28,17 +28,19 @@ PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 PREFIX session: <http://mu.semte.ch/vocabularies/session/>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 PREFIX org: <http://www.w3.org/ns/org#>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
 SELECT ?uuid ?email ?ovoCode
 WHERE {
     GRAPH $session_graph {
         $mu_session mu:uuid ?uuid ;
-            session:account ?account .
+            session:account ?account ;
+            ext:sessionMembership ?membership .
     }
     GRAPH $account_graph {
         ?person foaf:account ?account ;
-            foaf:mbox ?email_uri ;
-            ^org:member / org:organization / org:identifier ?ovoCode .
+            foaf:mbox ?email_uri .
+        ?membership org:organization / org:identifier ?ovoCode .
         BIND(REPLACE(STR(?email_uri), "^mailto:", "") AS ?email)
         FILTER(?ovoCode IN ($ovo_codes))
     }
