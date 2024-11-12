@@ -1,6 +1,7 @@
 from string import Template
 from pikepdf import Pdf, AttachedFileSpec
 from io import BytesIO
+import os
 
 from escape_helpers import sparql_escape_string, sparql_escape_uri
 from helpers import generate_uuid
@@ -54,14 +55,19 @@ def get_file_path_of_piece(piece_uri):
       file_record = query_result_helpers.ensure_1(file_records)
     except exceptions.InvalidStateException as e:
       raise exceptions.InvalidStateException(
-        f"File with uri <{file_record['uri']}> has inccorect attributes in the database and cannot be processed correctly."
+        f"File with uri <{file_record['uri']}> has incorrect attributes in the database and cannot be processed correctly."
       )
     file_path = file_record["physicalFile"]
     file_name = fs_sanitize_filename(doc_record["name"] + "." + file_record["extension"])
     file_name = file_name.strip()  # SH fails on uploads containing leading whitespace
 
     file_path = file_path.replace("share://", "/share/")
-    return {"path": file_path, "name": file_name}
+    if os.path.isfile(file_path):
+        return {"path": file_path, "name": file_name}
+    else:
+        raise exceptions.InvalidStateException(
+            f"Piece with uri <{piece_uri}> has zero files and cannot be processed correctly"
+        )
 
 
 def persist_signinghub_document_to_triplestore(signinghub_document_id, signinghub_package_id, piece_uri):
