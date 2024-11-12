@@ -42,7 +42,6 @@ GRAPH $graph {
     $format_filter
 }
 }
-LIMIT 1
 """)
     return query_template.substitute(
         graph=sparql_escape_uri(graph),
