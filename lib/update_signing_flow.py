@@ -8,7 +8,10 @@ from utils import pythonize_iso_timestamp
 
 from ..agent_query import query as agent_query
 from ..agent_query import update as agent_update
-from ..authentication import ensure_signinghub_machine_user_session
+from ..sudo_query import query as sudo_query
+from ..authentication import (
+    set_signinghub_machine_user_session,
+    create_signinghub_machine_user_session)
 from ..config import KALEIDOS_RESOURCE_BASE_URI
 from ..queries.document import construct_attach_document_to_unsigned_version
 from ..queries.signing_flow import construct_insert_cancellation_activity
@@ -22,6 +25,9 @@ from ..queries.signing_flow_signers import (
     construct_update_signing_activity_end_date,
     construct_update_signing_activity_start_date)
 from ..queries.wrap_up_activity import construct_insert_wrap_up_activity
+from ..queries.session import (
+    construct_get_signinghub_machine_user_session_query,
+    construct_get_org_for_email)
 from .document import download_sh_doc_to_kaleidos_doc
 from .signing_flow import (get_approvers, get_creator, get_pieces, get_signers,
                            get_signing_flow)
@@ -32,7 +38,52 @@ WRAP_UP_ACTIVITY_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/afrondingsactivitei
 def update_signing_flow(signflow_uri: str):
     signing_flow = get_signing_flow(signflow_uri, agent_query)
     creator = get_creator(signflow_uri, agent_query)
-    ensure_signinghub_machine_user_session(creator["email"])
+    """
+    There are multiple paths here
+
+    - There are 1 or multiple existing, active SH sessions
+    - Any of the sessions could work for checking the signing flow
+    - None could work, in which case we need to get the user's OVO codes and mint a new session
+    - There could be multiple OVO codes so we need to perform the operation with each session and see if it works
+
+    Ideally, the Signing Flow stores the OVO code alongside the creator so we don't need to do all this, but currently
+    existing flows will not have the OVO code so no matter how we slice it, we need to implement this retry mechanism
+    Maybe down the line we can start storing OVO codes attached to signing flows, and then later on when all active
+    signing flows have an OVO code we can remove the retry mechanism.
+    """
+
+    ovo_codes = sudo_query(
+        construct_get_org_for_email(creator["email"])
+    )["results"]["bindings"]
+    sessions = sudo_query(
+        construct_get_signinghub_machine_user_session_query(creator["email"])
+    )["results"]["bindings"]
+
+    last_exception = None # A bit of a hack so we have an actual exception to throw
+
+    if sessions:
+        for session in sessions:
+            try:
+                set_signinghub_machine_user_session(session)
+                _update_signing_flow(signing_flow)
+                return
+            except Exception as e:
+                logger.debug("Tried to pull in signing flow updates with existing session but failed, retrying with other session...")
+                last_exception = e
+    # Either no sessions existed, or no existing ones worked, let's try making new sessions
+    for ovo_code in ovo_codes:
+        try:
+            create_signinghub_machine_user_session(creator["email"], ovo_code["ovoCode"]["value"])
+            _update_signing_flow(signing_flow)
+            return
+        except Exception as e:
+            logger.debug("Tried to pull in signing flow updates with a new session but failed, retrying with other credentials if possible...")
+            last_exception = e
+    logger.warn("Could not pull in signing flow updates with existing nor new sessions...")
+    raise last_exception
+
+
+def _update_signing_flow(signing_flow):
     sh_package_id = signing_flow["sh_package_id"]
     try:
         sh_workflow_details = g.sh_session.get_workflow_details(sh_package_id)
