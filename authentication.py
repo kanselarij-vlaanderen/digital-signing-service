@@ -57,25 +57,6 @@ def ensure_signinghub_session(mu_session_uri):
     sh_session = get_or_create_signinghub_session(mu_session_uri)
     g.sh_session = sh_session
 
-def signinghub_session_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        mu_session_id = request.headers["MU-SESSION-ID"]
-        try:
-            ensure_signinghub_session(mu_session_id)
-            return f(*args, **kwargs)
-        except AuthenticationException as ex:
-            logger.exception("Authentication Error during SH login")
-            return error(ex.error_description, code="digital-signing.signinghub.{}".format(ex.error_id))
-        except NoQueryResultsException as ex:
-            logger.exception("No Query Results Error during SH login")
-            return error(ex.args[0], status=500)
-        except Exception as ex:
-            logger.exception("Unknown error during SH login")
-            return error(str(ex), status=500)
-
-    return decorated_function
-
 def open_new_signinghub_machine_user_session(ovo_code, scope=None):
     sh_session = SigningHubSession(SIGNINGHUB_API_URL)
     if CLIENT_CERT_AUTH_ENABLED:
@@ -108,3 +89,22 @@ def ensure_signinghub_machine_user_session(scope=None):
         sh_session_sudo_query = construct_mark_signinghub_session_as_machine_users_query(sh_session_uri)
         sudo_update(sh_session_sudo_query)
         g.sh_session = sh_session
+
+
+def set_signinghub_machine_user_session(session):
+    log("Found a valid SigningHub session.")
+    g.sh_session = SigningHubSession(SIGNINGHUB_API_URL)
+    if CLIENT_CERT_AUTH_ENABLED:
+        g.sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
+    g.sh_session.access_token = session["token"]["value"]
+
+
+def create_signinghub_machine_user_session(scope, ovo_code):
+    log("No valid SigningHub session found. Opening a new one ...")
+    sh_session = open_new_signinghub_machine_user_session(ovo_code, scope)
+    sh_session_uri = SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
+    sh_session_query = construct_insert_signinghub_session_query(sh_session, sh_session_uri, scope)
+    sudo_update(sh_session_query)
+    sh_session_sudo_query = construct_mark_signinghub_session_as_machine_users_query(sh_session_uri)
+    sudo_update(sh_session_sudo_query)
+    g.sh_session = sh_session
