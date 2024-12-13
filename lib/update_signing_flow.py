@@ -37,6 +37,7 @@ WRAP_UP_ACTIVITY_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/afrondingsactivitei
 
 def update_signing_flow(signflow_uri: str):
     signing_flow = get_signing_flow(signflow_uri, agent_query)
+    signing_flow["uri"] = signflow_uri
     creator = get_creator(signflow_uri, agent_query)
     """
     There are multiple paths here
@@ -85,6 +86,7 @@ def update_signing_flow(signflow_uri: str):
 
 def _update_signing_flow(signing_flow):
     sh_package_id = signing_flow["sh_package_id"]
+    signflow_uri = signing_flow["uri"]
     try:
         sh_workflow_details = g.sh_session.get_workflow_details(sh_package_id)
         logger.debug(f'Signing flow {signflow_uri}, workflow status {sh_workflow_details["workflow"]["workflow_status"]}')

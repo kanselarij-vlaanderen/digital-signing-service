@@ -68,28 +68,6 @@ def open_new_signinghub_machine_user_session(ovo_code, scope=None):
                             scope=scope)
     return sh_session
 
-def ensure_signinghub_machine_user_session(scope=None):
-    """For interactions made by the service agent (initiated by cron job or similar)"""
-    sh_session_query = construct_get_signinghub_machine_user_session_query(scope)
-    sh_session_results = sudo_query(sh_session_query)['results']['bindings']
-    if sh_session_results: # Restore SigningHub session
-        log("Found a valid SigningHub session.")
-        sh_session_result = sh_session_results[0]
-        g.sh_session = SigningHubSession(SIGNINGHUB_API_URL)
-        if CLIENT_CERT_AUTH_ENABLED:
-            g.sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
-        g.sh_session.access_token = sh_session_result["token"]["value"]
-    else: # Open new SigningHub session
-        log("No valid SigningHub session found. Opening a new one ...")
-        ovo_code = sudo_query(construct_get_org_for_email(scope))['results']['bindings'][0]['ovoCode']['value']
-        sh_session = open_new_signinghub_machine_user_session(ovo_code, scope)
-        sh_session_uri = SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
-        sh_session_query = construct_insert_signinghub_session_query(sh_session, sh_session_uri, scope)
-        sudo_update(sh_session_query)
-        sh_session_sudo_query = construct_mark_signinghub_session_as_machine_users_query(sh_session_uri)
-        sudo_update(sh_session_sudo_query)
-        g.sh_session = sh_session
-
 
 def set_signinghub_machine_user_session(session):
     log("Found a valid SigningHub session.")
