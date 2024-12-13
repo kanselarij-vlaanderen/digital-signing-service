@@ -31,6 +31,7 @@ Autoplacing signatures
     image: kanselarij/digital-signing # Make sure to specify a tagged version here
     environment:
       SIGNINGHUB_API_URL: ""
+      SIGNINGHUB_APP_DOMAIN: ""
       CERT_FILE_PATH: ""
       KEY_FILE_PATH: ""
       ACCOUNT_GRAPH: "http://mu.semte.ch/graphs/system/users"
