@@ -210,7 +210,6 @@ WHERE {
     }
 }
 ORDER BY DESC(?expiryTime)
-LIMIT 1
 """)
     if signinghub_scope:
         signinghub_scope_filter = f"?signinghubSession ext:scope {sparql_escape_string(signinghub_scope)} ."
