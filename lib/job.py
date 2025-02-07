@@ -26,7 +26,7 @@ def create_job(sign_flow_uris, mu_session_uri):
     uuid = generate_uuid()
     uri = f"{JOB_RESOURCE_BASE_URI}{uuid}"
     now = datetime.now()
-    logger.info(
+    logger.debug(
         f"Creating job with uri {sparql_escape_uri(uri)} for {len(sign_flow_uris)} sign flows"
     )
 
@@ -165,11 +165,10 @@ def execute_job(job):
         execute_prepare_sign_flow_job(job)
         update_job_status(job["uri"], JOB["STATUSES"]["SUCCESS"])
 
-        logger.info("**************************************")
         logger.info(f"Successfully finished job <{job['uri']}>")
-        logger.info("**************************************")
     except Exception as e:
-        logger.exception(f"Execution of job <{job['uri']}> failed:")
+        logger.exception(f"Failed to execute job <{job['uri']}>: {e}")
+
         update_job_status(job["uri"], JOB["STATUSES"]["FAILED"])
         error_message = str(e)
         update_job_error_message(

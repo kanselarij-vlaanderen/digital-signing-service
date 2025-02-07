@@ -2,7 +2,7 @@ import os
 from functools import wraps
 
 from flask import g, request
-from helpers import error, generate_uuid, log, logger
+from helpers import error, generate_uuid, logger
 from signinghub_api_client.client import SigningHubSession
 from signinghub_api_client.exceptions import AuthenticationException
 
@@ -36,14 +36,14 @@ def get_or_create_signinghub_session(mu_session_uri):
     sh_session_results = sudo_query(sh_session_query)['results']['bindings']
     sh_session = None
     if sh_session_results: # Restore SigningHub session
-        log("Found a valid SigningHub session.")
+        logger.debug("Found a valid SigningHub session.")
         sh_session_result = sh_session_results[0]
         sh_session = SigningHubSession(SIGNINGHUB_API_URL)
         if CLIENT_CERT_AUTH_ENABLED:
             sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
         sh_session.access_token = sh_session_result["token"]["value"]
     else: # Open new SigningHub session
-        log("No valid SigningHub session found. Opening a new one ...")
+        logger.debug("No valid SigningHub session found. Opening a new one ...")
         sh_session = open_new_signinghub_machine_user_session(mu_session["ovoCode"]["value"], mu_session["email"]["value"])
         sh_session_uri = SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
         sh_session_query = construct_insert_signinghub_session_query(sh_session, sh_session_uri)
@@ -70,7 +70,7 @@ def open_new_signinghub_machine_user_session(ovo_code, scope=None):
 
 
 def set_signinghub_machine_user_session(session):
-    log("Found a valid SigningHub session.")
+    logger.debug("Found a valid SigningHub session.")
     g.sh_session = SigningHubSession(SIGNINGHUB_API_URL)
     if CLIENT_CERT_AUTH_ENABLED:
         g.sh_session.cert = (CERT_FILE_PATH, KEY_FILE_PATH) # For authenticating against VO-network
@@ -78,7 +78,7 @@ def set_signinghub_machine_user_session(session):
 
 
 def create_signinghub_machine_user_session(scope, ovo_code):
-    log("No valid SigningHub session found. Opening a new one ...")
+    logger.debug("No valid SigningHub session found. Opening a new one ...")
     sh_session = open_new_signinghub_machine_user_session(ovo_code, scope)
     sh_session_uri = SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
     sh_session_query = construct_insert_signinghub_session_query(sh_session, sh_session_uri, scope)

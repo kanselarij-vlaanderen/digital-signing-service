@@ -43,7 +43,7 @@ def sh_profile_info():
     for ovo_code in MACHINE_ACCOUNTS.keys():
         try:
             open_new_signinghub_machine_user_session(ovo_code)
-            logger.info(f"Successful login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
+            logger.debug(f"Successful login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
             # sh_session.logout() doesn't work. https://manuals.ascertia.com/SigningHub/8.2/Api/#tag/Authentication/operation/V4_Account_LogoutUser specifies a (required?) device token which we don't have
         except Exception as e:
             response_code = 500

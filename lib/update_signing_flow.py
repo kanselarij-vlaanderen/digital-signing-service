@@ -147,7 +147,7 @@ def sync_approvers_status(sig_flow, sh_workflow_details):
                     if not kaleidos_approver["start_date"]:
                         # The flow has been shared, we can set the start time of the approval activity based on the modified_on field
                         start_time = pythonize_iso_timestamp(sh_workflow_details["modified_on"])
-                        logger.info(f"Approver {kaleidos_approver['email']} ready to approve. Syncing start date {start_time} ...")
+                        logger.debug(f"Approver {kaleidos_approver['email']} ready to approve. Syncing start date {start_time} ...")
                         query_string = construct_update_approval_activity_start_date(
                             sig_flow,
                             kaleidos_approver["email"],
@@ -155,14 +155,14 @@ def sync_approvers_status(sig_flow, sh_workflow_details):
                         agent_update(query_string)
                 elif proc_stat == "REVIEWED":
                     approval_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
-                    logger.info(f"Approver {kaleidos_approver['email']} approved. Syncing end date {approval_time} ...")
+                    logger.debug(f"Approver {kaleidos_approver['email']} approved. Syncing end date {approval_time} ...")
                     query_string = construct_update_approval_activity_end_date(
                         sig_flow,
                         kaleidos_approver["email"],
                         datetime.fromisoformat(approval_time))
                     agent_update(query_string)
                 elif proc_stat == "DECLINED":
-                    logger.info(f"Approver {kaleidos_approver['email']} refused. Syncing ...")
+                    logger.debug(f"Approver {kaleidos_approver['email']} refused. Syncing ...")
                     refusal_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
                     query_string = construct_insert_approval_refusal_activity(
                         sig_flow,
@@ -172,9 +172,9 @@ def sync_approvers_status(sig_flow, sh_workflow_details):
                 else:
                     logger.warn(f"Approver {kaleidos_approver['email']} encountered unknown process status {sh_workflow_user['process_status']}. Skipping ...")
             else:
-                logger.info(f"Approver {kaleidos_approver['email']} already has an end date in our db. No syncing needed.")
+                logger.debug(f"Approver {kaleidos_approver['email']} already has an end date in our db. No syncing needed.")
         else:
-            logger.info(f"Approver with e-mail address {sh_workflow_user['user_email']} not present in Kaleidos metadata: Adding.")
+            logger.debug(f"Approver with e-mail address {sh_workflow_user['user_email']} not present in Kaleidos metadata: Adding.")
             # insert approver with minimal info. Further details (dates, completion status, ...)
             # will get picked up on a next pass in the SH -> Kaleidos sync direction.
             query_string = construct_insert_approval_activity(sig_flow, sh_workflow_user['user_email'])
@@ -198,14 +198,14 @@ def sync_signers_status(sig_flow, sh_workflow_details):
                 if proc_stat == "IN_PROGRESS":
                     if not kaleidos_signer["start_date"]:
                         start_time = pythonize_iso_timestamp(sh_workflow_details["modified_on"])
-                        logger.info(f"Signer {kaleidos_signer['email']} ready to sign. Syncing start date {start_time} ...")
+                        logger.debug(f"Signer {kaleidos_signer['email']} ready to sign. Syncing start date {start_time} ...")
                         query_string = construct_update_signing_activity_start_date(
                             sig_flow,
                             kaleidos_signer["uri"],
                             datetime.fromisoformat(start_time))
                         agent_update(query_string)
                 elif proc_stat == "SIGNED":
-                    logger.info(f"Signer {kaleidos_signer['email']} signed. Syncing ...")
+                    logger.debug(f"Signer {kaleidos_signer['email']} signed. Syncing ...")
                     signing_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
                     query_string = construct_update_signing_activity_end_date(
                         sig_flow,
@@ -213,7 +213,7 @@ def sync_signers_status(sig_flow, sh_workflow_details):
                         datetime.fromisoformat(signing_time))
                     agent_update(query_string)
                 elif proc_stat == "DECLINED":
-                    logger.info(f"Signer {kaleidos_signer['email']} refused. Syncing ...")
+                    logger.debug(f"Signer {kaleidos_signer['email']} refused. Syncing ...")
                     refusal_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
                     query_string = construct_insert_signing_refusal_activity(
                         sig_flow,
@@ -223,6 +223,7 @@ def sync_signers_status(sig_flow, sh_workflow_details):
                 else:
                     logger.warn(f"Unknown process status {sh_workflow_user['process_status']}. Skipping ...")
             else:
-                logger.info(f"Signer {kaleidos_signer['email']} already has an end date in our db. No syncing needed.")
+                logger.debug(f"Signer {kaleidos_signer['email']} already has an end date in our db. No syncing needed.")
         else:
-            logger.info(f"Signer with e-mail address {sh_workflow_user['user_email']} not present in Kaleidos metadata: ignoring")
+            logger.debug(f"Signer with e-mail address {sh_workflow_user['user_email']} not present in Kaleidos metadata: ignoring")
+    return False
