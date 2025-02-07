@@ -85,20 +85,24 @@ def update_signing_flow(signflow_uri: str):
 def _update_signing_flow(signing_flow):
     sh_package_id = signing_flow["sh_package_id"]
     signflow_uri = signing_flow["uri"]
+
+    new_signing_flow_status = None
     try:
         sh_workflow_details = g.sh_session.get_workflow_details(sh_package_id)
         logger.debug(f'Signing flow {signflow_uri}, workflow status {sh_workflow_details["workflow"]["workflow_status"]}')
         if sh_workflow_details["workflow"]["workflow_status"] == "DRAFT":
             # Flow has not been shared yet by user, we can extract no information from it at this point
-            return None
+            pass
         if sh_workflow_details["workflow"]["workflow_status"] == "SHARED":
             approvers_changed = sync_approvers_status(signflow_uri, sh_workflow_details)
             signers_changed = sync_signers_status(signflow_uri, sh_workflow_details)
-            return "SHARED" if approvers_changed or signers_changed else None
+            new_signing_flow_status = "SHARED" if approvers_changed or signers_changed else None
+
         elif sh_workflow_details["workflow"]["workflow_status"] == "DECLINED":
             approvers_changed = sync_approvers_status(signflow_uri, sh_workflow_details)
             signers_changed = sync_signers_status(signflow_uri, sh_workflow_details)
-            return "DECLINED" if approvers_changed or signers_changed else None
+            new_signing_flow_status = "DECLINED" if approvers_changed or signers_changed else None
+
         elif sh_workflow_details["workflow"]["workflow_status"] == "COMPLETED":
             sync_approvers_status(signflow_uri, sh_workflow_details)
             sync_signers_status(signflow_uri, sh_workflow_details)
@@ -119,15 +123,17 @@ def _update_signing_flow(signing_flow):
                                                         signflow_uri,
                                                         doc["uri"])
             agent_update(wrap_up_qs)
-            return "COMPLETED"
+            new_signing_flow_status = "COMPLETED"
     except SigningHubException as e:
         if e.response.status_code == 404:
             logger.debug("Fetching workflow details resulted in a 404 response, marking flow as cancelled...")
             query_string = construct_insert_cancellation_activity(signflow_uri)
             agent_update(query_string)
-            return "CANCELLED"
+            new_signing_flow_status = "CANCELLED"
         else:
             raise e
+
+    return new_signing_flow_status
 
 
 # Updates the approval activities in the DB based on the
@@ -136,6 +142,8 @@ def _update_signing_flow(signing_flow):
 def sync_approvers_status(sig_flow, sh_workflow_details):
     sh_workflow_users = sh_workflow_details["users"]
     kaleidos_approvers = get_approvers(sig_flow, agent_query)
+    approvers_changed = False
+
     logger.debug(f"Syncing approvers status ...")
     for sh_workflow_user in sh_workflow_users:
         if sh_workflow_user["role"] != "REVIEWER":
@@ -157,7 +165,7 @@ def sync_approvers_status(sig_flow, sh_workflow_details):
                             kaleidos_approver["email"],
                             datetime.fromisoformat(start_time))
                         agent_update(query_string)
-                        return True
+                        approvers_changed = True
                 elif proc_stat == "REVIEWED":
                     approval_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
                     logger.debug(f"Approver {kaleidos_approver['email']} approved. Syncing end date {approval_time} ...")
@@ -166,7 +174,7 @@ def sync_approvers_status(sig_flow, sh_workflow_details):
                         kaleidos_approver["email"],
                         datetime.fromisoformat(approval_time))
                     agent_update(query_string)
-                    return True
+                    approvers_changed = True
                 elif proc_stat == "DECLINED":
                     logger.debug(f"Approver {kaleidos_approver['email']} refused. Syncing ...")
                     refusal_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
@@ -175,7 +183,7 @@ def sync_approvers_status(sig_flow, sh_workflow_details):
                         kaleidos_approver["email"],
                         datetime.fromisoformat(refusal_time))
                     agent_update(query_string)
-                    return True
+                    approvers_changed = True
                 else:
                     logger.warn(f"Approver {kaleidos_approver['email']} encountered unknown process status {sh_workflow_user['process_status']}. Skipping ...")
             else:
@@ -186,7 +194,7 @@ def sync_approvers_status(sig_flow, sh_workflow_details):
             # will get picked up on a next pass in the SH -> Kaleidos sync direction.
             query_string = construct_insert_approval_activity(sig_flow, sh_workflow_user['user_email'])
             agent_update(query_string)
-    return False
+    return approvers_changed
 
 
 # Updates the signing activities in the DB based on the
@@ -195,6 +203,8 @@ def sync_approvers_status(sig_flow, sh_workflow_details):
 def sync_signers_status(sig_flow, sh_workflow_details):
     sh_workflow_users = sh_workflow_details["users"]
     kaleidos_signers = get_signers(sig_flow, agent_query)
+    signers_changed = False
+
     logger.debug(f"Syncing signers status ...")
     for sh_workflow_user in sh_workflow_users:
         if sh_workflow_user["role"] != "SIGNER":
@@ -215,7 +225,7 @@ def sync_signers_status(sig_flow, sh_workflow_details):
                             kaleidos_signer["uri"],
                             datetime.fromisoformat(start_time))
                         agent_update(query_string)
-                        return True
+                        signers_changed = True
                 elif proc_stat == "SIGNED":
                     logger.debug(f"Signer {kaleidos_signer['email']} signed. Syncing ...")
                     signing_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
@@ -224,7 +234,7 @@ def sync_signers_status(sig_flow, sh_workflow_details):
                         kaleidos_signer["uri"],
                         datetime.fromisoformat(signing_time))
                     agent_update(query_string)
-                    return True                    
+                    signers_changed = True                    
                 elif proc_stat == "DECLINED":
                     logger.debug(f"Signer {kaleidos_signer['email']} refused. Syncing ...")
                     refusal_time = pythonize_iso_timestamp(sh_workflow_user["processed_on"])
@@ -233,11 +243,11 @@ def sync_signers_status(sig_flow, sh_workflow_details):
                         kaleidos_signer["uri"],
                         datetime.fromisoformat(refusal_time))
                     agent_update(query_string)
-                    return True
+                    signers_changed = True
                 else:
                     logger.warn(f"Unknown process status {sh_workflow_user['process_status']}. Skipping ...")
             else:
                 logger.debug(f"Signer {kaleidos_signer['email']} already has an end date in our db. No syncing needed.")
         else:
             logger.debug(f"Signer with e-mail address {sh_workflow_user['user_email']} not present in Kaleidos metadata: ignoring")
-    return False
+    return signers_changed
