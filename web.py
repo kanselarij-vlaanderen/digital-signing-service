@@ -107,10 +107,10 @@ def prepare_post():
 @app.route('/signing-flows/<signflow_id>', methods=['DELETE'])
 def signinghub_remove_signflow(signflow_id):
     physical_files = to_recs(query(get_physical_files_of_sign_flows_by_id([signflow_id])))
+    update(remove_signflows([signflow_id]))
     for physical_file in physical_files:
         delete_physical_file(physical_file["uri"])
         update(delete_physical_file_metadata(physical_file["uri"]))
-    update(remove_signflows([signflow_id]))
     # Give cache time to update
     # Ideally we want to return the changed values so the frontend
     # can update without refetching the new data.
