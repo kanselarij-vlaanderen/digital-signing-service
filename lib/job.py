@@ -11,9 +11,12 @@ from string import Template
 
 from ..authentication import get_or_create_signinghub_session
 from ..agent_query import query as agent_query, update as agent_update
+
+from .session import get_mu_session
 from .file import delete_physical_file
 from .prepare_signing_flow import prepare_signing_flow
 from .query_result_helpers import to_recs
+
 from ..queries.signing_flow import (
     construct_get_signing_flows_by_uris,
     get_physical_files_of_sign_flows,
@@ -161,6 +164,12 @@ INSERT DATA {
 
 def execute_job(job):
     try:
+        mu_session_uri = job["mu_session_uri"]
+        mu_session = get_mu_session(mu_session_uri)
+        email = mu_session["email"]["value"]
+
+        logger.info(f"Starting execution of job <{job['uri']}> started by user {email}")
+
         update_job_status(job["uri"], JOB["STATUSES"]["BUSY"])
         execute_prepare_sign_flow_job(job)
         update_job_status(job["uri"], JOB["STATUSES"]["SUCCESS"])
