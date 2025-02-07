@@ -8,16 +8,16 @@ from signinghub_api_client.exceptions import AuthenticationException
 
 from .authentication_config import MACHINE_ACCOUNTS
 from .config import KALEIDOS_RESOURCE_BASE_URI
-from .lib.exceptions import NoQueryResultsException
 from .queries.session import (
     construct_attach_signinghub_session_to_mu_session_query,
-    construct_get_mu_session_query, construct_get_org_for_email,
+    construct_get_org_for_email,
     construct_get_signinghub_machine_user_session_query,
     construct_get_signinghub_session_query,
     construct_insert_signinghub_session_query,
     construct_mark_signinghub_session_as_machine_users_query)
 from .sudo_query import query as sudo_query
 from .sudo_query import update as sudo_update
+from .lib.session import get_mu_session
 
 SIGNINGHUB_API_URL = os.environ.get("SIGNINGHUB_API_URL")
 CERT_FILE_PATH = os.environ.get("CERT_FILE_PATH")
@@ -27,11 +27,7 @@ CLIENT_CERT_AUTH_ENABLED = CERT_FILE_PATH and KEY_FILE_PATH
 SIGNINGHUB_SESSION_BASE_URI = KALEIDOS_RESOURCE_BASE_URI + "id/signinghub-sessions/"
 
 def get_or_create_signinghub_session(mu_session_uri):
-    mu_session_query = construct_get_mu_session_query(mu_session_uri)
-    mu_session_result = sudo_query(mu_session_query)['results']['bindings']
-    if not mu_session_result:
-        raise NoQueryResultsException("Didn't find a mu-session associated with an account with email-address and supported ovo-code")
-    mu_session = mu_session_result[0]
+    mu_session = get_mu_session(mu_session_uri)
     sh_session_query = construct_get_signinghub_session_query(mu_session_uri)
     sh_session_results = sudo_query(sh_session_query)['results']['bindings']
     sh_session = None
