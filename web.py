@@ -144,7 +144,11 @@ def signinghub_integration_url(signflow_id, piece_id):
 @app.route('/signing-flows/<signflow_id>/sync', methods=['POST'])
 def signinghub_sync(signflow_id):
     signflow_uri = get_by_uuid(signflow_id, None, agent_query)
-    update_signing_flow(signflow_uri)
+    new_status = update_signing_flow(signflow_uri)
+    if new_status:
+        logger.info(f"Status for signflow <{signflow_uri}> was changed to {new_status}")
+    else:
+        logger.info(f"Status for signflow <{signflow_uri}> was left unchanged")
     return make_response({}, 200)
 
 
