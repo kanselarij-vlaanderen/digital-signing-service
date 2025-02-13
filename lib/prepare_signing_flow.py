@@ -101,7 +101,7 @@ def prepare_signing_flow(
         # sign flow to get them.
         approvers = signing_flow.get_approvers(sign_flow, query_method)
         for approver in approvers:
-            logger.info(f"adding approver {approver['email']} to flow")
+            logger.debug(f"adding approver {approver['email']} to flow")
             sh_session.add_users_to_workflow(package_id, [{
             "user_email": approver["email"],
             "user_name": approver["email"],
@@ -112,7 +112,7 @@ def prepare_signing_flow(
 
         notified = signing_flow.get_notified(sign_flow, query_method)
         for notify in notified:
-            logger.info(f"adding notified {notify['email']} to flow")
+            logger.debug(f"adding notified {notify['email']} to flow")
             sh_session.add_users_to_workflow(package_id, [{
             "user_email": notify["email"],
             "user_name": notify["email"],
@@ -124,7 +124,7 @@ def prepare_signing_flow(
         signers = signing_flow.get_signers(sign_flow, query_method)
         signer_mandatees = []
         for signer in signers:
-            logger.info(f"adding signer {signer['uri']} to flow")
+            logger.debug(f"adding signer {signer['uri']} to flow")
             signer = get_mandatee(signer["uri"], query_method)
             signer_mandatees.append(signer)
             sh_session.add_users_to_workflow(package_id, [{
@@ -184,12 +184,12 @@ def auto_place_signature(
     auto_place_order,
     sh_session
 ):
-    logger.info((
+    logger.debug((
         f"auto-placing signature field for "
         f"{piece_uri} {package_id} {signinghub_document_id}"
     ))
     for index, mandatee in enumerate(signer_mandatees):
-        logger.info(f"placing field for signer {mandatee}")
+        logger.debug(f"placing field for signer {mandatee}")
         sh_data = {
             "search_text": (
                 f"{mandatee['first_name']} "

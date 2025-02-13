@@ -48,7 +48,7 @@ def fs_sanitize_filename(filename, replace_char=""):
 def delete_physical_file(physical_file_uri):
     path = physical_file_uri.replace("share://", "/share/")
     if os.path.exists(path):
-        logger.info(f"Removing file: {path}")
+        logger.debug(f"Removing file: {path}")
         os.remove(path)
     else:
         logger.debug(f"Tried removing file {path} but could not find it")

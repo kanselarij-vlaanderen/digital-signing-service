@@ -27,9 +27,11 @@ from .queries.file import delete_physical_file_metadata
 
 def sync_all_ongoing_flows():
     records = signing_flow.get_ongoing_signing_flows(agent_query)
+    logger.info(f"Starting synchronisation for {len(records)} signflows...")
     ids = list(map(lambda r: r["sign_flow_id"], records))
     for id in ids:
         requests.post(f"http://localhost/signing-flows/{id}/sync")
+    logger.info("Synchronisation finished")
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(sync_all_ongoing_flows, CronTrigger.from_crontab(SYNC_CRON_PATTERN))
@@ -43,7 +45,7 @@ def sh_profile_info():
     for ovo_code in MACHINE_ACCOUNTS.keys():
         try:
             open_new_signinghub_machine_user_session(ovo_code)
-            logger.info(f"Successful login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
+            logger.debug(f"Successful login for machine user account of {ovo_code} ({MACHINE_ACCOUNTS[ovo_code]['USERNAME']})")
             # sh_session.logout() doesn't work. https://manuals.ascertia.com/SigningHub/8.2/Api/#tag/Authentication/operation/V4_Account_LogoutUser specifies a (required?) device token which we don't have
         except Exception as e:
             response_code = 500
@@ -105,10 +107,10 @@ def prepare_post():
 @app.route('/signing-flows/<signflow_id>', methods=['DELETE'])
 def signinghub_remove_signflow(signflow_id):
     physical_files = to_recs(query(get_physical_files_of_sign_flows_by_id([signflow_id])))
+    update(remove_signflows([signflow_id]))
     for physical_file in physical_files:
         delete_physical_file(physical_file["uri"])
         update(delete_physical_file_metadata(physical_file["uri"]))
-    update(remove_signflows([signflow_id]))
     # Give cache time to update
     # Ideally we want to return the changed values so the frontend
     # can update without refetching the new data.
@@ -144,7 +146,11 @@ def signinghub_integration_url(signflow_id, piece_id):
 @app.route('/signing-flows/<signflow_id>/sync', methods=['POST'])
 def signinghub_sync(signflow_id):
     signflow_uri = get_by_uuid(signflow_id, None, agent_query)
-    update_signing_flow(signflow_uri)
+    new_status = update_signing_flow(signflow_uri)
+    if new_status:
+        logger.info(f"Status for signflow <{signflow_uri}> was changed to {new_status}")
+    else:
+        logger.info(f"Status for signflow <{signflow_uri}> was left unchanged")
     return make_response({}, 200)
 
 
