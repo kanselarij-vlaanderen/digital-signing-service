@@ -12,6 +12,7 @@ from helpers import error, logger, query, validate_json_api_content_type, update
 from lib.query_result_helpers import to_recs
 
 from .agent_query import query as agent_query
+from .sudo_query import update as sudo_update
 from .authentication import (MACHINE_ACCOUNTS,
                              open_new_signinghub_machine_user_session)
 from .config import SIGNINGHUB_APP_DOMAIN, SYNC_CRON_PATTERN
@@ -23,6 +24,7 @@ from .lib.file import delete_physical_file
 from .lib.job import create_job, execute_job, get_job
 from .queries.signing_flow import get_physical_files_of_sign_flows_by_id, remove_signflows
 from .queries.file import delete_physical_file_metadata
+from .queries.session import construct_delete_signinghub_sessions
 
 
 def sync_all_ongoing_flows():
@@ -65,6 +67,17 @@ def sh_profile_info():
         response.status_code = 500
         response.headers["Content-Type"] = "application/vnd.api+json"
         return response
+
+
+# Service endpoint, should only be accessed from the service container
+# In a hostend environment, execute the following command to fire this endpoint:
+# > drc exec digital-signing curl -XDELETE http://localhost/sessions
+# This endpoint should not be made available via the dispatcher, as it doesn't check the current session's rights
+@app.route('/sessions', methods=['DELETE'])
+def delete_sessions():
+    delete_sessions_query = construct_delete_signinghub_sessions()
+    sudo_update(delete_sessions_query)
+    return make_response("", 204)
 
 
 @app.route('/job/<job_id>')
