@@ -166,6 +166,25 @@ WHERE {
         mu_session=sparql_escape_uri(mu_session_uri))
     return query_string
 
+def construct_delete_signinghub_sessions():
+    query_template = Template("""
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX oauth-2.0: <http://kanselarij.vo.data.gift/vocabularies/oauth-2.0-session/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+DELETE WHERE {
+    GRAPH $session_graph {
+        ?signinghubSession a oauth-2.0:OauthSession, ?type ;
+            oauth-2.0:hasTokenValue ?tokenUri ;
+            ?p ?o .
+        ?tokenUri ?p_ ?o_ .
+    }
+}""")
+
+    query_string = query_template.substitute(session_graph=sparql_escape_uri(SESSION_GRAPH))
+    return query_string
+
 def construct_mark_signinghub_session_as_machine_users_query(signinghub_session_uri):
     # TODO: this is a hacky way of marking the machine user session.
     # Should think about way to model the service as an agent (with a mu session?)
