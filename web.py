@@ -12,7 +12,7 @@ from helpers import error, logger, query, validate_json_api_content_type, update
 from lib.query_result_helpers import to_recs
 
 from .agent_query import query as agent_query
-from .sudo_query import update as sudo_update
+from .sudo_query import update as sudo_update, query as sudo_query
 from .authentication import (MACHINE_ACCOUNTS,
                              open_new_signinghub_machine_user_session)
 from .config import SIGNINGHUB_APP_DOMAIN, SYNC_CRON_PATTERN
@@ -24,7 +24,7 @@ from .lib.file import delete_physical_file
 from .lib.job import create_job, execute_job, get_job
 from .queries.signing_flow import get_physical_files_of_sign_flows_by_id, remove_signflows
 from .queries.file import delete_physical_file_metadata
-from .queries.session import construct_delete_signinghub_sessions
+from .queries.session import construct_delete_signinghub_sessions, construct_ask_if_signinghub_sessions_exist
 
 
 def sync_all_ongoing_flows():
@@ -76,7 +76,15 @@ def sh_profile_info():
 @app.route('/sessions', methods=['DELETE'])
 def delete_sessions():
     delete_sessions_query = construct_delete_signinghub_sessions()
-    sudo_update(delete_sessions_query)
+
+    def ask_if_sessions_exist():
+        ask_if_sessions_exist_query = construct_ask_if_signinghub_sessions_exist()
+        response = sudo_query(ask_if_sessions_exist_query)
+        return response['boolean']
+
+    while ask_if_sessions_exist():
+        sudo_update(delete_sessions_query)
+
     return make_response("", 204)
 
 
