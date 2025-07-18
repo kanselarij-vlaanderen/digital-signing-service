@@ -138,7 +138,7 @@ WHERE {
 
 def construct_attach_document_to_unsigned_version(doc_uri, prev_ver_doc_uri, graph=APPLICATION_GRAPH):
     """Also handles attaching the signed version to the previous one's case
-    The relation ?case dossier:Dossier.bestaatUit $doc is what lets
+    The relation $doc sign:ongetekendStuk $prev_doc is what lets
     Yggdrasil propagate the signed pieces.
     """
     query_template = Template("""
@@ -157,7 +157,6 @@ INSERT {
     GRAPH $graph {
         $doc sign:ongetekendStuk $prev_doc .
         $doc dct:title ?signed_title .
-        ?case dossier:Dossier.bestaatUit $doc .
         $doc besluitvorming:vertrouwelijkheidsniveau ?access_level .
     }
 }
@@ -170,10 +169,6 @@ WHERE {
         BIND(CONCAT(?prev_title, " (met certificaat)") AS ?signed_title)
         OPTIONAL {
             $doc dct:title ?old_title .
-        }
-        OPTIONAL {
-            ?case a dossier:Dossier ;
-                dossier:Dossier.bestaatUit $prev_doc .
         }
         BIND(
             IF(?prev_access_level IN ($access_level_public, $access_level_government),
