@@ -74,7 +74,7 @@ def set_signinghub_machine_user_session(session):
 
 
 def create_signinghub_machine_user_session(scope, ovo_code):
-    logger.debug("No valid SigningHub session found. Opening a new one ...")
+    logger.debug(f"No valid SigningHub session found. Opening a new one for ovo_code: {ovo_code}")
     sh_session = open_new_signinghub_machine_user_session(ovo_code, scope)
     sh_session_uri = SIGNINGHUB_SESSION_BASE_URI + generate_uuid()
     sh_session_query = construct_insert_signinghub_session_query(sh_session, sh_session_uri, scope)
