@@ -17,6 +17,7 @@ from .document import upload_piece_to_sh
 from .kaleidos_document_name import DOC_NAME_REGEX, compare_piece_names
 from .mandatee import get_mandatee
 from ..constants import DECISION_REPORT_TYPE_URI, BEKRACHTIGING_TYPE_URI
+from .file import fs_sanitize_filename
 
 
 def sort_sign_flows_by_piece(sign_flows: List[Dict]):
@@ -75,6 +76,18 @@ def group_by_meeting_or_decision_activity(sign_flows: List[Dict]):
 
     return grouped_flows
 
+def prepare_package_name(
+    sorted_sign_flows: List[Dict],
+):
+    piece_name = fs_sanitize_filename(sorted_sign_flows[0]['piece_name'], "_")
+    if len(sorted_sign_flows) == 1:
+        return f"{piece_name}"
+    if len(sorted_sign_flows) == 2:
+        return f"{piece_name} (+ 1 document)"
+    if len(sorted_sign_flows) > 2:
+        return f"{piece_name} (+ {len(sorted_sign_flows) - 1} documenten)"
+    # this should be unreachable
+    return "Leeg pakket"
 
 def prepare_signing_flow(
     sh_session: SigningHubSession,
@@ -84,7 +97,10 @@ def prepare_signing_flow(
 ):
     """Prepares a signing flow in SigningHub based off multiple sign flows in Kaleidos."""
     for grouped_sign_flows in group_by_meeting_or_decision_activity(sign_flows):
+        sorted_sign_flows = sort_sign_flows_by_piece(grouped_sign_flows)
+        package_name = prepare_package_name(sorted_sign_flows)
         signinghub_package = sh_session.add_package({
+            "package_name": f"{package_name}",
             "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
         })
         package_id = signinghub_package["package_id"]
@@ -136,7 +152,7 @@ def prepare_signing_flow(
             }])
         auto_place_order = len(approvers) + len(notified) + 1
 
-        for sign_flow in sort_sign_flows_by_piece(grouped_sign_flows):
+        for sign_flow in sorted_sign_flows:
             sign_flow_uri = sign_flow["sign_flow"]
             piece_uri = sign_flow["piece"]
 

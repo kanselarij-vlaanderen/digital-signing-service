@@ -109,6 +109,7 @@ def upload_piece_to_sh(sh_session, piece_uri, sh_package_id=None, piece_type=Non
     file_path = file["path"]
 
     if sh_package_id is None:
+        # THIS is currently unreachable since we always have a package_id when we come here.
         sh_package = sh_session.add_package({
             # package_name: "New Package", # Defaults to "Undefined"
             "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
