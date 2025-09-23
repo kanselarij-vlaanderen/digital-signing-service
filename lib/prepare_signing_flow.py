@@ -15,16 +15,22 @@ from ..utils import pythonize_iso_timestamp
 from . import signing_flow, uri
 from .document import upload_piece_to_sh
 from .kaleidos_document_name import DOC_NAME_REGEX, compare_piece_names
+from .kaleidos_decision_name import DEC_NAME_REGEX, compare_decision_piece_names
 from .mandatee import get_mandatee
 from ..constants import DECISION_REPORT_TYPE_URI, BEKRACHTIGING_TYPE_URI, MINUTES_REPORT_TYPE_URI
 
-
 def sort_sign_flows_by_piece(sign_flows: List[Dict]):
     def compare_valid_sign_flows(sign_flow1, sign_flow2) -> int:
+        # assumption made: if the first piece is decision or minutes, we sort all based on a different regex
         name1 = sign_flow1["piece_name"]
         name2 = sign_flow2["piece_name"]
-
-        return compare_piece_names(name1, name2)
+        if sign_flow1["piece_type"] in [
+            DECISION_REPORT_TYPE_URI, 
+            MINUTES_REPORT_TYPE_URI
+        ]:
+            return compare_decision_piece_names(name1, name2)
+        else:
+            return compare_piece_names(name1, name2)
 
     def compare_invalid_sign_flows(sign_flow1, sign_flow2) -> int:
         created1 = datetime.fromisoformat(pythonize_iso_timestamp(sign_flow1["piece_created"]))
@@ -39,7 +45,13 @@ def sort_sign_flows_by_piece(sign_flows: List[Dict]):
     invalid_names = []
     for sign_flow in sign_flows:
         piece_name = sign_flow["piece_name"]
-        match = DOC_NAME_REGEX.match(piece_name) if piece_name else None
+        if sign_flow["piece_type"] in [
+            DECISION_REPORT_TYPE_URI, 
+            MINUTES_REPORT_TYPE_URI
+        ]:
+            match = DEC_NAME_REGEX.match(piece_name) if piece_name else None
+        else:
+            match = DOC_NAME_REGEX.match(piece_name) if piece_name else None
         if match:
             valid_names.append(sign_flow)
         else:
@@ -84,6 +96,7 @@ def prepare_signing_flow(
 ):
     """Prepares a signing flow in SigningHub based off multiple sign flows in Kaleidos."""
     for grouped_sign_flows in group_by_meeting_or_decision_activity(sign_flows):
+        sorted_sign_flows = sort_sign_flows_by_piece(grouped_sign_flows)
         signinghub_package = sh_session.add_package({
             "workflow_mode": "ONLY_OTHERS" # OVRB staff who prepare the flows will never sign
         })
@@ -136,7 +149,7 @@ def prepare_signing_flow(
             }])
         auto_place_order = len(approvers) + len(notified) + 1
 
-        for sign_flow in sort_sign_flows_by_piece(grouped_sign_flows):
+        for sign_flow in sorted_sign_flows:
             sign_flow_uri = sign_flow["sign_flow"]
             piece_uri = sign_flow["piece"]
 
