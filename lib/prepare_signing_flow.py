@@ -17,9 +17,7 @@ from .document import upload_piece_to_sh
 from .kaleidos_document_name import DOC_NAME_REGEX, compare_piece_names
 from .kaleidos_decision_name import DEC_NAME_REGEX, compare_decision_piece_names
 from .mandatee import get_mandatee
-from ..constants import DECISION_REPORT_TYPE_URI, BEKRACHTIGING_TYPE_URI
-# TODO import MINUTES_REPORT_TYPE_URI from KAS-4533
-
+from ..constants import DECISION_REPORT_TYPE_URI, BEKRACHTIGING_TYPE_URI, MINUTES_REPORT_TYPE_URI
 
 def sort_sign_flows_by_piece(sign_flows: List[Dict]):
     def compare_valid_sign_flows(sign_flow1, sign_flow2) -> int:
@@ -165,15 +163,18 @@ def prepare_signing_flow(
             if ADD_SIGNATURE_FIELD_ENABLED:
                 if sign_flow["piece_type"] in [
                     DECISION_REPORT_TYPE_URI, 
-                    BEKRACHTIGING_TYPE_URI
+                    BEKRACHTIGING_TYPE_URI,
+                    MINUTES_REPORT_TYPE_URI
                 ]:
+                    isMinutes = sign_flow["piece_type"] == MINUTES_REPORT_TYPE_URI
                     auto_place_signature(
                         piece_uri, 
                         package_id, 
                         signinghub_document_id, 
                         signer_mandatees,
                         auto_place_order,
-                        sh_session
+                        sh_session,
+                        isMinutes
                     )
 
             preparation_activity_id = generate_uuid()
@@ -197,7 +198,8 @@ def auto_place_signature(
     signinghub_document_id, 
     signer_mandatees,
     auto_place_order,
-    sh_session
+    sh_session,
+    isMinutes
 ):
     logger.debug((
         f"auto-placing signature field for "
@@ -205,11 +207,16 @@ def auto_place_signature(
     ))
     for index, mandatee in enumerate(signer_mandatees):
         logger.debug(f"placing field for signer {mandatee}")
+        if isMinutes:
+            # can we always rely on the \r\n being correct? if not there is no field, which is better than a field in a bad spot
+            search_text = f"{mandatee['first_name']} {mandatee['family_name']},\r\n{mandatee['title']}"
+            # this should always work because of the comma and doesn't need the title property
+            # search_text = f"{mandatee['first_name']} {mandatee['family_name']},"
+            # with title (or only comma) would also work for decisions, but not for ratifications (no comma behind minister names)
+        else:
+            search_text = f"{mandatee['first_name']} {mandatee['family_name']}"
         sh_data = {
-            "search_text": (
-                f"{mandatee['first_name']} "
-                f"{mandatee['family_name']}"
-            ),
+            "search_text": search_text,
             "order": index + auto_place_order,
             "field_type": "SIGNATURE",
             "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
