@@ -15,17 +15,23 @@ from ..utils import pythonize_iso_timestamp
 from . import signing_flow, uri
 from .document import upload_piece_to_sh
 from .kaleidos_document_name import DOC_NAME_REGEX, compare_piece_names
+from .kaleidos_decision_name import DEC_NAME_REGEX, compare_decision_piece_names
 from .mandatee import get_mandatee
-from ..constants import DECISION_REPORT_TYPE_URI, BEKRACHTIGING_TYPE_URI
+from ..constants import DECISION_REPORT_TYPE_URI, BEKRACHTIGING_TYPE_URI, MINUTES_REPORT_TYPE_URI
 from .file import fs_sanitize_filename
-
 
 def sort_sign_flows_by_piece(sign_flows: List[Dict]):
     def compare_valid_sign_flows(sign_flow1, sign_flow2) -> int:
+        # assumption made: if the first piece is decision or minutes, we sort all based on a different regex
         name1 = sign_flow1["piece_name"]
         name2 = sign_flow2["piece_name"]
-
-        return compare_piece_names(name1, name2)
+        if sign_flow1["piece_type"] in [
+            DECISION_REPORT_TYPE_URI, 
+            MINUTES_REPORT_TYPE_URI
+        ]:
+            return compare_decision_piece_names(name1, name2)
+        else:
+            return compare_piece_names(name1, name2)
 
     def compare_invalid_sign_flows(sign_flow1, sign_flow2) -> int:
         created1 = datetime.fromisoformat(pythonize_iso_timestamp(sign_flow1["piece_created"]))
@@ -40,7 +46,13 @@ def sort_sign_flows_by_piece(sign_flows: List[Dict]):
     invalid_names = []
     for sign_flow in sign_flows:
         piece_name = sign_flow["piece_name"]
-        match = DOC_NAME_REGEX.match(piece_name) if piece_name else None
+        if sign_flow["piece_type"] in [
+            DECISION_REPORT_TYPE_URI, 
+            MINUTES_REPORT_TYPE_URI
+        ]:
+            match = DEC_NAME_REGEX.match(piece_name) if piece_name else None
+        else:
+            match = DOC_NAME_REGEX.match(piece_name) if piece_name else None
         if match:
             valid_names.append(sign_flow)
         else:
@@ -166,15 +178,18 @@ def prepare_signing_flow(
             if ADD_SIGNATURE_FIELD_ENABLED:
                 if sign_flow["piece_type"] in [
                     DECISION_REPORT_TYPE_URI, 
-                    BEKRACHTIGING_TYPE_URI
+                    BEKRACHTIGING_TYPE_URI,
+                    MINUTES_REPORT_TYPE_URI
                 ]:
+                    isMinutes = sign_flow["piece_type"] == MINUTES_REPORT_TYPE_URI
                     auto_place_signature(
                         piece_uri, 
                         package_id, 
                         signinghub_document_id, 
                         signer_mandatees,
                         auto_place_order,
-                        sh_session
+                        sh_session,
+                        isMinutes
                     )
 
             preparation_activity_id = generate_uuid()
@@ -198,7 +213,8 @@ def auto_place_signature(
     signinghub_document_id, 
     signer_mandatees,
     auto_place_order,
-    sh_session
+    sh_session,
+    isMinutes
 ):
     logger.debug((
         f"auto-placing signature field for "
@@ -206,11 +222,16 @@ def auto_place_signature(
     ))
     for index, mandatee in enumerate(signer_mandatees):
         logger.debug(f"placing field for signer {mandatee}")
+        if isMinutes:
+            # can we always rely on the \r\n being correct? if not there is no field, which is better than a field in a bad spot
+            search_text = f"{mandatee['first_name']} {mandatee['family_name']},\r\n{mandatee['title']}"
+            # this should always work because of the comma and doesn't need the title property
+            # search_text = f"{mandatee['first_name']} {mandatee['family_name']},"
+            # with title (or only comma) would also work for decisions, but not for ratifications (no comma behind minister names)
+        else:
+            search_text = f"{mandatee['first_name']} {mandatee['family_name']}"
         sh_data = {
-            "search_text": (
-                f"{mandatee['first_name']} "
-                f"{mandatee['family_name']}"
-            ),
+            "search_text": search_text,
             "order": index + auto_place_order,
             "field_type": "SIGNATURE",
             "level_of_assurance": ["QUALIFIED_ELECTRONIC_SIGNATURE"],
