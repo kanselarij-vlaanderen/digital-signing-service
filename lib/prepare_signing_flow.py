@@ -47,7 +47,7 @@ def sort_sign_flows_by_piece(sign_flows: List[Dict]):
         piece_name = sign_flow["piece_name"]
         if sign_flow["piece_type"] in [
             DECISION_REPORT_TYPE_URI, 
-            #MINUTES_REPORT_TYPE_URI
+            MINUTES_REPORT_TYPE_URI
         ]:
             match = DEC_NAME_REGEX.match(piece_name) if piece_name else None
         else:
