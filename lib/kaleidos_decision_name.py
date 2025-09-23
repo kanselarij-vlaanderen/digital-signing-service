@@ -31,7 +31,7 @@ REGEXES = {
     'versionSuffix': rf'(?P<versionSuffix>({")|(".join(map(str.upper, NUMBERS_BY_LATIN_ADVERBIALS.keys()))}))'.replace('()|', ''),
 }
 
-DEC_NAME_REGEX = re.compile(rf'^{REGEXES["context"]} PV {REGEXES["year"]}/{REGEXES["sessionNr"]}( - {REGEXES["type"]} {REGEXES["typeNr"]})?{REGEXES["versionSuffix"]}?$')
+DEC_NAME_REGEX = re.compile(rf'^{REGEXES["context"]} PV {REGEXES["year"]}/{REGEXES["sessionNr"]}(-VV)?( - {REGEXES["type"]} {REGEXES["typeNr"]})?{REGEXES["versionSuffix"]}?$')
 
 
 def compare_decision_piece_names(name1, name2) -> int:
