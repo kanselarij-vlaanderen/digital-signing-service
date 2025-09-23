@@ -26,7 +26,7 @@ def sort_sign_flows_by_piece(sign_flows: List[Dict]):
         name2 = sign_flow2["piece_name"]
         if sign_flow1["piece_type"] in [
             DECISION_REPORT_TYPE_URI, 
-            #MINUTES_REPORT_TYPE_URI
+            MINUTES_REPORT_TYPE_URI
         ]:
             return compare_decision_piece_names(name1, name2)
         else:
