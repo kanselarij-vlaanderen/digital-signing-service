@@ -119,8 +119,9 @@ def prepare_post():
             "uri": job["uri"],
             "sign_flow_uris": job["sign_flow_uris"],
             "created": job["created"],
-            "modified": job["modified"],
             "status": job["status"],
+            "time_started": job["time_started"],
+            "time_ended": job["time_ended"],
     })
     res.headers["Content-Type"] = "application/vnd.api+json"
     return res

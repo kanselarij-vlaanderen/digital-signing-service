@@ -1,4 +1,4 @@
-from config import APPLICATION_GRAPH, JOB, JOB_RESOURCE_BASE_URI
+from config import APPLICATION_GRAPH, JOB
 from escape_helpers import (
     sparql_escape_string,
     sparql_escape_uri,
@@ -27,7 +27,7 @@ from ..queries.file import delete_physical_file_metadata
 
 def create_job(sign_flow_uris, mu_session_uri):
     uuid = generate_uuid()
-    uri = f"{JOB_RESOURCE_BASE_URI}{uuid}"
+    uri = f"{JOB["RESOURCE_BASE_URI"]}{uuid}"
     now = datetime.now()
     logger.debug(
         f"Creating job with uri {sparql_escape_uri(uri)} for {len(sign_flow_uris)} sign flows"
@@ -42,24 +42,23 @@ PREFIX adms: <http://www.w3.org/ns/adms#>
 
 INSERT DATA {
     GRAPH $graph {
-        $uri a ext:PrepareSignFlowJob ;
+        $uri a $rdf_type ;
             mu:uuid $uuid ;
             prov:used $sign_flow_uris ;
             adms:status $status ;
             dct:creator $mu_session_uri ;
-            dct:created $created ;
-            dct:modified $modified .
+            dct:created $created .
     }
 }"""
     ).substitute(
         graph=sparql_escape_uri(APPLICATION_GRAPH),
         uri=sparql_escape_uri(uri),
+        rdf_type=sparql_escape_uri(JOB["RDF_TYPE"]),
         uuid=sparql_escape_string(uuid),
         sign_flow_uris=", ".join(map(sparql_escape_uri, sign_flow_uris)),
         status=sparql_escape_uri(JOB["STATUSES"]["SCHEDULED"]),
         mu_session_uri=sparql_escape_uri(mu_session_uri),
         created=sparql_escape_datetime(now),
-        modified=sparql_escape_datetime(now),
     )
     update(query_string)
 
@@ -80,23 +79,26 @@ PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX adms: <http://www.w3.org/ns/adms#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX schema: <http://schema.org/>
 
-SELECT ?uri ?status ?sign_flow_uris ?mu_session_uri ?created ?modified ?error_message
+SELECT ?uri ?status ?sign_flow_uris ?mu_session_uri ?created ?time_started ?time_ended ?error_message
 WHERE {
   GRAPH $graph {
-    ?uri a ext:PrepareSignFlowJob ;
+    ?uri a $rdf_type ;
       mu:uuid $uuid ;
       prov:used ?sign_flow_uris ;
       dct:creator ?mu_session_uri ;
       dct:created ?created ;
-      dct:modified ?modified ;
       adms:status ?status .
-    OPTIONAL { ?uri ext:errorMessage ?error_message }
+    OPTIONAL { ?uri prov:startedAtTime ?time_started }
+    OPTIONAL { ?uri prov:endedAtTime ?time_ended }
+    OPTIONAL { ?uri schema:error ?error_message }
   }
 } ORDER BY ASC(?created) LIMIT 1"""
     ).substitute(
         graph=sparql_escape_uri(APPLICATION_GRAPH),
         uuid=sparql_escape_string(uuid),
+        rdf_type=sparql_escape_uri(JOB["RDF_TYPE"]),
     )
 
     result = query(query_string)
@@ -109,7 +111,8 @@ WHERE {
             "sign_flow_uris": record["sign_flow_uris"],
             "mu_session_uri": record["mu_session_uri"],
             "created": record["created"],
-            "modified": record["modified"],
+            "time_started": record["time_started"],
+            "time_ended": record["time_ended"],
             "status": record["status"],
             "error_message": record["error_message"],
         }
@@ -118,46 +121,48 @@ WHERE {
 
 def update_job_status(job_uri, status_uri):
     now = datetime.now()
+    if  status_uri == JOB["STATUSES"]["SUCCESS"] or status_uri == JOB["STATUSES"]["FAILED"]: # final statusses
+        time_predicate = 'http://www.w3.org/ns/prov#endedAtTime'
+    else:
+        time_predicate = 'http://www.w3.org/ns/prov#startedAtTime'
+    
     query_string = Template(
-        """PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX adms: <http://www.w3.org/ns/adms#>
+        """PREFIX adms: <http://www.w3.org/ns/adms#>
 
 DELETE WHERE {
-  $job_uri dct:modified ?modified ;
-           adms:status ?status.
+  $job_uri adms:status ?status_uri .
+  OPTIONAL { $job_uri $time_predicate ?now . }
 }
 ;
+
+;
 INSERT DATA {
-  $job_uri dct:modified $now;
-           adms:status $status_uri.
+  $job_uri adms:status $status_uri ;
+           $time_predicate $now .
 }"""
     ).substitute(
         job_uri=sparql_escape_uri(job_uri),
         status_uri=sparql_escape_uri(status_uri),
         now=sparql_escape_datetime(now),
+        time_predicate=sparql_escape_uri(time_predicate)
     )
     agent_update(query_string)
 
 
 def update_job_error_message(job_uri, error_message):
-    now = datetime.now()
     query_string = Template(
-        """PREFIX dct: <http://purl.org/dc/terms/>
-PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+        """PREFIX schema: <http://schema.org/>
 
 DELETE WHERE {
-  $job_uri dct:modified ?modified ;
-           ext:errorMessage ?errorMessage.
+  $job_uri schema:error ?errorMessage.
 }
 ;
 INSERT DATA {
-  $job_uri dct:modified $now;
-           ext:errorMessage $error_message.
+  $job_uri schema:error $error_message.
 }"""
     ).substitute(
         job_uri=sparql_escape_uri(job_uri),
         error_message=sparql_escape_string(error_message),
-        now=sparql_escape_datetime(now),
     )
     agent_update(query_string)
 
