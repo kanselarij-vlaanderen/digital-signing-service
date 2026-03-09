@@ -5,7 +5,6 @@ from pytz import timezone
 # Config
 KALEIDOS_RESOURCE_BASE_URI = "http://themis.vlaanderen.be/"
 SIGNINGHUB_RESOURCE_BASE_URI = os.environ.get("SIGNINGHUB_API_URL", KALEIDOS_RESOURCE_BASE_URI).strip("/") + "/"
-JOB_RESOURCE_BASE_URI = "http://mu.semte.ch/services/digital-signing/prepare-signing-flow-job/"
 TIMEZONE = timezone('Europe/Brussels')
 SYNC_CRON_PATTERN = os.environ.get("SYNC_CRON_PATTERN", "*/2 * * * *")
 SIGNINGHUB_APP_DOMAIN = os.environ.get("SIGNINGHUB_APP_DOMAIN")
@@ -27,6 +26,8 @@ JOB = {
         "SUCCESS": "http://redpencil.data.gift/id/concept/JobStatus/success",
         "FAILED": "http://redpencil.data.gift/id/concept/JobStatus/failed",
     },
+    "RDF_TYPE": "http://mu.semte.ch/vocabularies/ext/PrepareSignFlowJob",
+    "RESOURCE_BASE_URI": "http://mu.semte.ch/services/digital-signing/prepare-signing-flow-job/"
 }
 
 GOEDKEURINGSACTIVITEIT_RESOURCE_BASE_URI = f"{KALEIDOS_RESOURCE_BASE_URI}id/handteken-goedkeuringsactiviteit/"
